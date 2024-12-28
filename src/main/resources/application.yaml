@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: CloudStorage
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/cloudstorage?currentSchema=cloudstorage
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+  sql:
+    init:
+      mode: always
+      continue-on-error: false
+      data-locations: classpath:init-schema.sql
+
+  data:
+    jdbc:
+      dialect: postgresql
+
+  jpa:
+    hibernate:
+      ddl-auto: update
