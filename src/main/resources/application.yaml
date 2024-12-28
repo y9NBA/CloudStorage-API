@@ -10,9 +10,10 @@ spring:
 
   sql:
     init:
-      mode: always
+      mode: never
       continue-on-error: false
-      data-locations: classpath:init-schema.sql
+      data-locations: classpath:init-data.sql
+      schema-locations: classpath:init-schema.sql
 
   data:
     jdbc:
