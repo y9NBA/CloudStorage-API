@@ -3,6 +3,8 @@ package org.y9nba.app.model;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.y9nba.app.model.user.Role;
 
 import java.io.Serializable;
 
@@ -19,10 +21,8 @@ public class UserRoleModel {
     @JoinColumn(name = "user_id")
     private UserModel user;
 
-    @ManyToOne
-    @MapsId("roleId")
-    @JoinColumn(name = "role_id")
-    private RoleModel role;
+    @Column(name = "role", nullable = false)
+    private Role role;
 
     @Embeddable
     @Data
