@@ -1,12 +1,5 @@
 CREATE SCHEMA IF NOT EXISTS cloudstorage;
 
-CREATE TABLE IF NOT EXISTS role
-(
-    id          BIGSERIAL PRIMARY KEY,
-    role_name   VARCHAR(50) UNIQUE NOT NULL,
-    description TEXT
-);
-
 CREATE TABLE IF NOT EXISTS "user"
 (
     id         BIGSERIAL PRIMARY KEY,
@@ -19,10 +12,9 @@ CREATE TABLE IF NOT EXISTS "user"
 CREATE TABLE IF NOT EXISTS user_role
 (
     user_id BIGINT,
-    role_id BIGINT,
-    PRIMARY KEY (user_id, role_id),
-    CONSTRAINT fk_user_role FOREIGN KEY (user_id) REFERENCES "user" (id) ON DELETE CASCADE,
-    CONSTRAINT fk_role_id FOREIGN KEY (role_id) REFERENCES role (id) ON DELETE CASCADE
+    role VARCHAR(50),
+    PRIMARY KEY (user_id, role),
+    CONSTRAINT fk_user_role FOREIGN KEY (user_id) REFERENCES "user" (id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS file
