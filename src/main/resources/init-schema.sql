@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS file
     user_id    BIGINT,
     file_name  VARCHAR(255) NOT NULL,
     file_size  BIGINT       NOT NULL,
-    mime_type  VARCHAR(100) NOT NULL,
+    mime_type  VARCHAR(50) NOT NULL,
     url        VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_file_user FOREIGN KEY (user_id) REFERENCES "user" (id) ON DELETE CASCADE
@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS audit_log
 (
     id         BIGSERIAL PRIMARY KEY,
     user_id    BIGINT,
-    action     VARCHAR(255) NOT NULL,
+    action     VARCHAR(20) NOT NULL,
     file_id    BIGINT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_audit_user FOREIGN KEY (user_id) REFERENCES "user" (id) ON DELETE CASCADE,
