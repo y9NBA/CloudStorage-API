@@ -3,6 +3,7 @@ package org.y9nba.app.model;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.y9nba.app.constant.Action;
 
 import java.time.LocalDateTime;
 
@@ -20,7 +21,7 @@ public class AuditLogModel {
     private UserModel user;
 
     @Column(nullable = false)
-    private String action;
+    private Action action;
 
     @ManyToOne
     @JoinColumn(name = "file_id")

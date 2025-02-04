@@ -3,8 +3,7 @@ package org.y9nba.app.model;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.y9nba.app.model.user.Role;
+import org.y9nba.app.constant.Role;
 
 import java.io.Serializable;
 
