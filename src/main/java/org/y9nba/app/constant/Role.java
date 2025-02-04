@@ -1,4 +1,4 @@
-package org.y9nba.app.model.user;
+package org.y9nba.app.constant;
 
 public enum Role {
     ROLE_USER(),
