@@ -1,15 +1,15 @@
 package org.y9nba.app.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.y9nba.app.constant.Role;
 
 import java.io.Serializable;
 
 @Entity
 @Table(name = "user_role")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 public class UserRoleModel {
     @EmbeddedId
@@ -17,17 +17,25 @@ public class UserRoleModel {
 
     @ManyToOne
     @MapsId("userId")
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false)
     private UserModel user;
-
-    @Column(name = "role", nullable = false)
-    private Role role;
 
     @Embeddable
     @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
     public static class UserRoleId implements Serializable {
+
         private Long userId;
-        private Long roleId;
+
+        @Column(name = "role")
+        @Enumerated(EnumType.STRING)
+        private Role role;
+    }
+
+    public UserRoleModel(UserModel user, Role role) {
+        this.id = new UserRoleId(user.getId(), role);
+        this.user = user;
     }
 }
 
