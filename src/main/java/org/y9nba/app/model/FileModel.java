@@ -1,8 +1,9 @@
 package org.y9nba.app.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -18,6 +19,7 @@ public class FileModel {
 
     @ManyToOne
     @JoinColumn(name = "user_id")
+    @JsonBackReference
     private UserModel user;
 
     @Column(name = "file_name", nullable = false)
@@ -36,9 +38,11 @@ public class FileModel {
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @OneToMany(mappedBy = "file")
+    @JsonManagedReference
     private Set<FileAccessModel> fileAccesses;
 
     @OneToMany(mappedBy = "file")
+    @JsonManagedReference
     private Set<AuditLogModel> auditLogs;
 }
 

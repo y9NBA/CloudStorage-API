@@ -1,8 +1,7 @@
 package org.y9nba.app.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import org.y9nba.app.constant.Access;
 
@@ -24,5 +23,6 @@ public class FileAccessModel {
     private UserModel user;
 
     @Column(name = "access_level", nullable = false)
+    @Enumerated(EnumType.STRING)
     private Access accessLevel;
 }

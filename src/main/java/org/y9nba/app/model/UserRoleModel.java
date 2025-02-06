@@ -8,8 +8,7 @@ import java.io.Serializable;
 
 @Entity
 @Table(name = "user_role")
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 public class UserRoleModel {
     @EmbeddedId
