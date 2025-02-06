@@ -1,8 +1,7 @@
 package org.y9nba.app.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.y9nba.app.constant.Action;
 
 import java.time.LocalDateTime;
@@ -21,6 +20,7 @@ public class AuditLogModel {
     private UserModel user;
 
     @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private Action action;
 
     @ManyToOne
