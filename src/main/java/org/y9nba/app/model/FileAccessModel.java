@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import org.y9nba.app.constant.Access;
+
 @Entity
 @Table(name = "file_access")
 @Data
@@ -22,5 +24,5 @@ public class FileAccessModel {
     private UserModel user;
 
     @Column(name = "access_level", nullable = false)
-    private String accessLevel;
+    private Access accessLevel;
 }
