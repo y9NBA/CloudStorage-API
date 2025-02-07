@@ -7,8 +7,9 @@ import java.time.LocalDateTime;
 import java.util.Set;
 
 @Entity
-@Table(name = "user")
-@Data
+@Table(name = "\"user\"")
+@Getter
+@Setter
 @NoArgsConstructor
 public class UserModel {
     @Id
