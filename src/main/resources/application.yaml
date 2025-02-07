@@ -27,6 +27,13 @@ spring:
       hibernate:
         format_sql: true
 
+
 token:
   signing:
     key: token
+
+logging:
+  level:
+    org:
+      springframework:
+        data: debug
