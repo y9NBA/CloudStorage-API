@@ -7,7 +7,8 @@ import org.y9nba.app.constant.Access;
 
 @Entity
 @Table(name = "file_access")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 public class FileAccessModel {
     @Id
