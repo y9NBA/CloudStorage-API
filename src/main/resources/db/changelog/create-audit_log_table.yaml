@@ -1,0 +1,49 @@
+databaseChangeLog:
+  - changeSet:
+      id: 6
+      author: y9nba
+      changes:
+        - createTable:
+            tableName: audit_log
+            schemaName: cloudstorage
+            columns:
+              - column:
+                  name: id
+                  type: bigserial
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: action
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: file_id
+                  type: bigint
+              - column:
+                  name: created_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: audit_log
+            baseColumnNames: user_id
+            referencedTableName: user
+            referencedColumnNames: id
+            constraintName: fk_audit_log_user
+            referencedTableSchemaName: cloudstorage
+            baseTableSchemaName: cloudstorage
+        - addForeignKeyConstraint:
+            baseTableName: audit_log
+            baseColumnNames: file_id
+            referencedTableName: file
+            referencedColumnNames: id
+            constraintName: fk_audit_log_file
+            referencedTableSchemaName: cloudstorage
+            baseTableSchemaName: cloudstorage

@@ -1,0 +1,46 @@
+databaseChangeLog:
+  - changeSet:
+      id: 5
+      author: y9nba
+      changes:
+        - createTable:
+            tableName: file_access
+            schemaName: cloudstorage
+            columns:
+              - column:
+                  name: id
+                  type: bigserial
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: file_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: access_level
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: file_access
+            baseColumnNames: file_id
+            referencedTableName: file
+            referencedColumnNames: id
+            constraintName: fk_file_access_file
+            referencedTableSchemaName: cloudstorage
+            baseTableSchemaName: cloudstorage
+        - addForeignKeyConstraint:
+            baseTableName: file_access
+            baseColumnNames: user_id
+            referencedTableName: user
+            referencedColumnNames: id
+            constraintName: fk_file_access_user
+            referencedTableSchemaName: cloudstorage
+            baseTableSchemaName: cloudstorage

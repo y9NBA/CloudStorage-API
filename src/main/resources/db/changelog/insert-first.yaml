@@ -1,0 +1,36 @@
+databaseChangeLog:
+  - changeSet:
+      id: 6
+      author: y9nba
+      changes:
+        - insert:
+            tableName: user
+            schemaName: cloudstorage
+            columns:
+              - column:
+                  name: username
+                  value: 'John Doe'
+              - column:
+                  name: password
+                  value: '$2a$12$fMT6CAqYzNnHR.pX96o2AuGDwE6JiOyzVqV90/etj.ygkI2bpEQkS'
+              - column:
+                  name: email
+                  value: 'johndoe@example.com'
+              - column:
+                  name: storage_limit
+                  value: '10485760'
+
+  - changeSet:
+      id: 7
+      author: y9nba
+      changes:
+        - insert:
+            tableName: user_role
+            schemaName: cloudstorage
+            columns:
+              - column:
+                  name: user_id
+                  value: '1'
+              - column:
+                  name: role
+                  value: 'ROLE_ADMIN'
