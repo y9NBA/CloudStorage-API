@@ -29,7 +29,7 @@ public class UserRoleModel {
 
         private Long userId;
 
-        @Column(name = "role")
+        @Column(name = "role", length = 50)
         @Enumerated(EnumType.STRING)
         private Role role;
     }

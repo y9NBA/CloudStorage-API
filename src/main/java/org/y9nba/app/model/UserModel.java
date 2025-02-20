@@ -35,7 +35,7 @@ public class UserModel {
     private String email;
 
     @Column(name = "storage_limit", nullable = false)
-    private Long storageLimit = 1073741824L;
+    private Long storageLimit = 1073741824L;    // 1gb in byte
 
     @Column(name = "used_storage", nullable = false)
     private Long usedStorage = 0L;
