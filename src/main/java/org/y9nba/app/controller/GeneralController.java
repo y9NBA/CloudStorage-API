@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.y9nba.app.dto.message.MessageDto;
+import org.y9nba.app.dto.message.SimpleMessageDto;
 
 import java.util.Random;
 
@@ -26,8 +27,7 @@ public class GeneralController {
     )
     @GetMapping("/ping")
     public ResponseEntity<?> getPing() {
-        Random random = new Random();
-        return ResponseEntity.ok(new Random().nextDouble());
+        return ResponseEntity.ok(new SimpleMessageDto<>(new Random().nextDouble()));
     }
 
     @Operation(
