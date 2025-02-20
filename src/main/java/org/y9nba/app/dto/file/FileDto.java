@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.y9nba.app.dto.auditlog.AuditLogDto;
 import org.y9nba.app.dto.fileaccess.FileAccessDto;
+import org.y9nba.app.mapper.GeneralMapper;
 import org.y9nba.app.model.FileModel;
 
 import java.time.LocalDateTime;
@@ -31,7 +32,7 @@ public class FileDto {
         this.mimeType = model.getMimeType();
         this.url = model.getUrl();
         this.createdAt = model.getCreatedAt();
-        this.fileAccesses = model.getFileAccesses().stream().map(FileAccessDto::new).collect(Collectors.toSet());
-        this.auditLogs = model.getAuditLogs().stream().map(AuditLogDto::new).collect(Collectors.toSet());
+        this.fileAccesses = GeneralMapper.toFileAccessDto(model.getFileAccesses());
+        this.auditLogs = GeneralMapper.toAuditLogDto(model.getAuditLogs());
     }
 }

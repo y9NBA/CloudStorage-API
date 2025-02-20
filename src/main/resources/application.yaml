@@ -8,12 +8,10 @@ spring:
     password: postgres
     driver-class-name: org.postgresql.Driver
 
-  sql:
-    init:
-      mode: never
-      continue-on-error: false
-      data-locations: classpath:init-data.sql
-      schema-locations: classpath:init-schema.sql
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    enabled: true
+    default-schema: public
 
   data:
     jdbc:

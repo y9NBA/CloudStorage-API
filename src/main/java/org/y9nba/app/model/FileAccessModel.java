@@ -23,7 +23,7 @@ public class FileAccessModel {
     @JoinColumn(name = "user_id")
     private UserModel user;
 
-    @Column(name = "access_level", nullable = false)
+    @Column(name = "access_level", nullable = false, length = 50)
     @Enumerated(EnumType.STRING)
     private Access accessLevel;
 }
