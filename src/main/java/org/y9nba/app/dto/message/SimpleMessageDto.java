@@ -8,6 +8,9 @@ import lombok.Setter;
 public class SimpleMessageDto<T> {
     private T body;
 
+    public SimpleMessageDto() {
+    }
+
     public SimpleMessageDto(T body) {
         this.body = body;
     }
