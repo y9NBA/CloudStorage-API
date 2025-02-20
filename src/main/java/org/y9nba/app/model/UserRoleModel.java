@@ -43,4 +43,3 @@ public class UserRoleModel {
         this(dto.getUser(), dto.getRole());
     }
 }
-
