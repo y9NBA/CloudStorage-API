@@ -3,6 +3,7 @@ package org.y9nba.app.model;
 import jakarta.persistence.*;
 import lombok.*;
 import org.y9nba.app.constant.Role;
+import org.y9nba.app.dto.userrole.UserRoleCreateDto;
 
 import java.io.Serializable;
 
@@ -36,6 +37,10 @@ public class UserRoleModel {
     public UserRoleModel(UserModel user, Role role) {
         this.id = new UserRoleId(user.getId(), role);
         this.user = user;
+    }
+
+    public UserRoleModel(UserRoleCreateDto dto) {
+        this(dto.getUser(), dto.getRole());
     }
 }
 
