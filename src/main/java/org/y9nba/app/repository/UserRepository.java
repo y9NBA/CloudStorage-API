@@ -6,4 +6,7 @@ import org.y9nba.app.model.UserModel;
 
 @Repository
 public interface UserRepository extends JpaRepository<UserModel, Long> {
+
+    UserModel findByUsername(String username);
+    UserModel findByEmail(String email);
 }
