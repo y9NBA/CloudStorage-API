@@ -41,6 +41,7 @@ databaseChangeLog:
               - column:
                   name: created_at
                   type: timestamp
+                  defaultValue: now()
                   constraints:
                     nullable: false
         - addForeignKeyConstraint:
