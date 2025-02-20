@@ -1,6 +1,7 @@
 package org.y9nba.app.constant;
 
 public enum Access {
-    ACCESS_READER,
-    ACCESS_EDITOR
+    ACCESS_AUTHOR,
+    ACCESS_EDITOR,
+    ACCESS_READER
 }
