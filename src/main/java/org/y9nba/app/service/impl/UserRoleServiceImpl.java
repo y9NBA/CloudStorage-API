@@ -6,11 +6,13 @@ import org.y9nba.app.dto.user.UserDto;
 import org.y9nba.app.dto.userrole.UserRoleCreateDto;
 import org.y9nba.app.dto.userrole.UserRoleDto;
 import org.y9nba.app.dto.userrole.UserRoleUpdateDto;
+import org.y9nba.app.model.UserModel;
 import org.y9nba.app.model.UserRoleModel;
 import org.y9nba.app.repository.UserRoleRepository;
 import org.y9nba.app.service.UserRoleService;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class UserRoleServiceImpl implements UserRoleService {
@@ -21,23 +23,27 @@ public class UserRoleServiceImpl implements UserRoleService {
         this.repository = repository;
     }
 
+
     @Override
-    public UserRoleDto save(UserDto user, Role role) {
+    public Set<UserRoleModel> saveAll(Set<UserRoleCreateDto> createDtoSet) {
+
+        return createDtoSet.stream().map(this::save).collect(Collectors.toSet());
+    }
+
+    @Override
+    public UserRoleModel save(UserRoleCreateDto entity) {
+        UserRoleModel model = new UserRoleModel(entity);
+
+        return repository.save(model);
+    }
+
+    @Override
+    public UserRoleModel update(UserRoleUpdateDto entity) {
         return null;
     }
 
     @Override
-    public UserRoleDto save(UserRoleCreateDto entity) {
-        return null;
-    }
-
-    @Override
-    public UserRoleDto update(UserRoleUpdateDto entity) {
-        return null;
-    }
-
-    @Override
-    public void delete(UserRoleDto entity) {
+    public void delete(UserRoleModel entity) {
 
     }
 
@@ -47,7 +53,7 @@ public class UserRoleServiceImpl implements UserRoleService {
     }
 
     @Override
-    public UserRoleDto findById(UserRoleModel.UserRoleId id) {
+    public UserRoleModel findById(UserRoleModel.UserRoleId id) {
         return null;
     }
 
