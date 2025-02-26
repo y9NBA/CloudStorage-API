@@ -8,7 +8,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.y9nba.app.constant.Role;
-import org.y9nba.app.dto.auth.AuthenticationResponseDto;
+import org.y9nba.app.dto.auth.TokenResponseDto;
 import org.y9nba.app.dto.auth.LoginRequestDto;
 import org.y9nba.app.dto.auth.RegistrationRequestDto;
 import org.y9nba.app.dto.user.UserCreateDto;
@@ -82,7 +82,7 @@ public class AuthenticationService {
         tokenRepository.save(token);
     }
 
-    public AuthenticationResponseDto authenticate(LoginRequestDto request) {
+    public TokenResponseDto authenticate(LoginRequestDto request) {
 
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -100,10 +100,10 @@ public class AuthenticationService {
 
         saveUserToken(accessToken, refreshToken, user);
 
-        return new AuthenticationResponseDto(accessToken, refreshToken);
+        return new TokenResponseDto(accessToken, refreshToken);
     }
 
-    public AuthenticationResponseDto refreshToken(HttpServletRequest request, HttpServletResponse response) {
+    public TokenResponseDto refreshToken(HttpServletRequest request, HttpServletResponse response) {
 
         String authorizationHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
 
@@ -125,7 +125,7 @@ public class AuthenticationService {
 
             saveUserToken(accessToken, refreshToken, user);
 
-            return new AuthenticationResponseDto(accessToken, refreshToken);
+            return new TokenResponseDto(accessToken, refreshToken);
 
         }
 

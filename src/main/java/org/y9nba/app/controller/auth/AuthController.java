@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.y9nba.app.dto.auth.AuthenticationResponseDto;
+import org.y9nba.app.dto.auth.TokenResponseDto;
 import org.y9nba.app.dto.auth.LoginRequestDto;
 import org.y9nba.app.dto.auth.RegistrationRequestDto;
 import org.y9nba.app.dto.response.Response;
@@ -58,7 +58,7 @@ public class AuthController {
             description = "Вход в уже существующую учётную запись"
     )
     @PostMapping("/login")
-    public AuthenticationResponseDto authenticate(@RequestBody LoginRequestDto request) {
+    public TokenResponseDto authenticate(@RequestBody LoginRequestDto request) {
         return authenticationService.authenticate(request);
     }
 
@@ -67,7 +67,7 @@ public class AuthController {
             description = "Сносит все токены и отправляет свеженький"
     )
     @PostMapping("/refresh_token")
-    public AuthenticationResponseDto refreshToken(HttpServletRequest request, HttpServletResponse response) {
+    public TokenResponseDto refreshToken(HttpServletRequest request, HttpServletResponse response) {
         return authenticationService.refreshToken(request, response);
     }
 }
