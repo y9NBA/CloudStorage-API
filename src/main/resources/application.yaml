@@ -25,7 +25,9 @@ spring:
       hibernate:
         format_sql: true
 
-
+server:
+  servlet:
+    context-path: /api/v1/
 
 token:
   signing:
