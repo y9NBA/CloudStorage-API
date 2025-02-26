@@ -26,10 +26,9 @@ spring:
         format_sql: true
 
 
-springdoc:
-  swagger-ui:
-    path: /api/v1/
 
 token:
   signing:
     key: token
+    access_token: 36000000 # 10 hours
+    refresh_token: 252000000 # 7 days
