@@ -2,16 +2,15 @@ package org.y9nba.app.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.y9nba.app.dto.auditlog.AuditLogDto;
-import org.y9nba.app.dto.file.FileDto;
-import org.y9nba.app.dto.fileaccess.FileAccessDto;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.y9nba.app.dto.auth.RegistrationRequestDto;
 import org.y9nba.app.dto.user.UserCreateDto;
-import org.y9nba.app.dto.user.UserDto;
 import org.y9nba.app.dto.user.UserUpdateDto;
-import org.y9nba.app.dto.userrole.UserRoleDto;
-import org.y9nba.app.mapper.GeneralMapper;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -20,7 +19,7 @@ import java.util.stream.Collectors;
 @Getter
 @Setter
 @NoArgsConstructor
-public class UserModel {
+public class UserModel implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -55,16 +54,50 @@ public class UserModel {
     @OneToMany(mappedBy = "user")
     private Set<FileAccessModel> fileAccesses;
 
-    public UserModel(UserCreateDto dto) {
-        this.username = dto.getUsername();
-        this.password = dto.getPassword();
-        this.email = dto.getEmail();
-    }
+    @OneToMany(mappedBy = "user")
+    private Set<TokenModel> tokens;
 
     public UserModel(UserUpdateDto dto) {
         this.username = dto.getUsername();
         this.password = dto.getPassword();
         this.email = dto.getEmail();
 
+    }
+
+    public UserModel(UserCreateDto dto) {
+        this.username = dto.getUsername();
+        this.password = dto.getHashPassword();
+        this.email = dto.getEmail();
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return userRoles
+                .stream()
+                .map(UserRoleModel::getId)
+                .map(UserRoleModel.UserRoleId::getRole)
+                .map(Enum::name)
+                .map(SimpleGrantedAuthority::new)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return UserDetails.super.isAccountNonExpired();
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return UserDetails.super.isAccountNonLocked();
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return UserDetails.super.isCredentialsNonExpired();
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return UserDetails.super.isEnabled();
     }
 }
