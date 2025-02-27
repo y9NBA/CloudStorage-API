@@ -1,7 +1,6 @@
 package org.y9nba.app.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.PingHealthIndicator;
@@ -13,8 +12,8 @@ import org.y9nba.app.dto.response.Response;
 import java.util.Random;
 
 @Tag(
-        name = "Общий контроллер",
-        description = "Позволяет проверить доступность сервера"
+        name = "General controller",
+        description = "Содержит методы для проверки доступности и состояния сервера"
 )
 @RestController
 @RequestMapping("/general")

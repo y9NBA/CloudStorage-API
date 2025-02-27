@@ -1,10 +1,12 @@
 package org.y9nba.app.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -19,11 +21,13 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.y9nba.app.dto.response.Response;
 import org.y9nba.app.security.CustomAccessDeniedHandler;
 import org.y9nba.app.security.CustomLogoutHandler;
 import org.y9nba.app.security.JwtFilter;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 
 @Configuration
@@ -56,16 +60,22 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(httpSecurityExceptionHandlingConfigurer ->
                         httpSecurityExceptionHandlingConfigurer
-                                .authenticationEntryPoint(
-                                        (request, response, authException) -> unauthorizedResponse(response)
+                                .authenticationEntryPoint((request, response, authException) ->
+                                        unauthorizedResponse(response)
                                 )
-                                .accessDeniedHandler(customAccessDeniedHandler)
+                                .accessDeniedHandler(
+                                        customAccessDeniedHandler
+                                )
                 )
                 .authorizeHttpRequests(auth -> {
-                    auth.requestMatchers("auth/**", "general/**", "css/**",
-                                    "swagger-ui/**", "v3/api-docs/**")
-                            .permitAll();
-                    auth.anyRequest().authenticated();
+                            auth.requestMatchers(
+                                    "auth/**",
+                                    "general/**",
+                                    "css/**",
+                                    "swagger-ui/**",
+                                    "v3/api-docs/**"
+                            ).permitAll();
+                            auth.anyRequest().authenticated();
                         }
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
@@ -80,8 +90,12 @@ public class SecurityConfig {
     }
 
     private void unauthorizedResponse(HttpServletResponse response) throws IOException {
+        OutputStream responseOutputStream = response.getOutputStream();
+        ObjectMapper mapper = new ObjectMapper();
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
-        response.getWriter().write("UNAUTHORIZED");
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        mapper.writeValue(responseOutputStream, new Response(HttpStatus.UNAUTHORIZED.name()));
+        responseOutputStream.flush();
     }
 
     private CorsConfigurationSource corsConfigurationSource() {
