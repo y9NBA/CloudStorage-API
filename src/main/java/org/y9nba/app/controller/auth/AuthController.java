@@ -1,6 +1,12 @@
 package org.y9nba.app.controller.auth;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -18,8 +24,8 @@ import org.y9nba.app.security.AuthenticationService;
 import org.y9nba.app.service.UserService;
 
 @Tag(
-        name = "Контроллер авторизации",
-        description = "Позволяет зарегистрироваться и войти в свою учётную запись"
+        name = "Authentication Controller",
+        description = "Регистрация, аутентификация и управление токенами доступа"
 )
 @RestController
 @RequestMapping("/auth")
@@ -35,16 +41,52 @@ public class AuthController {
 
     @Operation(
             summary = "Запрос на регистрацию",
-            description = "Регистрация нового пользователя в системе"
+            description = "Регистрация нового пользователя в системе. Логин и email должны быть уникальными",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Данные для регистрации",
+                    required = true,
+                    content = @Content(
+                            schema = @Schema(implementation = RegistrationRequestDto.class),
+                            examples = @ExampleObject(
+                                    value = """
+                                                {
+                                                  "username": "john_doe",
+                                                  "email": "john@example.com",
+                                                  "password": "securePassword123"
+                                                }
+                                            """
+                            )
+                    )
+            )
     )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Успешная регистрация",
+                    content = @Content(
+                            schema = @Schema(implementation = Response.class),
+                            examples = @ExampleObject(
+                                    value = "{\"message\": \"Регистрация прошла успешно\"}"
+                            )
+                    )),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "Конфликт данных",
+                    content = @Content(
+                            examples = {
+                                    @ExampleObject(name = "Username conflict", value = "{\"message\": \"Имя пользователя уже занято\"}"),
+                                    @ExampleObject(name = "Email conflict", value = "{\"message\": \"Такой email уже занят\"}")
+                            }
+                    ))
+    })
     @PostMapping("/registration")
     public Response register(@RequestBody RegistrationRequestDto registrationDto) {
 
-        if(userService.existsByUsername(registrationDto.getUsername())) {
+        if (userService.existsByUsername(registrationDto.getUsername())) {
             throw new UsernameAlreadyException();
         }
 
-        if(userService.existsByEmail(registrationDto.getEmail())) {
+        if (userService.existsByEmail(registrationDto.getEmail())) {
             throw new EmailAlreadyException();
         }
 
@@ -55,8 +97,33 @@ public class AuthController {
 
     @Operation(
             summary = "Запрос на вход",
-            description = "Вход в уже существующую учётную запись"
+            description = "Аутентификация пользователя и получение JWT токенов",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Учетные данные пользователя",
+                    required = true,
+                    content = @Content(
+                            schema = @Schema(implementation = LoginRequestDto.class),
+                            examples = @ExampleObject(
+                                    value = """
+                                                {
+                                                  "username": "john_doe",
+                                                  "password": "securePassword123"
+                                                }
+                                            """
+                            )
+                    )
+            )
     )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Успешная аутентификация",
+                    content = @Content(schema = @Schema(implementation = TokenResponseDto.class))),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Ошибка в данных",
+                    content = @Content(examples = @ExampleObject(value = "{\"message\": \"Неверные учетные данные пользователя\"}")))
+    })
     @PostMapping("/login")
     public TokenResponseDto authenticate(@RequestBody LoginRequestDto request) {
         return authenticationService.authenticate(request);
@@ -64,8 +131,19 @@ public class AuthController {
 
     @Operation(
             summary = "Обновление токена",
-            description = "Сносит все токены и отправляет свеженький"
+            description = "Генерация новой пары access/refresh токенов по валидному refresh токену",
+            security = @SecurityRequirement(name = "Refresh Token")
     )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Токены успешно обновлены",
+                    content = @Content(schema = @Schema(implementation = TokenResponseDto.class))),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Невалидный или отсутствующий refresh токен",
+                    content = @Content(examples = @ExampleObject(value = "{\"message\": \"Refresh token invalid\"}")))
+    })
     @PostMapping("/refresh_token")
     public TokenResponseDto refreshToken(HttpServletRequest request, HttpServletResponse response) {
         return authenticationService.refreshToken(request, response);
