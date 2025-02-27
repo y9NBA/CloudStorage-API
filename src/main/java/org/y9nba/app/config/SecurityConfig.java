@@ -22,7 +22,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.y9nba.app.dto.response.Response;
+import org.y9nba.app.dto.response.ErrorResponse;
 import org.y9nba.app.security.CustomAccessDeniedHandler;
 import org.y9nba.app.security.CustomLogoutHandler;
 import org.y9nba.app.security.JwtFilter;
@@ -70,18 +70,13 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> {
                             auth.requestMatchers(
-                                    "/auth/login",
-                                    "/auth/registration",
+                                    "/auth/**",
                                     "/general/**",
                                     "/css/**",
                                     "/swagger-ui/**",
                                     "/v3/api-docs/**",
                                     "/h2-console/**"
                             ).permitAll();
-
-                            auth.requestMatchers(
-                                    "/auth/refresh_token"
-                            ).authenticated();
 
                             auth.anyRequest().authenticated();
                         }
@@ -105,7 +100,7 @@ public class SecurityConfig {
         ObjectMapper mapper = new ObjectMapper();
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        mapper.writeValue(responseOutputStream, new Response(HttpStatus.UNAUTHORIZED.name()));
+        mapper.writeValue(responseOutputStream, new ErrorResponse(HttpStatus.UNAUTHORIZED.name()));
         responseOutputStream.flush();
     }
 
