@@ -1,5 +1,6 @@
 package org.y9nba.app.dto.auth;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -8,7 +9,13 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 @AllArgsConstructor
 @Getter
 public class RegistrationRequestDto {
-    private String username;
-    private String email;
-    private String password;
+
+    @Schema(description = "Уникальное имя пользователя", example = "john_doe")
+    private final String username;
+
+    @Schema(description = "Пароль (мин. 8 символов)", example = "securePassword123")
+    private final String password;
+
+    @Schema(description = "Валидный email адрес", example = "john@example.com")
+    private final String email;
 }
