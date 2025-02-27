@@ -12,6 +12,7 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -69,12 +70,19 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> {
                             auth.requestMatchers(
-                                    "auth/**",
-                                    "general/**",
-                                    "css/**",
-                                    "swagger-ui/**",
-                                    "v3/api-docs/**"
+                                    "/auth/login",
+                                    "/auth/registration",
+                                    "/general/**",
+                                    "/css/**",
+                                    "/swagger-ui/**",
+                                    "/v3/api-docs/**",
+                                    "/h2-console/**"
                             ).permitAll();
+
+                            auth.requestMatchers(
+                                    "/auth/refresh_token"
+                            ).authenticated();
+
                             auth.anyRequest().authenticated();
                         }
                 )
@@ -84,7 +92,10 @@ public class SecurityConfig {
                     log.addLogoutHandler(customLogoutHandler);
                     log.logoutSuccessHandler((request, response, authentication) ->
                             SecurityContextHolder.clearContext());
-                });
+                })
+                .headers(headersConfigurer ->
+                        headersConfigurer.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)    // headers для работы iframe тега у h2-console
+                );
 
         return httpSecurity.build();
     }
