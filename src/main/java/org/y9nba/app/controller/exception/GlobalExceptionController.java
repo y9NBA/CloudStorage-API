@@ -17,7 +17,7 @@ import org.y9nba.app.exception.AbstractException;
 @Slf4j
 public class GlobalExceptionController {
     @ExceptionHandler(AbstractException.class)
-    public ResponseEntity<ErrorResponse> catchException(AbstractException e) {
+    public ResponseEntity<ErrorResponse> catchAbstractException(AbstractException e) {
         return new ResponseEntity<>(new ErrorResponse(e.getMessage()), e.getStatusCode());
     }
 
@@ -27,7 +27,7 @@ public class GlobalExceptionController {
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Response> catchRuntimeException(Exception e) {
+    public ResponseEntity<Response> catchException(Exception e) {
         return new ResponseEntity<>(new Response(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
