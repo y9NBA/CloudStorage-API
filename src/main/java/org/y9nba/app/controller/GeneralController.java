@@ -12,6 +12,7 @@ import org.springframework.boot.actuate.health.PingHealthIndicator;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.y9nba.app.dto.response.ErrorResponse;
 import org.y9nba.app.dto.response.Response;
 
 import java.util.Random;
@@ -37,7 +38,14 @@ public class GeneralController {
                             examples = @ExampleObject(value = "{\"status\": \"value\"}")
                     )
             ),
-            @ApiResponse(responseCode = "500", description = "Ошибка сервера")
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Ошибка сервера",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = "{\"message\": \"Внутрення ошибка сервера\"}")
+                    )
+            )
     })
     @GetMapping("/health")
     public Health getHealthStatus() {
@@ -58,7 +66,14 @@ public class GeneralController {
                             examples = @ExampleObject(value = "{\"message\": \"0.12345678\"}")
                     )
             ),
-            @ApiResponse(responseCode = "500", description = "Ошибка сервера")
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Ошибка сервера",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = "{\"message\": \"Внутрення ошибка сервера\"}")
+                    )
+            )
     })
     @GetMapping("/ping")
     public Response getPing() {
