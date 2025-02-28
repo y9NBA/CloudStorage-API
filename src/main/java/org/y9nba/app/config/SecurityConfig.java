@@ -98,9 +98,16 @@ public class SecurityConfig {
     private void unauthorizedResponse(HttpServletResponse response) throws IOException {
         OutputStream responseOutputStream = response.getOutputStream();
         ObjectMapper mapper = new ObjectMapper();
+
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        mapper.writeValue(responseOutputStream, new ErrorResponse(HttpStatus.UNAUTHORIZED.name()));
+        mapper.writeValue(
+                responseOutputStream,
+                new ErrorResponse(
+                        HttpStatus.UNAUTHORIZED.name(),
+                        HttpStatus.UNAUTHORIZED.value()
+                )
+        );
         responseOutputStream.flush();
     }
 

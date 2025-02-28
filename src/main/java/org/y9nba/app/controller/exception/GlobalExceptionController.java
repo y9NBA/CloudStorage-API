@@ -17,16 +17,28 @@ import org.y9nba.app.exception.AbstractException;
 public class GlobalExceptionController {
     @ExceptionHandler(AbstractException.class)
     public ResponseEntity<ErrorResponse> catchAbstractException(AbstractException e) {
-        return new ResponseEntity<>(new ErrorResponse(e.getMessage()), e.getStatusCode());
+        return new ResponseEntity<>(new ErrorResponse(e), e.getStatusCode());
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
-    public ResponseEntity<Response> catchNoResourceFoundException(NoResourceFoundException e) {
-        return new ResponseEntity<>(new Response(e.getMessage()), HttpStatus.NOT_FOUND);
+    public ResponseEntity<ErrorResponse> catchNoResourceFoundException(NoResourceFoundException e) {
+        return new ResponseEntity<>(
+                new ErrorResponse(
+                        e.getMessage(),
+                        e.getStatusCode().value()
+                ),
+                e.getStatusCode()
+        );
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Response> catchException(Exception e) {
-        return new ResponseEntity<>(new Response(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+    public ResponseEntity<ErrorResponse> catchException(Exception e) {
+        return new ResponseEntity<>(
+                new ErrorResponse(
+                        e.getMessage(),
+                        HttpStatus.INTERNAL_SERVER_ERROR.value()
+                ),
+                HttpStatus.INTERNAL_SERVER_ERROR
+        );
     }
 }
