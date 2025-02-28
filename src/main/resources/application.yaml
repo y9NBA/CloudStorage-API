@@ -29,6 +29,7 @@ spring:
 server:
   servlet:
     context-path: /api/v1/
+#  port: 80
 
 token:
   signing:
