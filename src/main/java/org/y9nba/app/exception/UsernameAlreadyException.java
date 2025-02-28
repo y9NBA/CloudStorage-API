@@ -4,6 +4,6 @@ import org.springframework.http.HttpStatus;
 
 public class UsernameAlreadyException extends AbstractException {
     public UsernameAlreadyException() {
-        super("Имя пользователя уже занято", HttpStatus.BAD_REQUEST);
+        super("Имя пользователя уже занято", HttpStatus.CONFLICT);
     }
 }

@@ -4,6 +4,6 @@ import org.springframework.http.HttpStatus;
 
 public class EmailAlreadyException extends AbstractException {
     public EmailAlreadyException() {
-        super("Такой email уже занят", HttpStatus.BAD_REQUEST);
+        super("Такой email уже занят", HttpStatus.CONFLICT);
     }
 }
