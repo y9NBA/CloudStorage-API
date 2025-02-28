@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.y9nba.app.dto.auth.TokenResponseDto;
 import org.y9nba.app.dto.auth.LoginRequestDto;
 import org.y9nba.app.dto.auth.RegistrationRequestDto;
+import org.y9nba.app.dto.response.ErrorResponse;
 import org.y9nba.app.dto.response.Response;
 import org.y9nba.app.exception.EmailAlreadyException;
 import org.y9nba.app.exception.UsernameAlreadyException;
@@ -73,6 +74,7 @@ public class AuthController {
                     responseCode = "409",
                     description = "Конфликт данных",
                     content = @Content(
+                            schema = @Schema(implementation = Response.class),
                             examples = {
                                     @ExampleObject(name = "Username conflict", value = "{\"message\": \"Имя пользователя уже занято\"}"),
                                     @ExampleObject(name = "Email conflict", value = "{\"message\": \"Такой email уже занят\"}")
@@ -122,7 +124,10 @@ public class AuthController {
             @ApiResponse(
                     responseCode = "401",
                     description = "Ошибка в данных",
-                    content = @Content(examples = @ExampleObject(value = "{\"message\": \"Неверные учетные данные пользователя\"}")))
+                    content = @Content(
+                            schema = @Schema(implementation = Response.class),
+                            examples = @ExampleObject(value = "{\"message\": \"Неверные учетные данные пользователя\"}"))
+            )
     })
     @PostMapping("/login")
     public TokenResponseDto authenticate(@RequestBody LoginRequestDto request) {
@@ -138,11 +143,17 @@ public class AuthController {
             @ApiResponse(
                     responseCode = "200",
                     description = "Токены успешно обновлены",
-                    content = @Content(schema = @Schema(implementation = TokenResponseDto.class))),
+                    content = @Content(
+                            schema = @Schema(implementation = TokenResponseDto.class))
+            ),
             @ApiResponse(
                     responseCode = "401",
                     description = "Невалидный или отсутствующий refresh токен",
-                    content = @Content(examples = @ExampleObject(value = "{\"message\": \"Refresh token invalid\"}")))
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = "{\"message\": \"UNAUTHORIZED\"}")
+                    )
+            )
     })
     @PostMapping("/refresh_token")
     public TokenResponseDto refreshToken(HttpServletRequest request, HttpServletResponse response) {
