@@ -1,5 +1,6 @@
 package org.y9nba.app.service;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.y9nba.app.constant.Role;
 import org.y9nba.app.dto.auth.RegistrationRequestDto;
@@ -21,4 +22,5 @@ public interface UserService extends UserDetailsService {
     boolean existsByUsername(String username);
     boolean existsByEmail(String email);
     boolean existsById(Long id);
+    UserDto getUserByRequest(HttpServletRequest request);
 }
