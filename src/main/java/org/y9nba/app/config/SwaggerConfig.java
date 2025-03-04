@@ -28,13 +28,13 @@ import org.springframework.context.annotation.Configuration;
                 name = "Bearer Authentication",
                 type = SecuritySchemeType.HTTP,
                 bearerFormat = "JWT",
-                scheme = "bearer"
+                scheme = "Bearer"
         ),
         @SecurityScheme(
                 name = "Refresh Token",
                 type = SecuritySchemeType.HTTP,
                 bearerFormat = "JWT",
-                scheme = "bearer"
+                scheme = "Bearer"
         )
 })
 public class SwaggerConfig {

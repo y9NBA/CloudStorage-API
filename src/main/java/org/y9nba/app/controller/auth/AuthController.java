@@ -65,6 +65,7 @@ public class AuthController {
                     responseCode = "200",
                     description = "Успешная регистрация",
                     content = @Content(
+                            mediaType = "application/json",
                             schema = @Schema(implementation = Response.class),
                             examples = @ExampleObject(
                                     value = "{\"message\": \"Регистрация прошла успешно\"}"
@@ -74,6 +75,7 @@ public class AuthController {
                     responseCode = "409",
                     description = "Конфликт данных",
                     content = @Content(
+                            mediaType = "application/json",
                             schema = @Schema(implementation = Response.class),
                             examples = {
                                     @ExampleObject(name = "Username conflict", value = "{\"message\": \"Имя пользователя уже занято\"}"),
@@ -104,6 +106,7 @@ public class AuthController {
                     description = "Учетные данные пользователя",
                     required = true,
                     content = @Content(
+                            mediaType = "application/json",
                             schema = @Schema(implementation = LoginRequestDto.class),
                             examples = @ExampleObject(
                                     value = """
@@ -120,11 +123,14 @@ public class AuthController {
             @ApiResponse(
                     responseCode = "200",
                     description = "Успешная аутентификация",
-                    content = @Content(schema = @Schema(implementation = TokenResponseDto.class))),
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = TokenResponseDto.class))),
             @ApiResponse(
                     responseCode = "401",
                     description = "Ошибка в данных",
                     content = @Content(
+                            mediaType = "application/json",
                             schema = @Schema(implementation = Response.class),
                             examples = @ExampleObject(value = "{\"message\": \"Неверные учетные данные пользователя\"}"))
             )
@@ -144,12 +150,14 @@ public class AuthController {
                     responseCode = "200",
                     description = "Токены успешно обновлены",
                     content = @Content(
+                            mediaType = "application/json",
                             schema = @Schema(implementation = TokenResponseDto.class))
             ),
             @ApiResponse(
                     responseCode = "401",
                     description = "Невалидный или отсутствующий refresh токен",
                     content = @Content(
+                            mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class),
                             examples = @ExampleObject(value = "{\"message\": \"UNAUTHORIZED\"}")
                     )

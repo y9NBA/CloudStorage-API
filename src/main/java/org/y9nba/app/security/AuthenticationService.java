@@ -12,6 +12,7 @@ import org.y9nba.app.dto.auth.TokenResponseDto;
 import org.y9nba.app.dto.auth.LoginRequestDto;
 import org.y9nba.app.dto.auth.RegistrationRequestDto;
 import org.y9nba.app.dto.user.UserCreateDto;
+import org.y9nba.app.dto.user.UserDto;
 import org.y9nba.app.exception.UnAuthorizedException;
 import org.y9nba.app.model.TokenModel;
 import org.y9nba.app.model.UserModel;
@@ -105,13 +106,7 @@ public class AuthenticationService {
 
     public TokenResponseDto refreshToken(HttpServletRequest request, HttpServletResponse response) {
 
-        String authorizationHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
-
-        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-            throw new UnAuthorizedException();
-        }
-
-        String token = authorizationHeader.substring(7);
+        String token = jwtService.getTokenByRequest(request);
         String username = jwtService.extractUsername(token);
 
         UserModel user = userService.getByUsername(username);
@@ -130,5 +125,12 @@ public class AuthenticationService {
         }
 
         throw new UnAuthorizedException();
+    }
+
+    public UserDto getUserInfo(HttpServletRequest request) {
+        String token = jwtService.getTokenByRequest(request);
+        String username = jwtService.extractUsername(token);
+
+        return new UserDto(userService.getByUsername(username));
     }
 }

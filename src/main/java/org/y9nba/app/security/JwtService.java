@@ -6,9 +6,12 @@ import io.jsonwebtoken.JwtParserBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.y9nba.app.exception.UnAuthorizedException;
 import org.y9nba.app.model.UserModel;
 import org.y9nba.app.repository.TokenRepository;
 
@@ -113,5 +116,15 @@ public class JwtService {
         byte[] keyBytes = Decoders.BASE64URL.decode(secretKey);
 
         return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    public String getTokenByRequest(HttpServletRequest request) {
+        String authorizationHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            throw new UnAuthorizedException();
+        }
+
+        return authorizationHeader.substring(7);
     }
 }
