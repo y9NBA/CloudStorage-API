@@ -142,8 +142,7 @@ public class AuthController {
 
     @Operation(
             summary = "Обновление токена",
-            description = "Генерация новой пары access/refresh токенов по валидному refresh токену",
-            security = @SecurityRequirement(name = "Refresh Token")
+            description = "Генерация новой пары access/refresh токенов по валидному refresh токену"
     )
     @ApiResponses({
             @ApiResponse(

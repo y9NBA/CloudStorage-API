@@ -29,12 +29,6 @@ import org.springframework.context.annotation.Configuration;
                 type = SecuritySchemeType.HTTP,
                 bearerFormat = "JWT",
                 scheme = "Bearer"
-        ),
-        @SecurityScheme(
-                name = "Refresh Token",
-                type = SecuritySchemeType.HTTP,
-                bearerFormat = "JWT",
-                scheme = "Bearer"
         )
 })
 public class SwaggerConfig {
@@ -43,7 +37,6 @@ public class SwaggerConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .addSecurityItem(new SecurityRequirement()
-                        .addList("Bearer Authentication")
-                        .addList("Refresh Token"));
+                        .addList("Bearer Authentication"));
     }
 }
