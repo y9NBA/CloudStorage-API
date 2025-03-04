@@ -1,5 +1,6 @@
 package org.y9nba.app.service.impl;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,7 @@ import org.y9nba.app.exception.NotFoundEntryException;
 import org.y9nba.app.model.UserModel;
 import org.y9nba.app.model.UserRoleModel;
 import org.y9nba.app.repository.UserRepository;
+import org.y9nba.app.security.JwtService;
 import org.y9nba.app.service.UserService;
 
 import java.util.Set;
@@ -24,10 +26,12 @@ public class UserServiceImpl implements UserService {
     private final UserRepository repository;
 
     private final UserRoleServiceImpl userRoleService;
+    private final JwtService jwtService;
 
-    public UserServiceImpl(UserRepository repository, UserRoleServiceImpl userRoleService) {
+    public UserServiceImpl(UserRepository repository, UserRoleServiceImpl userRoleService, JwtService jwtService) {
         this.repository = repository;
         this.userRoleService = userRoleService;
+        this.jwtService = jwtService;
     }
 
     @Override
@@ -112,6 +116,14 @@ public class UserServiceImpl implements UserService {
     @Override
     public boolean existsById(Long id) {
         return repository.existsById(id);
+    }
+
+    @Override
+    public UserDto getUserByRequest(HttpServletRequest request) {
+        String token = jwtService.getTokenByRequest(request);
+        String username = jwtService.extractUsername(token);
+
+        return new UserDto(getByUsername(username));
     }
 
     @Override
