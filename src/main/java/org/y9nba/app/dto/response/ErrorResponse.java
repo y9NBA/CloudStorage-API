@@ -9,17 +9,10 @@ import java.time.LocalDateTime;
 @Getter
 public class ErrorResponse extends Response {
 
-    @Schema(description = "Код статуса возникшей ошибки", example = "404")
+    @Schema(description = "Код статус возникшей ошибки", example = "404")
     private final int statusCode;
 
-    public ErrorResponse(
-            @Schema(
-                    description = "Описание ошибки, сообщение об ошибке",
-                    example = "Not found"
-            )
-            String message,
-            int statusCode
-    ) {
+    public ErrorResponse(String message, int statusCode) {
         super(message);
         this.statusCode = statusCode;
     }
