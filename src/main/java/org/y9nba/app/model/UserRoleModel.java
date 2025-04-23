@@ -16,7 +16,7 @@ public class UserRoleModel {
     @EmbeddedId
     private UserRoleId id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("userId")
     @JoinColumn(name = "user_id", nullable = false)
     private UserModel user;

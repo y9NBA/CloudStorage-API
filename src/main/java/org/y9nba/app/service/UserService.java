@@ -1,21 +1,21 @@
 package org.y9nba.app.service;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.y9nba.app.constant.Role;
-import org.y9nba.app.dto.auth.RegistrationRequestDto;
-import org.y9nba.app.dto.user.UserCreateDto;
-import org.y9nba.app.dto.user.UserDto;
-import org.y9nba.app.dto.user.UserUpdateDto;
+import org.y9nba.app.dto.user.*;
 import org.y9nba.app.model.UserModel;
 
 import java.util.Set;
 
-public interface UserService extends UserDetailsService {
-    UserDto saveWithManyRoles(UserCreateDto dto, Set<Role> role);
-    UserDto saveWithOneRole(UserCreateDto dto, Role role);
-    UserDto update(Long id, UserUpdateDto dto);
+public interface UserService {
+    void saveWithManyRoles(UserCreateDto dto, Set<Role> role);
+    void saveWithOneRole(UserCreateDto dto, Role role);
+    void update(String username, UserUpdatePasswordDto dto);
+    void update(String username, UserUpdateEmailDto dto);
+    void update(String username, UserUpdateUsernameDto dto);
+    void update(String username, UserUpdateDto dto);
     boolean deleteById(Long id);
+    boolean deleteByUsername(String username);
     UserModel getByUsername(String username);
     UserModel getByEmail(String email);
     UserModel getById(Long id);

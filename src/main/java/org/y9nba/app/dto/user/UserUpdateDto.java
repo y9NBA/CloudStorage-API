@@ -1,5 +1,6 @@
 package org.y9nba.app.dto.user;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -16,14 +17,10 @@ import java.util.stream.Collectors;
 @Setter
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
 public class UserUpdateDto {
     private String username;
-    private String password;
+    private String oldPassword;
+    private String newPassword;
     private String email;
-
-    public UserUpdateDto(UserModel model) {
-        this.username = model.getUsername();
-        this.password = model.getPassword();
-        this.email = model.getEmail();
-    }
 }

@@ -25,6 +25,9 @@ spring:
       hibernate:
         format_sql: true
     open-in-view: false
+  servlet:
+    multipart:
+      max-file-size: 50MB
 
 server:
   servlet:
@@ -36,3 +39,9 @@ token:
     key: token
     access_token: 36000000 # 10 hours
     refresh_token: 252000000 # 7 days
+
+minio:
+  access:
+    name: minioadmin
+    secret: minioadmin
+  url: http://localhost:9000

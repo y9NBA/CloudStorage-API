@@ -5,13 +5,12 @@ import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.y9nba.app.dto.auth.RegistrationRequestDto;
 import org.y9nba.app.dto.user.UserCreateDto;
-import org.y9nba.app.dto.user.UserUpdateDto;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Entity
@@ -32,6 +31,9 @@ public class UserModel implements UserDetails {
 
     @Column(unique = true, nullable = false)
     private String email;
+
+    @Column(unique = true, nullable = false)
+    private UUID bucketName;
 
     @Column(name = "storage_limit", nullable = false)
     private Long storageLimit = 1073741824L;    // 1gb in byte
@@ -57,17 +59,11 @@ public class UserModel implements UserDetails {
     @OneToMany(mappedBy = "user", fetch = FetchType.EAGER)
     private Set<TokenModel> tokens;
 
-    public UserModel(UserUpdateDto dto) {
-        this.username = dto.getUsername();
-        this.password = dto.getPassword();
-        this.email = dto.getEmail();
-
-    }
-
     public UserModel(UserCreateDto dto) {
         this.username = dto.getUsername();
         this.password = dto.getHashPassword();
         this.email = dto.getEmail();
+        this.bucketName = UUID.randomUUID();
     }
 
     @Override
@@ -99,5 +95,9 @@ public class UserModel implements UserDetails {
     @Override
     public boolean isEnabled() {
         return UserDetails.super.isEnabled();
+    }
+
+    public String getBucketName() {
+        return bucketName.toString();
     }
 }

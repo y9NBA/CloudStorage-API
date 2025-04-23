@@ -4,12 +4,15 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.y9nba.app.dto.response.ErrorResponse;
 import org.y9nba.app.dto.user.UserDto;
 import org.y9nba.app.exception.UnAuthorizedException;
+import org.y9nba.app.model.UserModel;
 import org.y9nba.app.service.impl.UserServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -51,7 +54,7 @@ public class UserInfoController {
                     ))
     })
     @GetMapping("/profile")
-    public UserDto getUserProfileInfo(HttpServletRequest request) {
-        return userService.getUserByRequest(request);
+    public UserDto getUserProfileInfo(@AuthenticationPrincipal UserModel user) {
+        return new UserDto(userService.getById(user.getId()));
     }
 }

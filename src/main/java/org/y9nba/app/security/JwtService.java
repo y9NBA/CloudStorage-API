@@ -38,26 +38,26 @@ public class JwtService {
     }
 
 
-    public boolean isValid(String token, UserDetails user) {
+    public boolean isValid(String token, UserModel user) {
 
-        String username = extractUsername(token);
+        String userIdAsString = extractUserId(token);
 
         boolean isValidToken = tokenRepository.findByAccessToken(token)
                 .map(t -> !t.isLoggedOut()).orElse(false);
 
-        return username.equals(user.getUsername())
+        return userIdAsString.equals(user.getId().toString())
                 && isAccessTokenExpired(token)
                 && isValidToken;
     }
 
     public boolean isValidRefresh(String token, UserModel user) {
 
-        String username = extractUsername(token);
+        String userIdAsString = extractUserId(token);
 
         boolean isValidRefreshToken = tokenRepository.findByRefreshToken(token)
                 .map(t -> !t.isLoggedOut()).orElse(false);
 
-        return username.equals(user.getUsername())
+        return userIdAsString.equals(user.getId().toString())
                 && isAccessTokenExpired(token)
                 && isValidRefreshToken;
     }
@@ -69,6 +69,10 @@ public class JwtService {
 
     private Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
+    }
+
+    public String extractUserId(String token) {
+        return extractClaim(token, Claims::getId);
     }
 
     public String extractUsername(String token) {
@@ -103,6 +107,7 @@ public class JwtService {
 
     private String generateToken(UserModel user, long expiryTime) {
         JwtBuilder builder = Jwts.builder()
+                .setId(String.valueOf(user.getId()))
                 .setSubject(user.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expiryTime))
@@ -126,5 +131,10 @@ public class JwtService {
         }
 
         return authorizationHeader.substring(7);
+    }
+
+    public String getUsernameByAuthRequest(HttpServletRequest request) {
+        String token = getTokenByRequest(request);
+        return extractUsername(token);
     }
 }

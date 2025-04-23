@@ -17,6 +17,9 @@ databaseChangeLog:
                   name: email
                   value: 'johndoe@example.com'
               - column:
+                  name: bucket_name
+                  value: 'da77c9ef-70f7-4b6a-a6c8-f3f521274d6f'
+              - column:
                   name: storage_limit
                   value: '10485760'
 

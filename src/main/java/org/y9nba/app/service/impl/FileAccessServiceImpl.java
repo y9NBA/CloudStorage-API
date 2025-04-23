@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpStatusCodeException;
+import org.y9nba.app.dto.fileaccess.FileAccessCreateDto;
 import org.y9nba.app.dto.fileaccess.FileAccessDto;
 import org.y9nba.app.dto.user.UserDto;
 import org.y9nba.app.model.FileAccessModel;
@@ -22,12 +23,12 @@ public class FileAccessServiceImpl implements FileAccessService {
     }
 
     @Override
-    public FileAccessDto save(FileAccessDto entity) {
-        return null;
+    public FileAccessModel save(FileAccessCreateDto entity) {
+        return repository.save(new FileAccessModel(entity));
     }
 
     @Override
-    public void delete(FileAccessDto entity) {
+    public void delete(FileAccessModel entity) {
 
     }
 
@@ -37,15 +38,12 @@ public class FileAccessServiceImpl implements FileAccessService {
     }
 
     @Override
-    public FileAccessDto findById(Long id) {
-        FileAccessModel model =
-                repository
-                        .findById(id)
-                        .orElseThrow(
-                                () -> new HttpClientErrorException(HttpStatus.BAD_REQUEST)
-                        );
-
-        return new FileAccessDto(model);
+    public FileAccessModel findById(Long id) {
+        return repository
+                .findById(id)
+                .orElseThrow(
+                        () -> new HttpClientErrorException(HttpStatus.BAD_REQUEST)
+                );
     }
 
     @Override

@@ -25,7 +25,7 @@ public class TokenModel {
     @Column(name = "is_logged_out")
     private boolean loggedOut;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private UserModel user;
 }
