@@ -3,7 +3,7 @@ package org.y9nba.app.service.impl;
 import org.springframework.stereotype.Service;
 import org.y9nba.app.dto.file.FIleCreateDto;
 import org.y9nba.app.dto.file.FileDto;
-import org.y9nba.app.dto.user.UserDto;
+import org.y9nba.app.model.FileModel;
 import org.y9nba.app.repository.FileRepository;
 import org.y9nba.app.service.FileService;
 
@@ -19,12 +19,12 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public FileDto save(FIleCreateDto entity) {
+    public FileModel save(FIleCreateDto entity) {
         return null;
     }
 
     @Override
-    public void delete(FileDto entity) {
+    public void delete(FileModel entity) {
 
     }
 
@@ -34,8 +34,8 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public FileDto findById(Long id) {
-        return new FileDto();
+    public FileModel findById(Long id) {
+        return null;
     }
 
     @Override
