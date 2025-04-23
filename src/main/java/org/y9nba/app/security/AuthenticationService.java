@@ -18,6 +18,7 @@ import org.y9nba.app.model.TokenModel;
 import org.y9nba.app.model.UserModel;
 import org.y9nba.app.repository.TokenRepository;
 import org.y9nba.app.service.impl.UserServiceImpl;
+import org.y9nba.app.util.PasswordUtil;
 
 import java.util.Set;
 
@@ -28,7 +29,7 @@ public class AuthenticationService {
 
     private final JwtService jwtService;
 
-    private final PasswordEncoder passwordEncoder;
+    private final PasswordUtil passwordUtil;
 
     private final AuthenticationManager authenticationManager;
 
@@ -37,12 +38,12 @@ public class AuthenticationService {
 
     public AuthenticationService(UserServiceImpl userService,
                                  JwtService jwtService,
-                                 PasswordEncoder passwordEncoder,
+                                 PasswordUtil passwordUtil,
                                  AuthenticationManager authenticationManager,
                                  TokenRepository tokenRepository) {
         this.userService = userService;
         this.jwtService = jwtService;
-        this.passwordEncoder = passwordEncoder;
+        this.passwordUtil = passwordUtil;
         this.authenticationManager = authenticationManager;
         this.tokenRepository = tokenRepository;
     }
@@ -52,7 +53,7 @@ public class AuthenticationService {
         UserCreateDto userCreateDto = new UserCreateDto(
                 request.getUsername(),
                 request.getEmail(),
-                passwordEncoder.encode(request.getPassword())
+                passwordUtil.encode(request.getPassword())
         );
 
         userService.saveWithOneRole(userCreateDto, Role.ROLE_USER);
@@ -105,9 +106,8 @@ public class AuthenticationService {
     }
 
     public TokenResponseDto refreshToken(HttpServletRequest request, HttpServletResponse response) {
-
         String token = jwtService.getTokenByRequest(request);
-        String username = jwtService.extractUsername(token);
+        String username = jwtService.getUsernameByAuthRequest(request);
 
         UserModel user = userService.getByUsername(username);
 
@@ -125,12 +125,5 @@ public class AuthenticationService {
         }
 
         throw new UnAuthorizedException();
-    }
-
-    public UserDto getUserInfo(HttpServletRequest request) {
-        String token = jwtService.getTokenByRequest(request);
-        String username = jwtService.extractUsername(token);
-
-        return new UserDto(userService.getByUsername(username));
     }
 }
