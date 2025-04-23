@@ -31,6 +31,13 @@ databaseChangeLog:
                     unique: true
                     nullable: false
               - column:
+                  name: bucket_name
+                  type: UUID
+                  defaultValue: gen_random_uuid()
+                  constraints:
+                    unique: true
+                    nullable: false
+              - column:
                   name: created_at
                   type: timestamp
                   defaultValue: now()
@@ -39,6 +46,7 @@ databaseChangeLog:
               - column:
                   name: storage_limit
                   type: bigint
+                  defaultValue: '1073741824'
                   constraints:
                     nullable: false
               - column:
