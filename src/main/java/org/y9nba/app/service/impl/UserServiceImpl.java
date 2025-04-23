@@ -1,21 +1,17 @@
 package org.y9nba.app.service.impl;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.y9nba.app.constant.Role;
-import org.y9nba.app.dto.auth.RegistrationRequestDto;
-import org.y9nba.app.dto.user.UserCreateDto;
-import org.y9nba.app.dto.user.UserDto;
-import org.y9nba.app.dto.user.UserUpdateDto;
+import org.y9nba.app.dto.user.*;
 import org.y9nba.app.dto.userrole.UserRoleCreateDto;
-import org.y9nba.app.exception.NotFoundEntryException;
+import org.y9nba.app.exception.*;
 import org.y9nba.app.model.UserModel;
 import org.y9nba.app.model.UserRoleModel;
 import org.y9nba.app.repository.UserRepository;
 import org.y9nba.app.security.JwtService;
 import org.y9nba.app.service.UserService;
+import org.y9nba.app.util.PasswordUtil;
 
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -27,15 +23,17 @@ public class UserServiceImpl implements UserService {
 
     private final UserRoleServiceImpl userRoleService;
     private final JwtService jwtService;
+    private final PasswordUtil passwordUtil;
 
-    public UserServiceImpl(UserRepository repository, UserRoleServiceImpl userRoleService, JwtService jwtService) {
+    public UserServiceImpl(UserRepository repository, UserRoleServiceImpl userRoleService, JwtService jwtService, PasswordUtil passwordUtil) {
         this.repository = repository;
         this.userRoleService = userRoleService;
         this.jwtService = jwtService;
+        this.passwordUtil = passwordUtil;
     }
 
     @Override
-    public UserDto saveWithManyRoles(UserCreateDto dto, Set<Role> roles) {
+    public void saveWithManyRoles(UserCreateDto dto, Set<Role> roles) {
         UserModel model = repository.save(new UserModel(dto));
 
         Set<UserRoleModel> roleModels = userRoleService.saveAll(
@@ -43,37 +41,78 @@ public class UserServiceImpl implements UserService {
                         e -> new UserRoleCreateDto(model, e)
                 ).collect(Collectors.toSet())
         );
-
-        model.setUserRoles(roleModels);
-
-        return new UserDto(model);
     }
 
     @Override
-    public UserDto saveWithOneRole(UserCreateDto dto, Role role) {
+    public void saveWithOneRole(UserCreateDto dto, Role role) {
         UserModel model = repository.save(new UserModel(dto));
-        UserRoleModel roleModel = userRoleService.save(new UserRoleCreateDto(model, role));
-
-        model.setUserRoles(Set.of(roleModel));
-
-        return new UserDto(model);
+        userRoleService.save(new UserRoleCreateDto(model, role));
     }
 
     @Override
-    public UserDto update(Long id, UserUpdateDto entity) {
-        UserModel model = this.getById(id);
+    public void update(String username, UserUpdatePasswordDto dto) {
+        UserModel model = getByUsername(username);
 
-        model.setUsername(entity.getUsername());
-        model.setEmail(entity.getEmail());
-        model.setPassword(entity.getPassword());
+        if(!passwordUtil.matches(dto.getOldPassword(), model.getPassword())) {
+            throw new PasswordIncorrectException();
+        }
 
-        return new UserDto(repository.save(model));
+        if(!passwordUtil.matches(dto.getNewPassword(), model.getPassword())) {
+            throw new PasswordDuplicateException();
+        }
+
+        model.setPassword(passwordUtil.encode(dto.getNewPassword()));
+
+        repository.save(model);
+    }
+
+    @Override
+    public void update(String username, UserUpdateEmailDto dto) {
+        UserModel model = getByUsername(username);
+
+        if(dto.getEmail().equals(model.getEmail())) {
+            throw new EmailDuplicateException();
+        }
+
+        if(existsByEmail(dto.getEmail())) {
+            throw new EmailAlreadyException();
+        }
+
+        repository.save(model);
+    }
+
+    @Override
+    public void update(String username, UserUpdateUsernameDto dto) {
+        UserModel model = getByUsername(username);
+
+        if(dto.getUsername().equals(model.getUsername())) {
+            throw new UsernameDuplicateException();
+        }
+
+        if(existsByUsername(dto.getUsername())) {
+            throw new UsernameAlreadyException();
+        }
+
+         repository.save(model);
+    }
+
+    @Override
+    public void update(String username, UserUpdateDto dto) {
+        update(username, new UserUpdateEmailDto(dto.getEmail()));
+        update(username, new UserUpdatePasswordDto(dto.getOldPassword(), dto.getNewPassword()));
+        update(username, new UserUpdateUsernameDto(dto.getUsername()));
     }
 
     @Override
     public boolean deleteById(Long id) {
         repository.deleteById(id);
         return !this.existsById(id);
+    }
+
+    @Override
+    public boolean deleteByUsername(String username) {
+        repository.delete(this.getByUsername(username));
+        return !this.existsByUsername(username);
     }
 
     @Override
@@ -120,18 +159,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto getUserByRequest(HttpServletRequest request) {
-        String token = jwtService.getTokenByRequest(request);
-        String username = jwtService.extractUsername(token);
+        String username = jwtService.getUsernameByAuthRequest(request);
 
         return new UserDto(getByUsername(username));
-    }
-
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return repository
-                .findByUsername(username)
-                .orElseThrow(
-                        () -> new NotFoundEntryException("Not found user by username: " + username)
-                );
     }
 }
