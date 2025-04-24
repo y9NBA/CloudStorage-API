@@ -5,7 +5,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.y9nba.app.dto.auditlog.AuditLogCreateDto;
 import org.y9nba.app.dto.auditlog.AuditLogDto;
-import org.y9nba.app.dto.user.UserDto;
 import org.y9nba.app.model.AuditLogModel;
 import org.y9nba.app.repository.AuditLogRepository;
 import org.y9nba.app.service.AuditLogService;
