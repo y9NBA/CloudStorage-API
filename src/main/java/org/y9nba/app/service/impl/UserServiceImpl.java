@@ -1,6 +1,5 @@
 package org.y9nba.app.service.impl;
 
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
 import org.y9nba.app.constant.Role;
 import org.y9nba.app.dto.user.*;
@@ -50,8 +49,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void update(String username, UserUpdatePasswordDto dto) {
-        UserModel model = getByUsername(username);
+    public void update(Long userId, UserUpdatePasswordDto dto) {
+        UserModel model = getById(userId);
 
         if(!passwordUtil.matches(dto.getOldPassword(), model.getPassword())) {
             throw new PasswordIncorrectException();
@@ -67,8 +66,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void update(String username, UserUpdateEmailDto dto) {
-        UserModel model = getByUsername(username);
+    public void update(Long userId, UserUpdateEmailDto dto) {
+        UserModel model = getById(userId);
 
         if(dto.getEmail().equals(model.getEmail())) {
             throw new EmailDuplicateException();
@@ -78,12 +77,14 @@ public class UserServiceImpl implements UserService {
             throw new EmailAlreadyException();
         }
 
+        model.setEmail(dto.getEmail());
+
         repository.save(model);
     }
 
     @Override
-    public void update(String username, UserUpdateUsernameDto dto) {
-        UserModel model = getByUsername(username);
+    public void update(Long userId, UserUpdateUsernameDto dto) {
+        UserModel model = getById(userId);
 
         if(dto.getUsername().equals(model.getUsername())) {
             throw new UsernameDuplicateException();
@@ -93,14 +94,16 @@ public class UserServiceImpl implements UserService {
             throw new UsernameAlreadyException();
         }
 
-         repository.save(model);
+        model.setUsername(dto.getUsername());
+
+        repository.save(model);
     }
 
     @Override
-    public void update(String username, UserUpdateDto dto) {
-        update(username, new UserUpdateEmailDto(dto.getEmail()));
-        update(username, new UserUpdatePasswordDto(dto.getOldPassword(), dto.getNewPassword()));
-        update(username, new UserUpdateUsernameDto(dto.getUsername()));
+    public void update(Long userId, UserUpdateDto dto) {
+        update(userId, new UserUpdateEmailDto(dto.getEmail()));
+        update(userId, new UserUpdatePasswordDto(dto.getOldPassword(), dto.getNewPassword()));
+        update(userId, new UserUpdateUsernameDto(dto.getUsername()));
     }
 
     @Override
@@ -155,12 +158,5 @@ public class UserServiceImpl implements UserService {
     @Override
     public boolean existsById(Long id) {
         return repository.existsById(id);
-    }
-
-    @Override
-    public UserDto getUserByRequest(HttpServletRequest request) {
-        String username = jwtService.getUsernameByAuthRequest(request);
-
-        return new UserDto(getByUsername(username));
     }
 }

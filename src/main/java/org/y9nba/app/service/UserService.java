@@ -10,10 +10,10 @@ import java.util.Set;
 public interface UserService {
     void saveWithManyRoles(UserCreateDto dto, Set<Role> role);
     void saveWithOneRole(UserCreateDto dto, Role role);
-    void update(String username, UserUpdatePasswordDto dto);
-    void update(String username, UserUpdateEmailDto dto);
-    void update(String username, UserUpdateUsernameDto dto);
-    void update(String username, UserUpdateDto dto);
+    void update(Long userId, UserUpdatePasswordDto dto);
+    void update(Long userId, UserUpdateEmailDto dto);
+    void update(Long userId, UserUpdateUsernameDto dto);
+    void update(Long userId, UserUpdateDto dto);
     boolean deleteById(Long id);
     boolean deleteByUsername(String username);
     UserModel getByUsername(String username);
@@ -22,5 +22,4 @@ public interface UserService {
     boolean existsByUsername(String username);
     boolean existsByEmail(String email);
     boolean existsById(Long id);
-    UserDto getUserByRequest(HttpServletRequest request);
 }
