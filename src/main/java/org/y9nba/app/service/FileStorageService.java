@@ -9,18 +9,18 @@ import java.io.InputStream;
 import java.util.Set;
 
 public interface FileStorageService {
-    FileModel uploadFile(String username, MultipartFile file);
-    FileModel uploadFile(String username, MultipartFile file, String folderURL);
-    InputStream downloadFile(String username, String fileName);
-    InputStream downloadFile(String username, String fileName, String folderURL);
+    FileModel uploadFile(Long userId, MultipartFile file);
+    FileModel uploadFile(Long userId, MultipartFile file, String folderURL);
+    InputStream downloadFile(Long userId, String fileName);
+    InputStream downloadFile(Long userId, String fileName, String folderURL);
     FileModel save(FileCreateDto dto);
     FileModel update(FileUpdateDto dto);
-    void deleteFile(String username, String fileName);
-    void deleteFile(String username, String fileName, String folderURL);
+    void deleteFile(Long userId, String fileName);
+    void deleteFile(Long userId, String fileName, String folderURL);
     void deleteById(Long id);
     FileModel findById(Long id);
-    FileModel findByUsernameAndUrl(String username, String url);
+    FileModel findByUserIdAndUrl(Long userId, String url);
     boolean existsByURL(String url);
-    Set<FileModel> findByUsername(String username);
-    Set<FileModel> findByUsernameAndFolderUrl(String username, String folderURL);
+    Set<FileModel> findByUserId(Long userId);
+    Set<FileModel> findByUserIdAndFolderUrl(Long userId, String folderURL);
 }

@@ -2,7 +2,6 @@ package org.y9nba.app.service.impl;
 
 import io.minio.*;
 import io.minio.messages.Bucket;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,8 +24,20 @@ public class StorageServiceImpl implements StorageService {
 
     @Override
     public void uploadFile(MultipartFile file, String bucketName) {
+        uploadFile(file, bucketName, null);
+    }
+
+    @Override
+    public void uploadFile(MultipartFile file, String bucketName, String folderUrl) {
         String fileName = file.getOriginalFilename();
         InputStream inputStream;
+        String objectName;
+
+        if (folderUrl == null) {
+            objectName = fileName;
+        } else {
+            objectName = folderUrl + "/" + fileName;
+        }
 
         createBucket(bucketName);
 
@@ -35,7 +46,7 @@ public class StorageServiceImpl implements StorageService {
 
             PutObjectArgs objectArgs = PutObjectArgs.builder()
                     .bucket(bucketName)
-                    .object(fileName)
+                    .object(objectName)
                     .stream(inputStream, file.getSize(), -1)
                     .contentType(file.getContentType())
                     .build();
@@ -47,19 +58,17 @@ public class StorageServiceImpl implements StorageService {
     }
 
     @Override
-    public InputStream downloadFile(FileModel fileModel, String bucketName) {
-        String correctUrl = fileModel.getUrl();
-        correctUrl = correctUrl.substring(correctUrl.indexOf("/") + 1);     // Отрезаю часть с названием bucket
-
-        return downloadFileByUrl(bucketName, correctUrl);
+    public InputStream downloadFile(String bucketName, FileModel fileModel) {
+        return downloadFileByUrl(bucketName, getCorrectUrl(fileModel.getUrl()));
     }
 
     @Override
-    public InputStream downloadFile(String fileName, String bucketName) {
+    public InputStream downloadFile(String bucketName, String fileName) {
         return downloadFileByUrl(bucketName, fileName);
     }
 
-    private InputStream downloadFileByUrl(String bucketName, String fileURL) {
+    @Override
+    public InputStream downloadFileByUrl(String bucketName, String fileURL) {
         try {
             GetObjectArgs getArgs = GetObjectArgs.builder().bucket(bucketName).object(fileURL).build();
             return minioClient.getObject(getArgs);
@@ -69,15 +78,13 @@ public class StorageServiceImpl implements StorageService {
     }
 
     @Override
-    public void downloadManyFiles(List<FileModel> fileModels, String username) {
+    public void downloadManyFiles(String username, List<FileModel> fileModels) {
 
     }
 
     public void createBucket(String bucketName) {
         try {
-            if (bucketExists(bucketName)) {
-                return;
-            } else {
+            if (!bucketExists(bucketName))  {
                 minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
             }
         } catch (Exception e) {
@@ -91,11 +98,14 @@ public class StorageServiceImpl implements StorageService {
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
         }
-
     }
 
     @SneakyThrows
     public boolean bucketExists(String bucketName) {
         return minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
+    }
+
+    private String getCorrectUrl(String url) {
+        return url.substring(url.indexOf("/") + 1);    // Отрезаю часть с названием bucket пользователя
     }
 }

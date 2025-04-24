@@ -15,6 +15,7 @@ import org.y9nba.app.model.UserModel;
 import org.y9nba.app.repository.FileRepository;
 import org.y9nba.app.service.FileStorageService;
 
+import java.io.File;
 import java.io.InputStream;
 import java.util.Set;
 
@@ -37,24 +38,35 @@ public class FileStorageServiceImpl implements FileStorageService {
 
     @Transactional
     @Override
-    public FileModel uploadFile(String username, MultipartFile file) {
-        return uploadFile(username, file, null);
+    public FileModel uploadFile(Long userId, MultipartFile file) {
+        return uploadFile(userId, file, null);
     }
 
     @Transactional
     @Override
-    public FileModel uploadFile(String username, MultipartFile file, String folderURL) {
-        UserModel userModel = getUserByUsername(username);
+    public FileModel uploadFile(Long userId, MultipartFile file, String folderURL) {
+        UserModel userModel = userService.getById(userId);
         String url;
+        Long fileId;
 
-        storageService.uploadFile(file, userModel.getBucketName());
+        storageService.uploadFile(file, userModel.getBucketName(), folderURL);
 
         if (folderURL == null) {
-            url = createAbsFileURL(username, file.getOriginalFilename());
+            url = createAbsFileURL(userId, file.getOriginalFilename());
         } else {
-            url = createAbsFileURL(username, folderURL, file.getOriginalFilename());
+            url = createAbsFileURL(userId, folderURL, file.getOriginalFilename());
         }
 
+        if(repository.existsByUrl(url)) {
+            fileId = updateExisting(file, url, userModel);
+        } else {
+            fileId = createNew(file, url, userModel);
+        }
+
+        return findById(fileId);
+    }
+
+    private Long createNew(MultipartFile file, String url, UserModel userModel) {
         FileCreateDto fileCreateDto = getFileCreateDtoByFileAndUser(file, url, userModel);
 
         FileModel fileModel = this.save(fileCreateDto);
@@ -65,15 +77,29 @@ public class FileStorageServiceImpl implements FileStorageService {
         auditLogService.save(auditLogCreateDto);
         fileAccessService.save(fileAccessCreateDto);
 
-        return findById(fileModel.getId());
+        return fileModel.getId();
+    }
+
+    private Long updateExisting(MultipartFile file, String url, UserModel userModel) {
+        FileUpdateDto fileUpdateDto = getFileUpdateDtoByFileAndUser(file, url, userModel);
+
+        fileUpdateDto.setFileSize(file.getSize());
+
+        FileModel fileModel = this.update(fileUpdateDto);
+
+        AuditLogCreateDto auditLogCreateDto = new AuditLogCreateDto(userModel, fileModel, Action.ACTION_UPDATE);
+
+        auditLogService.save(auditLogCreateDto);
+
+        return fileModel.getId();
     }
 
     @Override
-    public InputStream downloadFile(String username, String fileName) {
-        UserModel userModel = userService.getByUsername(username);
+    public InputStream downloadFile(Long userId, String fileName) {
+        UserModel userModel = userService.getById(userId);    // TODO сделать проверку доступа к файлу
 
         FileModel fileModel = repository
-                .getFileModelsByUser_Username(username)
+                .getFileModelsByUser_Id(userId)
                 .stream().filter(f -> f.getFileName().equals(fileName))
                 .findFirst()
                 .orElseThrow(
@@ -84,7 +110,7 @@ public class FileStorageServiceImpl implements FileStorageService {
     }
 
     @Override
-    public InputStream downloadFile(String username, String fileName, String folderURL) {
+    public InputStream downloadFile(Long userId, String fileName, String folderURL) {
         return null;
     }
 
@@ -99,24 +125,24 @@ public class FileStorageServiceImpl implements FileStorageService {
     }
 
     @Override
-    public void deleteFile(String username, String fileName) {
+    public void deleteFile(Long userId, String fileName) {
         repository.delete(
-                this.findByUsernameAndUrl(
-                        username,
+                this.findByUserIdAndUrl(
+                        userId,
                         createAbsFileURL(
-                                username, fileName
+                                userId, fileName
                         )
                 )
         );
     }
 
     @Override
-    public void deleteFile(String username, String fileName, String folderURL) {
+    public void deleteFile(Long userId, String fileName, String folderURL) {
         repository.delete(
-                this.findByUsernameAndUrl(
-                        username,
+                this.findByUserIdAndUrl(
+                        userId,
                         createAbsFileURL(
-                                username, folderURL, fileName
+                                userId, folderURL, fileName
                         )
                 )
         );
@@ -137,9 +163,9 @@ public class FileStorageServiceImpl implements FileStorageService {
     }
 
     @Override
-    public FileModel findByUsernameAndUrl(String username, String url) {
+    public FileModel findByUserIdAndUrl(Long userId, String url) {
         return repository
-                .getFileModelByUser_UsernameAndUrl(username, url)
+                .getFileModelByUser_IdAndUrl(userId, url)
                 .orElseThrow(
                         () -> new NotFoundEntryException("Not found file by url: " + url)
                 );
@@ -151,34 +177,30 @@ public class FileStorageServiceImpl implements FileStorageService {
     }
 
     @Override
-    public Set<FileModel> findByUsername(String username) {
-        return repository.getFileModelsByUser_Username(username);
+    public Set<FileModel> findByUserId(Long userId) {
+        return repository.getFileModelsByUser_Id(userId);
     }
 
     @Override
-    public Set<FileModel> findByUsernameAndFolderUrl(String username, String folderURL) {
+    public Set<FileModel> findByUserIdAndFolderUrl(Long userId, String folderURL) {
         return repository
-                .getFileModelsByUser_UsernameAndUrlContaining(
-                        username,
-                        getBucketNameByUsername(username) + "/" + folderURL
+                .getFileModelsByUser_IdAndUrlContaining(
+                        userId,
+                        getBucketNameByUserId(userId) + "/" + folderURL
                 );
     }
 
-    private UserModel getUserByUsername(String username) {
-        return userService.getByUsername(username);
+    private String getBucketNameByUserId(Long userId) {
+        return userService.getById(userId).getBucketName();
     }
 
-    private String getBucketNameByUsername(String username) {
-        return userService.getByUsername(username).getBucketName();
-    }
-
-    private String createAbsFileURL(String username, String folderURL, String fileName) {
-        String bucketName = getBucketNameByUsername(username);
+    private String createAbsFileURL(Long userId, String folderURL, String fileName) {
+        String bucketName = getBucketNameByUserId(userId);
         return String.format("%s/%s/%s", bucketName, folderURL, fileName);
     }
 
-    private String createAbsFileURL(String username, String fileName) {
-        String bucketName = getBucketNameByUsername(username);
+    private String createAbsFileURL(Long userId, String fileName) {
+        String bucketName = getBucketNameByUserId(userId);
         return String.format("%s/%s", bucketName, fileName);
     }
 
@@ -190,5 +212,9 @@ public class FileStorageServiceImpl implements FileStorageService {
                 url,
                 userModel
         );
+    }
+
+    private FileUpdateDto getFileUpdateDtoByFileAndUser(MultipartFile file, String url, UserModel userModel) {
+        return new FileUpdateDto(findByUserIdAndUrl(userModel.getId(), url));
     }
 }
