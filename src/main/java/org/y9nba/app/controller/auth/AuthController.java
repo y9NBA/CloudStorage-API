@@ -6,7 +6,6 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -19,8 +18,8 @@ import org.y9nba.app.dto.auth.LoginRequestDto;
 import org.y9nba.app.dto.auth.RegistrationRequestDto;
 import org.y9nba.app.dto.response.ErrorResponse;
 import org.y9nba.app.dto.response.Response;
-import org.y9nba.app.exception.EmailAlreadyException;
-import org.y9nba.app.exception.UsernameAlreadyException;
+import org.y9nba.app.exception.web.EmailAlreadyException;
+import org.y9nba.app.exception.web.UsernameAlreadyException;
 import org.y9nba.app.security.AuthenticationService;
 import org.y9nba.app.service.UserService;
 

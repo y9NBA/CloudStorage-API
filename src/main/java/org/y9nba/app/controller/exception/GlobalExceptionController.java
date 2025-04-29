@@ -8,8 +8,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 import org.y9nba.app.dto.response.ErrorResponse;
-import org.y9nba.app.dto.response.Response;
-import org.y9nba.app.exception.AbstractException;
+import org.y9nba.app.exception.web.AbstractException;
 
 @Hidden
 @ControllerAdvice
