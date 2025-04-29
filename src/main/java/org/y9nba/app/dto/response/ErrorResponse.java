@@ -2,9 +2,7 @@ package org.y9nba.app.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
-import org.y9nba.app.exception.AbstractException;
-
-import java.time.LocalDateTime;
+import org.y9nba.app.exception.web.AbstractException;
 
 @Getter
 public class ErrorResponse extends Response {
