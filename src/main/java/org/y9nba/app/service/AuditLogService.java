@@ -3,7 +3,6 @@ package org.y9nba.app.service;
 
 import org.y9nba.app.dto.auditlog.AuditLogCreateDto;
 import org.y9nba.app.dto.auditlog.AuditLogDto;
-import org.y9nba.app.dto.user.UserDto;
 import org.y9nba.app.model.AuditLogModel;
 import org.y9nba.app.model.FileModel;
 import org.y9nba.app.model.UserModel;

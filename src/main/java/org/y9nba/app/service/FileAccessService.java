@@ -2,7 +2,6 @@ package org.y9nba.app.service;
 
 import org.y9nba.app.constant.Access;
 import org.y9nba.app.dto.fileaccess.FileAccessCreateDto;
-import org.y9nba.app.dto.fileaccess.FileAccessDto;
 import org.y9nba.app.model.FileAccessModel;
 
 import java.util.Set;

@@ -7,7 +7,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
 import org.y9nba.app.constant.Access;
 import org.y9nba.app.dto.fileaccess.FileAccessCreateDto;
-import org.y9nba.app.dto.fileaccess.FileAccessDto;
 import org.y9nba.app.exception.web.NotFoundEntryException;
 import org.y9nba.app.model.FileAccessModel;
 import org.y9nba.app.repository.FileAccessRepository;
