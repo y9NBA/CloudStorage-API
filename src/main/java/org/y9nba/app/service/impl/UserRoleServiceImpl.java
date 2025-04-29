@@ -1,12 +1,9 @@
 package org.y9nba.app.service.impl;
 
 import org.springframework.stereotype.Service;
-import org.y9nba.app.constant.Role;
-import org.y9nba.app.dto.user.UserDto;
 import org.y9nba.app.dto.userrole.UserRoleCreateDto;
 import org.y9nba.app.dto.userrole.UserRoleDto;
 import org.y9nba.app.dto.userrole.UserRoleUpdateDto;
-import org.y9nba.app.model.UserModel;
 import org.y9nba.app.model.UserRoleModel;
 import org.y9nba.app.repository.UserRoleRepository;
 import org.y9nba.app.service.UserRoleService;

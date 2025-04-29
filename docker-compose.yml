@@ -47,6 +47,8 @@ services:
       - "9000:9000"
     volumes:
       - minio-data:/data
+    environment:
+      - TZ=Europe/Moscow
     command: server ~/minio --console-address :9090
 
 volumes:

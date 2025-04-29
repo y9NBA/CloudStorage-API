@@ -9,9 +9,8 @@ import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
-import org.y9nba.app.exception.UnAuthorizedException;
+import org.y9nba.app.exception.web.UnAuthorizedException;
 import org.y9nba.app.model.UserModel;
 import org.y9nba.app.repository.TokenRepository;
 

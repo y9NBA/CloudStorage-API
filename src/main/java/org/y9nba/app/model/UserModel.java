@@ -100,4 +100,8 @@ public class UserModel implements UserDetails {
     public String getBucketName() {
         return bucketName.toString();
     }
+
+    public Long getNotUsedStorage() {
+        return storageLimit - usedStorage;
+    }
 }

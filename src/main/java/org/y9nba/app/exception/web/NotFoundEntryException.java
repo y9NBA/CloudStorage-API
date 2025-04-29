@@ -1,4 +1,4 @@
-package org.y9nba.app.exception;
+package org.y9nba.app.exception.web;
 
 import org.springframework.http.HttpStatus;
 

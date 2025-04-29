@@ -3,10 +3,12 @@ package org.y9nba.app.service.impl;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+import org.y9nba.app.constant.Action;
 import org.y9nba.app.dto.auditlog.AuditLogCreateDto;
 import org.y9nba.app.dto.auditlog.AuditLogDto;
-import org.y9nba.app.dto.user.UserDto;
 import org.y9nba.app.model.AuditLogModel;
+import org.y9nba.app.model.FileModel;
+import org.y9nba.app.model.UserModel;
 import org.y9nba.app.repository.AuditLogRepository;
 import org.y9nba.app.service.AuditLogService;
 
@@ -25,6 +27,42 @@ public class AuditLogServiceImpl implements AuditLogService {
     public AuditLogModel save(AuditLogCreateDto entity) {
         return repository.save(new AuditLogModel(entity));
     }
+
+    @Override
+    public void logDownload(UserModel user, FileModel file) {
+        save(new AuditLogCreateDto(user, file, Action.ACTION_DOWNLOAD));
+    }
+
+    @Override
+    public void logCreate(UserModel user, FileModel file) {
+        save(new AuditLogCreateDto(user, file, Action.ACTION_CREATE));
+    }
+
+    @Override
+    public void logUpdate(UserModel user, FileModel file) {
+        save(new AuditLogCreateDto(user, file, Action.ACTION_UPDATE));
+    }
+
+    @Override
+    public void logRename(UserModel user, FileModel file) {
+        save(new AuditLogCreateDto(user, file, Action.ACTION_RENAME));
+    }
+
+    @Override
+    public void logMove(UserModel user, FileModel file) {
+        save(new AuditLogCreateDto(user, file, Action.ACTION_MOVE));
+    }
+
+    @Override
+    public void logAddAccess(UserModel user, FileModel file) {
+        save(new AuditLogCreateDto(user, file, Action.ACTION_ADD_ACCESS));
+    }
+
+    @Override
+    public void logRemoveAccess(UserModel user, FileModel file) {
+        save(new AuditLogCreateDto(user, file, Action.ACTION_DEL_ACCESS));
+    }
+
 
     @Override
     public void delete(AuditLogModel entity) {

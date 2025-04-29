@@ -1,7 +1,6 @@
-package org.y9nba.app.exception;
+package org.y9nba.app.exception.web;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 
 public class UnAuthorizedException extends AbstractException {
     public UnAuthorizedException() {

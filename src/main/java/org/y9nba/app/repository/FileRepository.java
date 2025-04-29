@@ -10,8 +10,8 @@ import java.util.Set;
 @Repository
 public interface FileRepository extends JpaRepository<FileModel, Long> {
 
-    Set<FileModel> getFileModelsByUser_Username(String username);
-    Set<FileModel> getFileModelsByUser_UsernameAndUrlContaining(String username, String url);
-    Optional<FileModel> getFileModelByUser_UsernameAndUrl(String username, String url);
+    Set<FileModel> getFileModelsByUser_Id(Long userId);
+    Set<FileModel> getFileModelsByUser_IdAndUrlContaining(Long userId, String url);
+    Optional<FileModel> getFileModelByUser_IdAndUrl(Long userId, String url);
     boolean existsByUrl(String url);
 }
