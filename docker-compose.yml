@@ -13,7 +13,7 @@ services:
     environment:
       - SERVER_PORT= 8080
       - SPRING_DATASOURCE_URL=jdbc:postgresql://service-db:5432/cloudstorage?currentSchema=cloudstorage
-      - MINIO_URL=http://minio:9000
+      - MINIO_URL=http://minio:9000    # ggj-cldstrg.ru
 
   service-db:
     image: postgres:14.7-alpine
@@ -47,8 +47,6 @@ services:
       - "9000:9000"
     volumes:
       - minio-data:/data
-    environment:
-      - TZ=Europe/Moscow
     command: server ~/minio --console-address :9090
 
 volumes:
