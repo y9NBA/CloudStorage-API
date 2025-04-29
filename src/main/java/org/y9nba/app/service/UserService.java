@@ -1,6 +1,5 @@
 package org.y9nba.app.service;
 
-import jakarta.servlet.http.HttpServletRequest;
 import org.y9nba.app.constant.Role;
 import org.y9nba.app.dto.user.*;
 import org.y9nba.app.model.UserModel;
@@ -14,6 +13,7 @@ public interface UserService {
     void update(Long userId, UserUpdateEmailDto dto);
     void update(Long userId, UserUpdateUsernameDto dto);
     void update(Long userId, UserUpdateDto dto);
+    void update(Long userId, Long newUsedStorage);
     boolean deleteById(Long id);
     boolean deleteByUsername(String username);
     UserModel getByUsername(String username);

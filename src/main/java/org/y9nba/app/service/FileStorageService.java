@@ -1,26 +1,33 @@
 package org.y9nba.app.service;
 
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 import org.y9nba.app.dto.file.FileCreateDto;
 import org.y9nba.app.dto.file.FileUpdateDto;
+import org.y9nba.app.dto.share.ExpireRequestDto;
+import org.y9nba.app.dto.share.SharedUrlResponseDto;
 import org.y9nba.app.model.FileModel;
 
 import java.io.InputStream;
 import java.util.Set;
 
 public interface FileStorageService {
-    FileModel uploadFile(Long userId, MultipartFile file);
     FileModel uploadFile(Long userId, MultipartFile file, String folderURL);
-    InputStream downloadFile(Long userId, String fileName);
     InputStream downloadFile(Long userId, String fileName, String folderURL);
+    InputStream downloadFileByAccess(Long userId, Long fileId);
     FileModel save(FileCreateDto dto);
     FileModel update(FileUpdateDto dto);
-    void deleteFile(Long userId, String fileName);
     void deleteFile(Long userId, String fileName, String folderURL);
-    void deleteById(Long id);
     FileModel findById(Long id);
     FileModel findByUserIdAndUrl(Long userId, String url);
-    boolean existsByURL(String url);
+    FileModel findFile(Long userId, String fileName, String folderURL);
     Set<FileModel> findByUserId(Long userId);
     Set<FileModel> findByUserIdAndFolderUrl(Long userId, String folderURL);
+    FileModel findOwnerByFileId(Long userId, Long fileId);
+    Set<FileModel> findOwnerByUserId(Long userId);
+    Set<FileModel> findOwnerByUserIdAndFolderUrl(Long userId, String folderURL);
+    boolean existsByURL(String url);
+    SharedUrlResponseDto getSharedUrlForFile(ExpireRequestDto expireRequestDto, Long userId, String fileName, String folderURL);
+    ResponseEntity<InputStreamResource> getResourceByInputStream(InputStream inputStream, String fileName);
 }

@@ -4,11 +4,10 @@ import org.springframework.stereotype.Service;
 import org.y9nba.app.constant.Role;
 import org.y9nba.app.dto.user.*;
 import org.y9nba.app.dto.userrole.UserRoleCreateDto;
-import org.y9nba.app.exception.*;
+import org.y9nba.app.exception.web.*;
 import org.y9nba.app.model.UserModel;
 import org.y9nba.app.model.UserRoleModel;
 import org.y9nba.app.repository.UserRepository;
-import org.y9nba.app.security.JwtService;
 import org.y9nba.app.service.UserService;
 import org.y9nba.app.util.PasswordUtil;
 
@@ -21,13 +20,11 @@ public class UserServiceImpl implements UserService {
     private final UserRepository repository;
 
     private final UserRoleServiceImpl userRoleService;
-    private final JwtService jwtService;
     private final PasswordUtil passwordUtil;
 
-    public UserServiceImpl(UserRepository repository, UserRoleServiceImpl userRoleService, JwtService jwtService, PasswordUtil passwordUtil) {
+    public UserServiceImpl(UserRepository repository, UserRoleServiceImpl userRoleService, PasswordUtil passwordUtil) {
         this.repository = repository;
         this.userRoleService = userRoleService;
-        this.jwtService = jwtService;
         this.passwordUtil = passwordUtil;
     }
 
@@ -104,6 +101,14 @@ public class UserServiceImpl implements UserService {
         update(userId, new UserUpdateEmailDto(dto.getEmail()));
         update(userId, new UserUpdatePasswordDto(dto.getOldPassword(), dto.getNewPassword()));
         update(userId, new UserUpdateUsernameDto(dto.getUsername()));
+    }
+
+    @Override
+    public void update(Long userId, Long newUsedStorage) {
+        UserModel model = getById(userId);
+        model.setUsedStorage(newUsedStorage);
+
+        repository.save(model);
     }
 
     @Override
