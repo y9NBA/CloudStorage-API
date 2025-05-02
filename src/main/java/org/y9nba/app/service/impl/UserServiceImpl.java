@@ -2,6 +2,7 @@ package org.y9nba.app.service.impl;
 
 import org.springframework.stereotype.Service;
 import org.y9nba.app.constant.Role;
+import org.y9nba.app.dto.search.UserSearchDto;
 import org.y9nba.app.dto.user.*;
 import org.y9nba.app.dto.userrole.UserRoleCreateDto;
 import org.y9nba.app.exception.web.*;
@@ -163,5 +164,15 @@ public class UserServiceImpl implements UserService {
     @Override
     public boolean existsById(Long id) {
         return repository.existsById(id);
+    }
+
+    @Override
+    public Set<UserSearchDto> getAllUsers(Long userId) {
+        return repository
+                .findAll()
+                .stream()
+                .filter(u -> !u.getId().equals(userId))
+                .map(UserSearchDto::new)
+                .collect(Collectors.toSet());
     }
 }
