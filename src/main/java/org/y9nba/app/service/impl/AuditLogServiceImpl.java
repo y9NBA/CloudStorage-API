@@ -54,6 +54,11 @@ public class AuditLogServiceImpl implements AuditLogService {
     }
 
     @Override
+    public void logCopy(UserModel user, FileModel file) {
+        save(new AuditLogCreateDto(user, file, Action.ACTION_COPY));
+    }
+
+    @Override
     public void logAddAccess(UserModel user, FileModel file) {
         save(new AuditLogCreateDto(user, file, Action.ACTION_ADD_ACCESS));
     }

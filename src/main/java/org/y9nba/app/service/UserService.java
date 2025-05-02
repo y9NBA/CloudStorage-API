@@ -1,6 +1,7 @@
 package org.y9nba.app.service;
 
 import org.y9nba.app.constant.Role;
+import org.y9nba.app.dto.search.UserSearchDto;
 import org.y9nba.app.dto.user.*;
 import org.y9nba.app.model.UserModel;
 
@@ -22,4 +23,5 @@ public interface UserService {
     boolean existsByUsername(String username);
     boolean existsByEmail(String email);
     boolean existsById(Long id);
+    Set<UserSearchDto> getAllUsers(Long userId);
 }

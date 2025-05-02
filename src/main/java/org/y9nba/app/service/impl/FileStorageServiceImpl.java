@@ -15,10 +15,9 @@ import org.y9nba.app.dto.fileaccess.FileAccessCreateDto;
 import org.y9nba.app.dto.share.ExpireRequestDto;
 import org.y9nba.app.dto.share.SharedUrlResponseDto;
 import org.y9nba.app.exception.local.NotPhysicalFileException;
-import org.y9nba.app.exception.web.FileAccessDeniedException;
-import org.y9nba.app.exception.web.FilePhysicalNotFoundException;
-import org.y9nba.app.exception.web.NotFoundEntryException;
-import org.y9nba.app.exception.web.UserNotEnoughMemoryException;
+import org.y9nba.app.exception.local.PhysicalFileOnUrlAlreadyException;
+import org.y9nba.app.exception.local.PhysicalFilesAndEntriesNotSyncException;
+import org.y9nba.app.exception.web.*;
 import org.y9nba.app.model.FileAccessModel;
 import org.y9nba.app.model.FileModel;
 import org.y9nba.app.model.UserModel;
@@ -56,9 +55,18 @@ public class FileStorageServiceImpl implements FileStorageService {
         Long fileId;
 
         if (repository.existsByUrl(url)) {
-            fileId = updateExisting(file, url, userModel);
+            fileId =
+                    updateExisting(
+                            findByUserIdAndUrl(userId, url),
+                            getFileUpdateDtoByFileAndUser(url, userModel, file.getSize()),
+                            userModel
+                    );
         } else {
-            fileId = createNew(file, url, userModel);
+            fileId =
+                    createNew(
+                            getFileCreateDtoByFileAndUser(file, url, userModel),
+                            userModel
+                    );
         }
 
         storageService.uploadFile(file, userModel.getBucketName(), folderURL);
@@ -68,9 +76,7 @@ public class FileStorageServiceImpl implements FileStorageService {
         return findById(fileId);
     }
 
-    private Long createNew(MultipartFile file, String url, UserModel userModel) {
-        FileCreateDto fileCreateDto = getFileCreateDtoByFileAndUser(file, url, userModel);
-
+    private Long createNew(FileCreateDto fileCreateDto, UserModel userModel) {
         if (fileCreateDto.getFileSize() > userModel.getNotUsedStorage())
             throw new UserNotEnoughMemoryException();
 
@@ -84,15 +90,11 @@ public class FileStorageServiceImpl implements FileStorageService {
         return fileModel.getId();
     }
 
-    private Long updateExisting(MultipartFile file, String url, UserModel userModel) {
-        FileUpdateDto fileUpdateDto = getFileUpdateDtoByFileAndUser(file, url, userModel);
-
-        if ((fileUpdateDto.getFileSize() - file.getSize()) > userModel.getNotUsedStorage() && fileUpdateDto.getFileSize() > file.getSize())
+    private Long updateExisting(FileModel file, FileUpdateDto fileUpdateDto, UserModel userModel) {
+        if ((fileUpdateDto.getFileSize() - file.getFileSize()) > userModel.getNotUsedStorage() && fileUpdateDto.getFileSize() > file.getFileSize())
             throw new UserNotEnoughMemoryException();
 
-        fileUpdateDto.setFileSize(file.getSize());
-
-        FileModel fileModel = this.update(fileUpdateDto);
+        FileModel fileModel = update(fileUpdateDto);
 
         auditLogService.logUpdate(userModel, fileModel);
 
@@ -131,6 +133,88 @@ public class FileStorageServiceImpl implements FileStorageService {
         return downloadFileByUserAndFile(author, fileModel);
     }
 
+    @Transactional
+    @Override
+    public FileModel moveFileOnNewUrl(Long userId, String fileName, String newFolderURL, String oldFolderURL) {
+        String oldUrl = createAbsFileURL(userId, fileName, oldFolderURL);
+        String newUrl = createAbsFileURL(userId, fileName, newFolderURL);
+        FileModel fileModel = findByUserIdAndUrl(userId, oldUrl);
+        UserModel userModel = userService.getById(userId);
+
+        if (existsByURL(newUrl)) {
+            throw new FileNewUrlAlreadyException();
+        }
+
+        FileUpdateDto fileUpdateDto = getFileUpdateDtoByFileAndUser(oldUrl, userModel, newUrl);
+
+        fileModel = tryMoveOrRenameFile(fileModel, userModel, fileUpdateDto);
+
+        auditLogService.logMove(userModel, fileModel);
+
+        return findById(fileUpdateDto.getId());
+    }
+
+    @Transactional
+    @Override
+    public FileModel copyExistingFile(Long userId, String fileName, String folderURL) {
+        String fileURL = createAbsFileURL(userId, fileName, folderURL);
+        FileModel fileModel = findByUserIdAndUrl(userId, fileURL);
+        UserModel userModel = userService.getById(userId);
+        FileCreateDto fileCreateDto = getFileCreateDtoAsCopyByFileModelAndUser(fileModel, userModel);
+        Long copyFileId;
+
+        try {
+            storageService.copyFile(userModel.getBucketName(), fileModel, fileCreateDto);
+            copyFileId = createNew(fileCreateDto, userModel);
+        } catch (NotPhysicalFileException e) {
+            deleteEntry(fileModel);
+            throw new FilePhysicalNotFoundException(e.getMessage());
+        } catch (PhysicalFileOnUrlAlreadyException e) {
+            createNew(e.getFileCreateDto(), userModel);
+            throw new FilePhysicalOnUrlException(e.getMessage());
+        }
+
+        auditLogService.logCopy(userModel, fileModel);
+
+        return findById(copyFileId);
+    }
+
+    @Transactional
+    @Override
+    public FileModel renameFile(Long userId, String fileName, String newFileName, String folderURL) {
+        String oldUrl = createAbsFileURL(userId, fileName, folderURL);
+        String newUrl = createAbsFileURL(userId, newFileName, folderURL);
+        FileModel fileModel = findByUserIdAndUrl(userId, createAbsFileURL(userId, fileName, folderURL));
+        UserModel userModel = userService.getById(userId);
+
+        if (existsByURL(newUrl)) {
+            throw new FileNewUrlAlreadyException();
+        }
+
+        FileUpdateDto fileUpdateDto = getFileUpdateDtoByFileAndUser(oldUrl, userModel, newUrl, newFileName);
+
+        fileModel = tryMoveOrRenameFile(fileModel, userModel, fileUpdateDto);
+
+        auditLogService.logRename(userModel, fileModel);
+
+        return findById(fileUpdateDto.getId());
+    }
+
+    private FileModel tryMoveOrRenameFile(FileModel fileModel, UserModel userModel, FileUpdateDto fileUpdateDto) {
+        try {
+            storageService.moveFile(userModel.getBucketName(), fileModel, fileUpdateDto);
+        } catch (NotPhysicalFileException e) {
+            deleteEntry(fileModel);
+            throw new FilePhysicalNotFoundException(e.getMessage());
+        } catch (PhysicalFileOnUrlAlreadyException e) {
+            createNew(e.getFileCreateDto(), userModel);
+            throw new FilePhysicalOnUrlException(e.getMessage());
+        }
+
+        fileModel = update(fileUpdateDto);
+        return fileModel;
+    }
+
     private InputStream downloadFileByUserAndFile(UserModel userModel, FileModel fileModel) {
         try {
             return storageService.downloadFile(userModel.getBucketName(), fileModel);
@@ -151,11 +235,14 @@ public class FileStorageServiceImpl implements FileStorageService {
     }
 
     @Override
-    public void deleteFile(Long userId, String fileName, String folderURL) {
-        FileModel fileModel = findByUserIdAndUrl(userId, createAbsFileURL(userId, fileName, folderURL));
+    public String deleteFile(Long userId, String fileName, String folderURL) {
+        String url = createAbsFileURL(userId, fileName, folderURL);
+        FileModel fileModel = findByUserIdAndUrl(userId, url);
 
-        storageService.deleteFile(getBucketNameByUserId(userId), fileModel);
         deleteEntry(fileModel);
+        storageService.deleteFile(getBucketNameByUserId(userId), fileModel);
+
+        return url;
     }
 
     private void deleteEntry(FileModel fileModel) {
@@ -264,6 +351,22 @@ public class FileStorageServiceImpl implements FileStorageService {
         return ResponseEntity.ok().headers(headers).body(new InputStreamResource(inputStream));
     }
 
+    @Override
+    public void refreshFiles(Long userId) {
+        UserModel userModel = userService.getById(userId);
+
+        try {
+            storageService.synchronizeFile(userModel.getBucketName(), findByUserId(userId), userModel);
+        } catch (PhysicalFilesAndEntriesNotSyncException e) {
+            e.getFileModelsWithoutPhysicalFile().forEach(this::deleteEntry);
+            e.getFilesWithoutEntryInDB().forEach(fileCreateDto -> {
+                createNew(fileCreateDto, userModel);
+            });
+
+            updateUsedStorageOfUser(userId);
+        }
+    }
+
     private String getBucketNameByUserId(Long userId) {
         return userService.getById(userId).getBucketName();
     }
@@ -288,8 +391,41 @@ public class FileStorageServiceImpl implements FileStorageService {
         );
     }
 
-    private FileUpdateDto getFileUpdateDtoByFileAndUser(MultipartFile file, String url, UserModel userModel) {
-        return new FileUpdateDto(findByUserIdAndUrl(userModel.getId(), url));
+    private FileCreateDto getFileCreateDtoAsCopyByFileModelAndUser(FileModel file, UserModel userModel) {
+        String urlForSearch = file.getUrl().substring(0, file.getUrl().lastIndexOf("."));
+        String fileNameWithoutExt = file.getFileName().substring(0, file.getFileName().lastIndexOf("."));
+        String ext = file.getFileName().substring(file.getFileName().lastIndexOf("."));
+
+        int count = repository.getFileModelsByUser_IdAndUrlContaining(userModel.getId(), urlForSearch).size();
+
+        return new FileCreateDto(
+                fileNameWithoutExt + "(" + count + ")" + ext,
+                file.getFileSize(),
+                file.getMimeType(),
+                urlForSearch + "(" + count + ")" + ext,
+                userModel
+        );
+    }
+
+    private FileUpdateDto getFileUpdateDtoByFileAndUser(String url, UserModel userModel, Long newFileSize) {
+        FileUpdateDto fileUpdateDto = new FileUpdateDto(findByUserIdAndUrl(userModel.getId(), url));
+        fileUpdateDto.setFileSize(newFileSize);
+
+        return fileUpdateDto;
+    }
+
+    private FileUpdateDto getFileUpdateDtoByFileAndUser(String url, UserModel userModel, String newFileUrl) {
+        FileUpdateDto fileUpdateDto = new FileUpdateDto(findByUserIdAndUrl(userModel.getId(), url));
+        fileUpdateDto.setUrl(newFileUrl);
+
+        return fileUpdateDto;
+    }
+
+    private FileUpdateDto getFileUpdateDtoByFileAndUser(String url, UserModel userModel, String newFileUrl, String newFileName) {
+        FileUpdateDto fileUpdateDto = getFileUpdateDtoByFileAndUser(url, userModel, newFileUrl);
+        fileUpdateDto.setFileName(newFileName);
+
+        return fileUpdateDto;
     }
 
     private void checkAccessOnRead(Long userId, Long fileId) {

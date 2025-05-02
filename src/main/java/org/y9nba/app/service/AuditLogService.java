@@ -16,6 +16,7 @@ public interface AuditLogService {
     void logUpdate(UserModel user, FileModel file);
     void logRename(UserModel user, FileModel file);
     void logMove(UserModel user, FileModel file);
+    void logCopy(UserModel user, FileModel file);
     void logAddAccess(UserModel user, FileModel file);
     void logRemoveAccess(UserModel user, FileModel file);
     void delete(AuditLogModel entity);

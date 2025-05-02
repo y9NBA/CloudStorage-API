@@ -16,9 +16,12 @@ public interface FileStorageService {
     FileModel uploadFile(Long userId, MultipartFile file, String folderURL);
     InputStream downloadFile(Long userId, String fileName, String folderURL);
     InputStream downloadFileByAccess(Long userId, Long fileId);
+    FileModel moveFileOnNewUrl(Long userId, String fileName, String newFolderURL, String oldFolderURL);
+    FileModel copyExistingFile(Long userId, String fileName, String folderURL);
+    FileModel renameFile(Long userId, String fileName, String newFileName, String folderURL);
     FileModel save(FileCreateDto dto);
     FileModel update(FileUpdateDto dto);
-    void deleteFile(Long userId, String fileName, String folderURL);
+    String deleteFile(Long userId, String fileName, String folderURL);
     FileModel findById(Long id);
     FileModel findByUserIdAndUrl(Long userId, String url);
     FileModel findFile(Long userId, String fileName, String folderURL);
@@ -30,4 +33,5 @@ public interface FileStorageService {
     boolean existsByURL(String url);
     SharedUrlResponseDto getSharedUrlForFile(ExpireRequestDto expireRequestDto, Long userId, String fileName, String folderURL);
     ResponseEntity<InputStreamResource> getResourceByInputStream(InputStream inputStream, String fileName);
+    void refreshFiles(Long userId);
 }
