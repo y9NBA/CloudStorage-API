@@ -78,4 +78,14 @@ public class FileStorageController {
     public FileDto moveFile(@RequestParam String fileName, @RequestParam String newFolderUrl, @RequestParam(required = false) String oldFolderUrl, @AuthenticationPrincipal UserModel userModel) {
         return new FileDto(fileStorageService.moveFileOnNewUrl(userModel.getId(), fileName, newFolderUrl, oldFolderUrl));
     }
+
+    @PostMapping(path = "/copy/file")
+    public FileDto copyFile(@RequestParam String fileName, @RequestParam String folderUrl, @AuthenticationPrincipal UserModel userModel) {
+        return new FileDto(fileStorageService.copyExistingFile(userModel.getId(), fileName, folderUrl));
+    }
+
+    @PostMapping(path = "/rename/file")
+    public FileDto renameFile(@RequestParam String fileName, @RequestParam String newName, @RequestParam(required = false) String folderUrl, @AuthenticationPrincipal UserModel userModel) {
+        return new FileDto(fileStorageService.renameFile(userModel.getId(), fileName, newName, folderUrl));
+    }
 }

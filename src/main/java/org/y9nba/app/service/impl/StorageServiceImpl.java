@@ -1,7 +1,6 @@
 package org.y9nba.app.service.impl;
 
 import io.minio.*;
-import io.minio.errors.*;
 import io.minio.http.Method;
 import io.minio.messages.Bucket;
 import lombok.SneakyThrows;
@@ -10,17 +9,14 @@ import org.springframework.web.multipart.MultipartFile;
 import org.y9nba.app.dto.file.FileCreateDto;
 import org.y9nba.app.dto.file.FileUpdateDto;
 import org.y9nba.app.exception.local.NotPhysicalFileException;
-import org.y9nba.app.exception.local.PhysicalFileOnNewUrlAlreadyException;
+import org.y9nba.app.exception.local.PhysicalFileOnUrlAlreadyException;
 import org.y9nba.app.exception.local.PhysicalFilesAndEntriesNotSyncException;
 import org.y9nba.app.exception.web.FileNotUploadException;
 import org.y9nba.app.model.FileModel;
 import org.y9nba.app.model.UserModel;
 import org.y9nba.app.service.StorageService;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -108,26 +104,12 @@ public class StorageServiceImpl implements StorageService {
         deleteFileByUrl(bucketName, fileName);
     }
 
-    // TODO: На основе данного метода сделать метод на создание копии файла
     @Override
-    public void moveFile(String bucketName, FileModel fileModel, FileUpdateDto fileUpdDto) throws NotPhysicalFileException, PhysicalFileOnNewUrlAlreadyException {
+    public void moveFile(String bucketName, FileModel fileModel, FileUpdateDto fileUpdDto) throws NotPhysicalFileException, PhysicalFileOnUrlAlreadyException {
         String oldFileURL = getCorrectUrl(fileModel.getUrl());
         String newFileURL = getCorrectUrl(fileUpdDto.getUrl());
 
-        if (!isFileExist(bucketName, oldFileURL)) {
-            throw new NotPhysicalFileException(oldFileURL);
-        } else if (isFileExist(bucketName, newFileURL)) {
-            StatObjectResponse statObjectArgs = getStatObjectArgs(bucketName, newFileURL);
-            FileCreateDto fileCreateDto = new FileCreateDto(
-                    fileUpdDto.getFileName(),
-                    statObjectArgs.size(),
-                    statObjectArgs.contentType(),
-                    fileUpdDto.getUrl(),
-                    fileUpdDto.getUser()
-            );
-
-            throw new PhysicalFileOnNewUrlAlreadyException(newFileURL, fileCreateDto);
-        }
+        checkURLs(bucketName, oldFileURL, newFileURL, new FileModel(fileUpdDto));
 
         try {
             CopySource copySource = CopySource.builder().bucket(bucketName).object(oldFileURL).build();
@@ -139,6 +121,26 @@ public class StorageServiceImpl implements StorageService {
             minioClient.copyObject(copyArgs);
 
             deleteFileByUrl(bucketName, oldFileURL);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void copyFile(String bucketName, FileModel fileModel, FileCreateDto fileCrtDto) throws NotPhysicalFileException, PhysicalFileOnUrlAlreadyException {
+        String fileURL = getCorrectUrl(fileModel.getUrl());
+        String copyFileURL = getCorrectUrl(fileCrtDto.getUrl());
+
+        checkURLs(bucketName, fileURL, copyFileURL,  new FileModel(fileCrtDto));
+
+        try {
+            CopySource copySource = CopySource.builder().bucket(bucketName).object(fileURL).build();
+            CopyObjectArgs copyArgs = CopyObjectArgs.builder()
+                    .source(copySource)
+                    .bucket(bucketName)
+                    .object(copyFileURL)
+                    .build();
+            minioClient.copyObject(copyArgs);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -161,6 +163,23 @@ public class StorageServiceImpl implements StorageService {
     @Override
     public boolean isFileExist(String bucketName, FileModel fileModel) {
         return isFileExistByUrl(bucketName, getCorrectUrl(fileModel.getUrl()));
+    }
+
+    private void checkURLs(String bucketName, String beginFileURL, String endFileURL, FileModel fileModel) throws NotPhysicalFileException, PhysicalFileOnUrlAlreadyException {
+        if (!isFileExist(bucketName, beginFileURL)) {
+            throw new NotPhysicalFileException(beginFileURL);
+        } else if (isFileExist(bucketName, endFileURL)) {
+            StatObjectResponse statObjectArgs = getStatObjectArgs(bucketName, endFileURL);
+            FileCreateDto fileCreateDto = new FileCreateDto(
+                    fileModel.getFileName(),
+                    statObjectArgs.size(),
+                    statObjectArgs.headers().get("Content-Type"),
+                    fileModel.getUrl(),
+                    fileModel.getUser()
+            );
+
+            throw new PhysicalFileOnUrlAlreadyException(endFileURL, fileCreateDto);
+        }
     }
 
     @Override

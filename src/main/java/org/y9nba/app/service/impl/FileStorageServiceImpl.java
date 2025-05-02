@@ -15,7 +15,7 @@ import org.y9nba.app.dto.fileaccess.FileAccessCreateDto;
 import org.y9nba.app.dto.share.ExpireRequestDto;
 import org.y9nba.app.dto.share.SharedUrlResponseDto;
 import org.y9nba.app.exception.local.NotPhysicalFileException;
-import org.y9nba.app.exception.local.PhysicalFileOnNewUrlAlreadyException;
+import org.y9nba.app.exception.local.PhysicalFileOnUrlAlreadyException;
 import org.y9nba.app.exception.local.PhysicalFilesAndEntriesNotSyncException;
 import org.y9nba.app.exception.web.*;
 import org.y9nba.app.model.FileAccessModel;
@@ -136,33 +136,81 @@ public class FileStorageServiceImpl implements FileStorageService {
     @Transactional
     @Override
     public FileModel moveFileOnNewUrl(Long userId, String fileName, String newFolderURL, String oldFolderURL) {
-        String oldUrl = createAbsFileURL(userId, fileName, oldFolderURL);
         String newUrl = createAbsFileURL(userId, fileName, newFolderURL);
-        FileModel fileModel = findByUserIdAndUrl(userId, oldUrl);
+        FileModel fileModel = findByUserIdAndUrl(userId, createAbsFileURL(userId, fileName, oldFolderURL));
         UserModel userModel = userService.getById(userId);
-        FileUpdateDto fileUpdateDto = new FileUpdateDto(fileModel);
 
         if (existsByURL(newUrl)) {
             throw new FileNewUrlAlreadyException();
         }
 
-        fileUpdateDto.setUrl(newUrl);
+        FileUpdateDto fileUpdateDto = getFileUpdateDtoByFileAndUser(newUrl, userModel, newUrl);
 
+        fileModel = tryMoveOrRenameFile(fileModel, userModel, fileUpdateDto);
+
+        auditLogService.logMove(userModel, fileModel);
+
+        return findById(fileUpdateDto.getId());
+    }
+
+    @Transactional
+    @Override
+    public FileModel copyExistingFile(Long userId, String fileName, String folderURL) {
+        String fileURL = createAbsFileURL(userId, fileName, folderURL);
+        FileModel fileModel = findByUserIdAndUrl(userId, fileURL);
+        UserModel userModel = userService.getById(userId);
+        FileCreateDto fileCreateDto = getFileCreateDtoAsCopyByFileModelAndUser(fileModel, userModel);
+        Long copyFileId;
+
+        try {
+            storageService.copyFile(userModel.getBucketName(), fileModel, fileCreateDto);
+            copyFileId = createNew(fileCreateDto, userModel);
+        } catch (NotPhysicalFileException e) {
+            deleteEntry(fileModel);
+            throw new FilePhysicalNotFoundException(e.getMessage());
+        } catch (PhysicalFileOnUrlAlreadyException e) {
+            createNew(e.getFileCreateDto(), userModel);
+            throw new FilePhysicalOnUrlException(e.getMessage());
+        }
+
+        auditLogService.logCopy(userModel, fileModel);
+
+        return findById(copyFileId);
+    }
+
+    @Transactional
+    @Override
+    public FileModel renameFile(Long userId, String fileName, String newFileName, String folderURL) {
+        String newUrl = createAbsFileURL(userId, newFileName, folderURL);
+        FileModel fileModel = findByUserIdAndUrl(userId, createAbsFileURL(userId, fileName, folderURL));
+        UserModel userModel = userService.getById(userId);
+
+        if (existsByURL(newUrl)) {
+            throw new FileNewUrlAlreadyException();
+        }
+
+        FileUpdateDto fileUpdateDto = getFileUpdateDtoByFileAndUser(newUrl, userModel, newUrl, newFileName);
+
+        fileModel = tryMoveOrRenameFile(fileModel, userModel, fileUpdateDto);
+
+        auditLogService.logRename(userModel, fileModel);
+
+        return findById(fileUpdateDto.getId());
+    }
+
+    private FileModel tryMoveOrRenameFile(FileModel fileModel, UserModel userModel, FileUpdateDto fileUpdateDto) {
         try {
             storageService.moveFile(userModel.getBucketName(), fileModel, fileUpdateDto);
         } catch (NotPhysicalFileException e) {
             deleteEntry(fileModel);
             throw new FilePhysicalNotFoundException(e.getMessage());
-        } catch (PhysicalFileOnNewUrlAlreadyException e) {
+        } catch (PhysicalFileOnUrlAlreadyException e) {
             createNew(e.getFileCreateDto(), userModel);
-            throw new FilePhysicalOnNewUrlException(e.getMessage());
+            throw new FilePhysicalOnUrlException(e.getMessage());
         }
 
         fileModel = update(fileUpdateDto);
-
-        auditLogService.logMove(userModel, fileModel);
-
-        return findById(fileUpdateDto.getId());
+        return fileModel;
     }
 
     private InputStream downloadFileByUserAndFile(UserModel userModel, FileModel fileModel) {
@@ -341,9 +389,39 @@ public class FileStorageServiceImpl implements FileStorageService {
         );
     }
 
+    private FileCreateDto getFileCreateDtoAsCopyByFileModelAndUser(FileModel file, UserModel userModel) {
+        String urlForSearch = file.getUrl().substring(0, file.getUrl().lastIndexOf("."));
+        String fileNameWithoutExt = file.getFileName().substring(0, file.getFileName().lastIndexOf("."));
+        String ext = file.getFileName().substring(file.getFileName().lastIndexOf("."));
+
+        int count = repository.getFileModelsByUser_IdAndUrlContaining(userModel.getId(), urlForSearch).size();
+
+        return new FileCreateDto(
+                fileNameWithoutExt + "(" + count + ")" + ext,
+                file.getFileSize(),
+                file.getMimeType(),
+                urlForSearch + "(" + count + ")" + ext,
+                userModel
+        );
+    }
+
     private FileUpdateDto getFileUpdateDtoByFileAndUser(String url, UserModel userModel, Long newFileSize) {
         FileUpdateDto fileUpdateDto = new FileUpdateDto(findByUserIdAndUrl(userModel.getId(), url));
         fileUpdateDto.setFileSize(newFileSize);
+
+        return fileUpdateDto;
+    }
+
+    private FileUpdateDto getFileUpdateDtoByFileAndUser(String url, UserModel userModel, String newFileUrl) {
+        FileUpdateDto fileUpdateDto = new FileUpdateDto(findByUserIdAndUrl(userModel.getId(), url));
+        fileUpdateDto.setUrl(newFileUrl);
+
+        return fileUpdateDto;
+    }
+
+    private FileUpdateDto getFileUpdateDtoByFileAndUser(String url, UserModel userModel, String newFileUrl, String newFileName) {
+        FileUpdateDto fileUpdateDto = getFileUpdateDtoByFileAndUser(url, userModel, newFileUrl);
+        fileUpdateDto.setFileName(newFileName);
 
         return fileUpdateDto;
     }
