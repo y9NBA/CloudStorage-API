@@ -37,10 +37,10 @@ public class FileModel {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    @OneToMany(mappedBy = "file", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "file", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     private Set<FileAccessModel> fileAccesses;
 
-    @OneToMany(mappedBy = "file", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "file", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     private Set<AuditLogModel> auditLogs;
 
     public FileModel(FileCreateDto dto) {
