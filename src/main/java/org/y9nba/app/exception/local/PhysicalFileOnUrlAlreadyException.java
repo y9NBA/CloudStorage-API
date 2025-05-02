@@ -6,14 +6,14 @@ import org.y9nba.app.dto.file.FileCreateDto;
 import java.io.IOException;
 
 @Getter
-public class PhysicalFileOnNewUrlAlreadyException extends IOException {
+public class PhysicalFileOnUrlAlreadyException extends IOException {
     private FileCreateDto fileCreateDto;
 
-    public PhysicalFileOnNewUrlAlreadyException(String message) {
+    public PhysicalFileOnUrlAlreadyException(String message) {
         super(message);
     }
 
-    public PhysicalFileOnNewUrlAlreadyException(String message, FileCreateDto fileCreateDto) {
+    public PhysicalFileOnUrlAlreadyException(String message, FileCreateDto fileCreateDto) {
         super(message);
         this.fileCreateDto = fileCreateDto;
     }
