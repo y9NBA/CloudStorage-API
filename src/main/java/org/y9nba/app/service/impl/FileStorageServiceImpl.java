@@ -136,15 +136,16 @@ public class FileStorageServiceImpl implements FileStorageService {
     @Transactional
     @Override
     public FileModel moveFileOnNewUrl(Long userId, String fileName, String newFolderURL, String oldFolderURL) {
+        String oldUrl = createAbsFileURL(userId, fileName, oldFolderURL);
         String newUrl = createAbsFileURL(userId, fileName, newFolderURL);
-        FileModel fileModel = findByUserIdAndUrl(userId, createAbsFileURL(userId, fileName, oldFolderURL));
+        FileModel fileModel = findByUserIdAndUrl(userId, oldUrl);
         UserModel userModel = userService.getById(userId);
 
         if (existsByURL(newUrl)) {
             throw new FileNewUrlAlreadyException();
         }
 
-        FileUpdateDto fileUpdateDto = getFileUpdateDtoByFileAndUser(newUrl, userModel, newUrl);
+        FileUpdateDto fileUpdateDto = getFileUpdateDtoByFileAndUser(oldUrl, userModel, newUrl);
 
         fileModel = tryMoveOrRenameFile(fileModel, userModel, fileUpdateDto);
 
@@ -181,6 +182,7 @@ public class FileStorageServiceImpl implements FileStorageService {
     @Transactional
     @Override
     public FileModel renameFile(Long userId, String fileName, String newFileName, String folderURL) {
+        String oldUrl = createAbsFileURL(userId, fileName, folderURL);
         String newUrl = createAbsFileURL(userId, newFileName, folderURL);
         FileModel fileModel = findByUserIdAndUrl(userId, createAbsFileURL(userId, fileName, folderURL));
         UserModel userModel = userService.getById(userId);
@@ -189,7 +191,7 @@ public class FileStorageServiceImpl implements FileStorageService {
             throw new FileNewUrlAlreadyException();
         }
 
-        FileUpdateDto fileUpdateDto = getFileUpdateDtoByFileAndUser(newUrl, userModel, newUrl, newFileName);
+        FileUpdateDto fileUpdateDto = getFileUpdateDtoByFileAndUser(oldUrl, userModel, newUrl, newFileName);
 
         fileModel = tryMoveOrRenameFile(fileModel, userModel, fileUpdateDto);
 

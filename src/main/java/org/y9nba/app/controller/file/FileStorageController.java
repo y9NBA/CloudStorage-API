@@ -80,7 +80,7 @@ public class FileStorageController {
     }
 
     @PostMapping(path = "/copy/file")
-    public FileDto copyFile(@RequestParam String fileName, @RequestParam String folderUrl, @AuthenticationPrincipal UserModel userModel) {
+    public FileDto copyFile(@RequestParam String fileName, @RequestParam(required = false) String folderUrl, @AuthenticationPrincipal UserModel userModel) {
         return new FileDto(fileStorageService.copyExistingFile(userModel.getId(), fileName, folderUrl));
     }
 
