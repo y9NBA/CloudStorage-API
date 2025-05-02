@@ -8,6 +8,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.y9nba.app.dto.file.FileDto;
+import org.y9nba.app.dto.response.Response;
 import org.y9nba.app.mapper.GeneralMapper;
 import org.y9nba.app.model.FileModel;
 import org.y9nba.app.model.UserModel;
@@ -41,6 +42,8 @@ public class FileStorageController {
 
     @GetMapping(path = "/my-files")
     public Set<FileDto> getListFiles(@RequestParam(required = false) String folderUrl, @AuthenticationPrincipal UserModel userModel) {
+        fileStorageService.refreshFiles(userModel.getId());
+
         if (folderUrl != null) {
             return GeneralMapper.toFileDto(fileStorageService.findByUserIdAndFolderUrl(userModel.getId(), folderUrl));
         } else {
@@ -63,5 +66,16 @@ public class FileStorageController {
     public ResponseEntity<InputStreamResource> downloadFile(@RequestParam String fileName, @RequestParam(required = false) String folderUrl, @AuthenticationPrincipal UserModel userModel) {
         InputStream inputStream = fileStorageService.downloadFile(userModel.getId(), fileName, folderUrl);
         return fileStorageService.getResourceByInputStream(inputStream, fileName);
+    }
+
+    @DeleteMapping(path = "/delete/file")
+    public Response deleteFile(@RequestParam String fileName, @RequestParam(required = false) String folderUrl, @AuthenticationPrincipal UserModel userModel) {
+        String deleteFileUrl = fileStorageService.deleteFile(userModel.getId(), fileName, folderUrl);
+        return new Response("Файл успешно удалён по пути: " + deleteFileUrl);
+    }
+
+    @PostMapping(path = "/move/file")
+    public FileDto moveFile(@RequestParam String fileName, @RequestParam String newFolderUrl, @RequestParam(required = false) String oldFolderUrl, @AuthenticationPrincipal UserModel userModel) {
+        return new FileDto(fileStorageService.moveFileOnNewUrl(userModel.getId(), fileName, newFolderUrl, oldFolderUrl));
     }
 }
