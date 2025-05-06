@@ -4,6 +4,7 @@ import io.minio.*;
 import io.minio.http.Method;
 import io.minio.messages.Bucket;
 import lombok.SneakyThrows;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.y9nba.app.dto.file.FileCreateDto;
@@ -27,6 +28,12 @@ import java.util.stream.Collectors;
 public class StorageServiceImpl implements StorageService {
 
     private final MinioClient minioClient;
+
+    @Value("${minio.url}")
+    private String minioUrl;
+
+    @Value("${minio.domain.url}")
+    private String minioDomainUrl;
 
     public StorageServiceImpl(MinioClient minioClient) {
         this.minioClient = minioClient;
@@ -238,7 +245,7 @@ public class StorageServiceImpl implements StorageService {
                     .method(Method.GET)
                     .expiry(60 * minutes)
                     .build();
-            return minioClient.getPresignedObjectUrl(args);
+            return minioClient.getPresignedObjectUrl(args).replace(minioUrl, minioDomainUrl);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
