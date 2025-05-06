@@ -75,7 +75,9 @@ public class SecurityConfig {
                                     "/css/**",
                                     "/swagger-ui/**",
                                     "/v3/api-docs/**",
-                                    "/h2-console/**"
+                                    "/h2-console/**",
+                                    "/sharing/view/**",
+                                    "/sharing/download/**"
                             ).permitAll();
 
                             auth.anyRequest().authenticated();
