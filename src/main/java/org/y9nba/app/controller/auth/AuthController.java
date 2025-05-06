@@ -18,8 +18,8 @@ import org.y9nba.app.dto.auth.LoginRequestDto;
 import org.y9nba.app.dto.auth.RegistrationRequestDto;
 import org.y9nba.app.dto.response.ErrorResponse;
 import org.y9nba.app.dto.response.Response;
-import org.y9nba.app.exception.web.EmailAlreadyException;
-import org.y9nba.app.exception.web.UsernameAlreadyException;
+import org.y9nba.app.exception.web.user.info.EmailAlreadyException;
+import org.y9nba.app.exception.web.user.info.UsernameAlreadyException;
 import org.y9nba.app.security.AuthenticationService;
 import org.y9nba.app.service.UserService;
 

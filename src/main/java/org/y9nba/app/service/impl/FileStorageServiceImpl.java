@@ -1,7 +1,6 @@
 package org.y9nba.app.service.impl;
 
 import jakarta.transaction.Transactional;
-import org.apache.catalina.User;
 import org.hibernate.Hibernate;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
@@ -19,13 +18,20 @@ import org.y9nba.app.exception.local.NotPhysicalFileException;
 import org.y9nba.app.exception.local.PhysicalFileOnUrlAlreadyException;
 import org.y9nba.app.exception.local.PhysicalFilesAndEntriesNotSyncException;
 import org.y9nba.app.exception.web.*;
+import org.y9nba.app.exception.web.file.FileNewUrlAlreadyException;
+import org.y9nba.app.exception.web.file.FilePhysicalNotFoundException;
+import org.y9nba.app.exception.web.file.FilePhysicalOnUrlException;
+import org.y9nba.app.exception.web.file.access.FileAccessAlreadyException;
+import org.y9nba.app.exception.web.file.access.FileAccessDeniedException;
+import org.y9nba.app.exception.web.file.search.NotFoundFileByIdException;
+import org.y9nba.app.exception.web.file.search.NotFoundFileByURLException;
+import org.y9nba.app.exception.web.user.UserNotEnoughMemoryException;
 import org.y9nba.app.model.FileAccessModel;
 import org.y9nba.app.model.FileModel;
 import org.y9nba.app.model.UserModel;
 import org.y9nba.app.repository.FileRepository;
 import org.y9nba.app.service.FileStorageService;
 
-import java.io.File;
 import java.io.InputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -435,7 +441,7 @@ public class FileStorageServiceImpl implements FileStorageService {
         FileModel fileModel = repository
                 .findById(id)
                 .orElseThrow(
-                        () -> new NotFoundEntryException("Not found file by id: " + id)
+                        () -> new NotFoundFileByIdException(id)
                 );
 
         Hibernate.initialize(fileModel.getUser());
@@ -447,7 +453,7 @@ public class FileStorageServiceImpl implements FileStorageService {
         return repository
                 .getFileModelByUser_IdAndUrl(userId, url)
                 .orElseThrow(
-                        () -> new NotFoundEntryException("Not found file by url: " + url)
+                        () -> new NotFoundFileByURLException(url)
                 );
     }
 
@@ -455,7 +461,7 @@ public class FileStorageServiceImpl implements FileStorageService {
         return repository
                 .getFileModelByUrl(url)
                 .orElseThrow(
-                        () -> new NotFoundEntryException("Not found file by url: " + url)
+                        () -> new NotFoundFileByURLException(url)
                 );
     }
 

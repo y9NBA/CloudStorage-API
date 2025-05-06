@@ -8,7 +8,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.y9nba.app.constant.Access;
 import org.y9nba.app.dto.fileaccess.FileAccessCreateDto;
 import org.y9nba.app.dto.fileaccess.FileAccessUpdateDto;
-import org.y9nba.app.exception.web.NotFoundEntryException;
+import org.y9nba.app.exception.web.file.access.NotFoundFileAccessByUserAndFileException;
 import org.y9nba.app.model.FileAccessModel;
 import org.y9nba.app.repository.FileAccessRepository;
 import org.y9nba.app.service.FileAccessService;
@@ -58,7 +58,7 @@ public class FileAccessServiceImpl implements FileAccessService {
         return repository
                 .findByUserIdAndFileId(userId, fileId)
                 .orElseThrow(
-                        () -> new NotFoundEntryException("Not found file access. FileId: " + fileId + "; UserId: " + userId)
+                        () -> new NotFoundFileAccessByUserAndFileException(fileId, userId)
                 );
     }
 
