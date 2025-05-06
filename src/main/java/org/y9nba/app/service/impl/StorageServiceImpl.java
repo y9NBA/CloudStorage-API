@@ -18,9 +18,7 @@ import org.y9nba.app.model.UserModel;
 import org.y9nba.app.service.StorageService;
 
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -29,20 +27,15 @@ public class StorageServiceImpl implements StorageService {
 
     private final MinioClient minioClient;
 
-    @Value("${minio.url}")
-    private String minioUrl;
-
-    @Value("${minio.domain.url}")
-    private String minioDomainUrl;
-
     public StorageServiceImpl(MinioClient minioClient) {
         this.minioClient = minioClient;
     }
 
     @Override
     public void uploadFile(MultipartFile file, String bucketName, String folderUrl) {
+        createBucket(bucketName);
+
         String fileName = file.getOriginalFilename();
-        Map<String, String> metadata = new HashMap<>();
         InputStream inputStream;
         String objectName;
 
@@ -52,18 +45,14 @@ public class StorageServiceImpl implements StorageService {
             objectName = folderUrl + "/" + fileName;
         }
 
-        createBucket(bucketName);
-
         try {
             inputStream = file.getInputStream();
-            metadata.put("Content-Type", file.getContentType());
 
             PutObjectArgs objectArgs = PutObjectArgs.builder()
                     .bucket(bucketName)
                     .object(objectName)
                     .stream(inputStream, file.getSize(), -1)
                     .contentType(file.getContentType())
-                    .userMetadata(metadata)
                     .build();
 
             minioClient.putObject(objectArgs);
@@ -74,17 +63,14 @@ public class StorageServiceImpl implements StorageService {
 
     @Override
     public InputStream downloadFile(String bucketName, FileModel fileModel) throws NotPhysicalFileException {
+        createBucket(bucketName);
+
         String fileURL = getCorrectUrl(fileModel.getUrl());
 
         if (!isFileExist(bucketName, fileURL))
             throw new NotPhysicalFileException(fileURL);
 
         return downloadFileByUrl(bucketName, fileURL);
-    }
-
-    @Override
-    public InputStream downloadFile(String bucketName, String fileName) {
-        return downloadFileByUrl(bucketName, fileName);
     }
 
     private InputStream downloadFileByUrl(String bucketName, String fileURL) {
@@ -103,16 +89,14 @@ public class StorageServiceImpl implements StorageService {
 
     @Override
     public void deleteFile(String bucketName, FileModel fileModel) {
+        createBucket(bucketName);
         deleteFileByUrl(bucketName, getCorrectUrl(fileModel.getUrl()));
     }
 
     @Override
-    public void deleteFile(String bucketName, String fileName) {
-        deleteFileByUrl(bucketName, fileName);
-    }
-
-    @Override
     public void moveFile(String bucketName, FileModel fileModel, FileUpdateDto fileUpdDto) throws NotPhysicalFileException, PhysicalFileOnUrlAlreadyException {
+        createBucket(bucketName);
+
         String oldFileURL = getCorrectUrl(fileModel.getUrl());
         String newFileURL = getCorrectUrl(fileUpdDto.getUrl());
 
@@ -135,6 +119,8 @@ public class StorageServiceImpl implements StorageService {
 
     @Override
     public void copyFile(String bucketName, FileModel fileModel, FileCreateDto fileCrtDto) throws NotPhysicalFileException, PhysicalFileOnUrlAlreadyException {
+        createBucket(bucketName);
+
         String fileURL = getCorrectUrl(fileModel.getUrl());
         String copyFileURL = getCorrectUrl(fileCrtDto.getUrl());
 
@@ -162,13 +148,11 @@ public class StorageServiceImpl implements StorageService {
         }
     }
 
-    @Override
-    public boolean isFileExist(String bucketName, String fileName) {
+    private boolean isFileExist(String bucketName, String fileName) {
         return isFileExistByUrl(bucketName, fileName);
     }
 
-    @Override
-    public boolean isFileExist(String bucketName, FileModel fileModel) {
+    private boolean isFileExist(String bucketName, FileModel fileModel) {
         return isFileExistByUrl(bucketName, getCorrectUrl(fileModel.getUrl()));
     }
 
@@ -189,13 +173,11 @@ public class StorageServiceImpl implements StorageService {
         }
     }
 
-    @Override
-    public String shareFile(String bucketName, String fileName, int minutes) {
-        return shareFileByUrl(bucketName, fileName, minutes);
-    }
 
     @Override
     public void synchronizeFile(String bucketName, Set<FileModel> fileModels, UserModel user) throws PhysicalFilesAndEntriesNotSyncException {
+        createBucket(bucketName);
+
         Set<FileModel> fileModelsWithoutPhysicalFile = new java.util.HashSet<>();
         Set<FileCreateDto> filesWithoutEntryInDB = new java.util.HashSet<>();
         Set<String> objectNames = fileModels.stream().map(FileModel::getUrl).map(this::getCorrectUrl).collect(Collectors.toSet());
@@ -227,30 +209,6 @@ public class StorageServiceImpl implements StorageService {
             throw new PhysicalFilesAndEntriesNotSyncException(fileModelsWithoutPhysicalFile, filesWithoutEntryInDB);
     }
 
-    @Override
-    public String shareFile(String bucketName, FileModel fileModel, int minutes) throws NotPhysicalFileException {
-        String fileURL = getCorrectUrl(fileModel.getUrl());
-
-        if (!isFileExist(bucketName, fileModel))
-            throw new NotPhysicalFileException(fileURL);
-
-        return shareFileByUrl(bucketName, fileURL, minutes);
-    }
-
-    private String shareFileByUrl(String bucketName, String fileURL, int minutes) {
-        try {
-            GetPresignedObjectUrlArgs args = GetPresignedObjectUrlArgs.builder()
-                    .bucket(bucketName)
-                    .object(fileURL)
-                    .method(Method.GET)
-                    .expiry(60 * minutes)
-                    .build();
-            return minioClient.getPresignedObjectUrl(args).replace(minioUrl, minioDomainUrl);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     private boolean isFileExistByUrl(String bucketName, String fileURL) {
         try {
             return minioClient.statObject(StatObjectArgs.builder().bucket(bucketName).object(fileURL).build()) != null;
@@ -266,14 +224,6 @@ public class StorageServiceImpl implements StorageService {
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
-        }
-    }
-
-    public List<String> getAllBucketsName() {
-        try {
-            return minioClient.listBuckets().stream().map(Bucket::name).collect(Collectors.toList());
-        } catch (Exception e) {
-            throw new RuntimeException(e.getMessage());
         }
     }
 
