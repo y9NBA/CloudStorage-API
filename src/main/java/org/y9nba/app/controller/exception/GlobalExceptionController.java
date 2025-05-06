@@ -4,7 +4,12 @@ import io.swagger.v3.oas.annotations.Hidden;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.web.authentication.preauth.PreAuthenticatedCredentialsNotFoundException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
@@ -31,9 +36,8 @@ public class GlobalExceptionController {
         );
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ErrorResponse> catchIllegalArgumentException(IllegalArgumentException e) {
-        log.error(e.getMessage());
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ErrorResponse> catchIllegalArgumentException(BadCredentialsException e) {
         return new ResponseEntity<>(
                 new ErrorResponse(
                         e.getMessage(),
@@ -43,15 +47,26 @@ public class GlobalExceptionController {
         );
     }
 
+    @ExceptionHandler(InternalAuthenticationServiceException.class)
+    public ResponseEntity<ErrorResponse> catchAuthenticationException(InternalAuthenticationServiceException e) {
+        return new ResponseEntity<>(
+                new ErrorResponse(
+                        e.getMessage(),
+                        HttpStatus.NOT_FOUND.value()
+                ),
+                HttpStatus.NOT_FOUND
+        );
+    }
+
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ErrorResponse> catchAuthenticationException(AuthenticationException e) {
         log.error(e.getMessage());
         return new ResponseEntity<>(
                 new ErrorResponse(
                         e.getMessage(),
-                        HttpStatus.BAD_REQUEST.value()
+                        HttpStatus.NO_CONTENT.value()
                 ),
-                HttpStatus.BAD_REQUEST
+                HttpStatus.NO_CONTENT
         );
     }
 
