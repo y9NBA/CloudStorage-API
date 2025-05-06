@@ -15,7 +15,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://service-db:5432/cloudstorage?currentSchema=cloudstorage
       - MINIO_ACCESS_NAME=minioadmin
       - MINIO_ACCESS_SECRET=minioadmin
-      - MINIO_URL=http://minio:9090
+      - MINIO_URL=http://minio:9000
 
   service-db:
     image: postgres:14.7-alpine
