@@ -7,12 +7,14 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
 import org.y9nba.app.constant.Access;
 import org.y9nba.app.dto.fileaccess.FileAccessCreateDto;
+import org.y9nba.app.dto.fileaccess.FileAccessUpdateDto;
 import org.y9nba.app.exception.web.NotFoundEntryException;
 import org.y9nba.app.model.FileAccessModel;
 import org.y9nba.app.repository.FileAccessRepository;
 import org.y9nba.app.service.FileAccessService;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class FileAccessServiceImpl implements FileAccessService {
@@ -24,8 +26,13 @@ public class FileAccessServiceImpl implements FileAccessService {
     }
 
     @Override
-    public FileAccessModel save(FileAccessCreateDto entity) {
-        return repository.save(new FileAccessModel(entity));
+    public FileAccessModel save(FileAccessCreateDto dto) {    // TODO: сделать методы на добавление и удаление доступа к файлу
+        return repository.save(new FileAccessModel(dto));
+    }
+
+    @Override
+    public FileAccessModel update(FileAccessUpdateDto dto) {
+        return repository.save(new FileAccessModel(dto));
     }
 
     @Override
@@ -51,18 +58,44 @@ public class FileAccessServiceImpl implements FileAccessService {
         return repository
                 .findByUserIdAndFileId(userId, fileId)
                 .orElseThrow(
-                        () -> new NotFoundEntryException("Not found file access.\nFileId: " + fileId + "\nUserId: " + userId)
+                        () -> new NotFoundEntryException("Not found file access. FileId: " + fileId + "; UserId: " + userId)
                 );
     }
 
     @Override
-    public void delete(FileAccessModel entity) {
+    public void deleteAllAccessesForFile(Long fileId) {
+        deleteAll(repository.getFileAccessModelsByFileId(fileId));
+    }
 
+    @Override
+    public void deleteAllAccessesReaderForFile(Long fileId) {
+        deleteAll(
+                repository
+                        .getFileAccessModelsByFileId(fileId)
+                        .stream()
+                        .filter(
+                                fa -> fa.getAccessLevel().equals(Access.ACCESS_READER)
+                        ).collect(Collectors.toSet())
+        );
+    }
+
+    private void deleteAll(Set<FileAccessModel> fileAccessModels) {
+        repository.deleteAll(fileAccessModels);
+    }
+
+    @Override
+    public void delete(FileAccessModel entity) {
+        repository.delete(entity);
     }
 
     @Override
     public void deleteById(Long id) {
+        repository.deleteById(id);
+    }
 
+    @Override
+    public void deleteByUserIdAndFileId(Long userId, Long fileId) {
+        delete(findByUserAndFile(userId, fileId));
     }
 
     @Override
@@ -72,6 +105,11 @@ public class FileAccessServiceImpl implements FileAccessService {
                 .orElseThrow(
                         () -> new HttpClientErrorException(HttpStatus.BAD_REQUEST)
                 );
+    }
+
+    @Override
+    public boolean existsByUserAndFile(Long userId, Long fileId) {
+        return repository.existsByUserIdAndFileId(userId, fileId);
     }
 
     @Override
