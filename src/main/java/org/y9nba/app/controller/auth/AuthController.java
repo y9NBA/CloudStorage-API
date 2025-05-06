@@ -126,7 +126,7 @@ public class AuthController {
                             mediaType = "application/json",
                             schema = @Schema(implementation = TokenResponseDto.class))),
             @ApiResponse(
-                    responseCode = "401",
+                    responseCode = "400",
                     description = "Ошибка в данных",
                     content = @Content(
                             mediaType = "application/json",
