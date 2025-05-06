@@ -56,7 +56,7 @@ services:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
       TZ: Europe/Moscow
-    command: server ~/minio --console-address :9090 --address :9000
+    command: server /data --console-address :9090 --address :9000
 
 volumes:
   db-data:
