@@ -33,11 +33,10 @@ spring:
 server:
   servlet:
     context-path: /api/v1/
-#  port: 80
 
 token:
   signing:
-    key: token
+    key: ${TOKEN_SIGNING_KEY}
     access_token: 36000000 # 10 hours
     refresh_token: 252000000 # 7 days
 

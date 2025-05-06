@@ -5,6 +5,7 @@ import lombok.*;
 
 import org.y9nba.app.constant.Access;
 import org.y9nba.app.dto.fileaccess.FileAccessCreateDto;
+import org.y9nba.app.dto.fileaccess.FileAccessUpdateDto;
 
 @Entity
 @Table(name = "file_access")
@@ -29,6 +30,13 @@ public class FileAccessModel {
     private Access accessLevel;
 
     public FileAccessModel(FileAccessCreateDto dto) {
+        this.user = dto.getUser();
+        this.file = dto.getFile();
+        this.accessLevel = dto.getAccessLevel();
+    }
+
+    public FileAccessModel(FileAccessUpdateDto dto) {
+        this.id = dto.getId();
         this.user = dto.getUser();
         this.file = dto.getFile();
         this.accessLevel = dto.getAccessLevel();

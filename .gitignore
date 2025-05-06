@@ -1,6 +1,6 @@
 storage/
 HELP.md
-token.config
+.env
 .gradle
 build/
 !gradle/wrapper/gradle-wrapper.jar

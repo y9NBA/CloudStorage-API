@@ -30,53 +30,63 @@ public class AuditLogServiceImpl implements AuditLogService {
 
     @Override
     public void logDownload(UserModel user, FileModel file) {
-        save(new AuditLogCreateDto(user, file, Action.ACTION_DOWNLOAD));
+        saveLog(user, file, Action.ACTION_DOWNLOAD);
     }
 
     @Override
     public void logCreate(UserModel user, FileModel file) {
-        save(new AuditLogCreateDto(user, file, Action.ACTION_CREATE));
+        saveLog(user, file, Action.ACTION_CREATE);
     }
 
     @Override
     public void logUpdate(UserModel user, FileModel file) {
-        save(new AuditLogCreateDto(user, file, Action.ACTION_UPDATE));
+        saveLog(user, file, Action.ACTION_UPDATE);
     }
 
     @Override
     public void logRename(UserModel user, FileModel file) {
-        save(new AuditLogCreateDto(user, file, Action.ACTION_RENAME));
+        saveLog(user, file, Action.ACTION_RENAME);
     }
 
     @Override
     public void logMove(UserModel user, FileModel file) {
-        save(new AuditLogCreateDto(user, file, Action.ACTION_MOVE));
+        saveLog(user, file, Action.ACTION_MOVE);
     }
 
     @Override
     public void logCopy(UserModel user, FileModel file) {
-        save(new AuditLogCreateDto(user, file, Action.ACTION_COPY));
+        saveLog(user, file, Action.ACTION_COPY);
     }
 
     @Override
     public void logAddAccess(UserModel user, FileModel file) {
-        save(new AuditLogCreateDto(user, file, Action.ACTION_ADD_ACCESS));
+        saveLog(user, file, Action.ACTION_ADD_ACCESS);
     }
 
     @Override
     public void logRemoveAccess(UserModel user, FileModel file) {
-        save(new AuditLogCreateDto(user, file, Action.ACTION_DEL_ACCESS));
+        saveLog(user, file, Action.ACTION_DEL_ACCESS);
+    }
+
+    @Override
+    public void logMakePublic(UserModel user, FileModel file) {
+        saveLog(user, file, Action.ACTION_MAKE_PUBLIC);
+    }
+
+    @Override
+    public void logMakePrivate(UserModel user, FileModel file) {
+        saveLog(user, file, Action.ACTION_MAKE_PRIVATE);
     }
 
 
     @Override
     public void delete(AuditLogModel entity) {
-
+        repository.delete(entity);
     }
 
     @Override
     public void deleteById(Long id) {
-
+        repository.deleteById(id);
     }
 
     @Override
@@ -96,5 +106,9 @@ public class AuditLogServiceImpl implements AuditLogService {
     @Override
     public Set<AuditLogDto> findByUser(Long userId) {
         return null;
+    }
+
+    private void saveLog(UserModel user, FileModel file, Action action) {
+        save(new AuditLogCreateDto(user, file, action));
     }
 }

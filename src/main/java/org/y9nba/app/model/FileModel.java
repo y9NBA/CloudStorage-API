@@ -34,6 +34,9 @@ public class FileModel {
     @Column(nullable = false, unique = true)
     private String url;
 
+    @Column(nullable = false)
+    private Boolean isPublic = false;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -58,6 +61,11 @@ public class FileModel {
         this.mimeType = dto.getMimeType();
         this.url = dto.getUrl();
         this.user = dto.getUser();
+        this.isPublic = dto.getIsPublic();
+    }
+
+    public Boolean isPublic() {
+        return this.isPublic;
     }
 }
 

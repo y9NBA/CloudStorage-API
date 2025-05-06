@@ -8,15 +8,14 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.y9nba.app.dto.file.FileDto;
+import org.y9nba.app.dto.file.FileInputStreamWithAccessDto;
 import org.y9nba.app.dto.response.Response;
 import org.y9nba.app.mapper.GeneralMapper;
 import org.y9nba.app.model.FileModel;
 import org.y9nba.app.model.UserModel;
 import org.y9nba.app.service.impl.FileStorageServiceImpl;
-import org.y9nba.app.service.impl.StorageServiceImpl;
 
 import java.io.InputStream;
-import java.util.List;
 import java.util.Set;
 
 @Tag(
@@ -27,17 +26,10 @@ import java.util.Set;
 @RequestMapping("/storage")
 public class FileStorageController {
 
-    private final StorageServiceImpl storageService;
     private final FileStorageServiceImpl fileStorageService;
 
-    public FileStorageController(StorageServiceImpl storageService, FileStorageServiceImpl fileStorageService) {
-        this.storageService = storageService;
+    public FileStorageController(FileStorageServiceImpl fileStorageService) {
         this.fileStorageService = fileStorageService;
-    }
-
-    @GetMapping(path = "/buckets")
-    public List<String> listBuckets() {
-        return storageService.getAllBucketsName();
     }
 
     @GetMapping(path = "/my-files")
@@ -64,8 +56,16 @@ public class FileStorageController {
 
     @GetMapping(path = "/download/file")
     public ResponseEntity<InputStreamResource> downloadFile(@RequestParam String fileName, @RequestParam(required = false) String folderUrl, @AuthenticationPrincipal UserModel userModel) {
-        InputStream inputStream = fileStorageService.downloadFile(userModel.getId(), fileName, folderUrl);
-        return fileStorageService.getResourceByInputStream(inputStream, fileName);
+        FileInputStreamWithAccessDto dto = fileStorageService.downloadFile(userModel.getId(), fileName, folderUrl);
+        FileModel fileModel = fileStorageService.findFile(userModel.getId(), fileName, folderUrl);
+        return fileStorageService.getResourceForDownloadByInputStream(dto, fileModel);
+    }
+
+    @GetMapping(path = "/view/file")
+    public ResponseEntity<InputStreamResource> viewFile(@RequestParam String fileName, @RequestParam(required = false) String folderUrl, @AuthenticationPrincipal UserModel userModel) {
+        FileInputStreamWithAccessDto dto = fileStorageService.downloadFile(userModel.getId(), fileName, folderUrl);
+        FileModel fileModel = fileStorageService.findFile(userModel.getId(), fileName, folderUrl);
+        return fileStorageService.getResourceForViewByInputStream(dto, fileModel);
     }
 
     @DeleteMapping(path = "/delete/file")

@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   client-backend:
-    image: client:0.0.4
+    image: client:1.0.0
     build:
       context: .
       dockerfile: Dockerfile
@@ -9,22 +9,26 @@ services:
       - "8080:8080"
     depends_on:
       - service-db
-      - minio
     environment:
-      - SERVER_PORT= 8080
+      - SERVER_PORT=8080
+      - TOKEN_SIGNING_KEY=${TOKEN_SIGNING_KEY}
       - SPRING_DATASOURCE_URL=jdbc:postgresql://service-db:5432/cloudstorage?currentSchema=cloudstorage
-      - MINIO_URL=http://minio:9000    # ggj-cldstrg.ru
+      - MINIO_ACCESS_NAME=minioadmin
+      - MINIO_ACCESS_SECRET=minioadmin
+      - MINIO_URL=http://minio:9090
 
   service-db:
     image: postgres:14.7-alpine
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+      PGTZ: Europe/Moscow
     ports:
       - "15432:5432"
     volumes:
       - ./infrastructure/db/create-db.sql:/docker-entrypoint-initdb.d/create-db.sql
       - db-data:/var/lib/postgresql/data
+      - /etc/localtime:/etc/localtime:ro
     restart: unless-stopped
 
   pgadmin:
@@ -41,13 +45,18 @@ services:
 
   minio:
     container_name: minio_server
-    image: minio/minio:RELEASE.2024-04-18T19-09-19Z
+    image: quay.io/minio/minio:latest
     ports:
-      - "9090:9090"
       - "9000:9000"
+      - "9090:9090"
     volumes:
       - minio-data:/data
-    command: server ~/minio --console-address :9090
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+      TZ: Europe/Moscow
+    command: server ~/minio --console-address :9090 --address :9000
 
 volumes:
   db-data:

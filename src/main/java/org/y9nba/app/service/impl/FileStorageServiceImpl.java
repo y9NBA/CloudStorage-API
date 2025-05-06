@@ -1,6 +1,7 @@
 package org.y9nba.app.service.impl;
 
 import jakarta.transaction.Transactional;
+import org.apache.catalina.User;
 import org.hibernate.Hibernate;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
@@ -10,10 +11,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.y9nba.app.constant.Access;
 import org.y9nba.app.dto.file.FileCreateDto;
+import org.y9nba.app.dto.file.FileInputStreamWithAccessDto;
 import org.y9nba.app.dto.file.FileUpdateDto;
 import org.y9nba.app.dto.fileaccess.FileAccessCreateDto;
-import org.y9nba.app.dto.share.ExpireRequestDto;
-import org.y9nba.app.dto.share.SharedUrlResponseDto;
+import org.y9nba.app.dto.fileaccess.FileAccessUpdateDto;
 import org.y9nba.app.exception.local.NotPhysicalFileException;
 import org.y9nba.app.exception.local.PhysicalFileOnUrlAlreadyException;
 import org.y9nba.app.exception.local.PhysicalFilesAndEntriesNotSyncException;
@@ -24,6 +25,7 @@ import org.y9nba.app.model.UserModel;
 import org.y9nba.app.repository.FileRepository;
 import org.y9nba.app.service.FileStorageService;
 
+import java.io.File;
 import java.io.InputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -59,7 +61,8 @@ public class FileStorageServiceImpl implements FileStorageService {
                     updateExisting(
                             findByUserIdAndUrl(userId, url),
                             getFileUpdateDtoByFileAndUser(url, userModel, file.getSize()),
-                            userModel
+                            userModel,
+                            null
                     );
         } else {
             fileId =
@@ -72,6 +75,33 @@ public class FileStorageServiceImpl implements FileStorageService {
         storageService.uploadFile(file, userModel.getBucketName(), folderURL);
 
         updateUsedStorageOfUser(userId);
+
+        return findById(fileId);
+    }
+
+    @Transactional
+    @Override
+    public FileModel uploadFileByAccess(Long userId, MultipartFile file, String bucketName, String fileName, String folderURL) {
+        String url = createAbsFileURL(bucketName, fileName, folderURL);
+        FileModel fileModel = findByUrl(url);
+
+        if (!fileAccessService.hasAccessOnEdit(userId, fileModel.getId())) {
+            throw new FileAccessDeniedException(Access.ACCESS_EDITOR);
+        }
+
+        UserModel author = findById(fileModel.getId()).getUser();
+        UserModel collaborator = userService.getById(userId);
+
+        Long fileId = updateExisting(
+                fileModel,
+                getFileUpdateDtoByFileAndUser(url, author, file.getSize()),
+                author,
+                collaborator
+        );
+
+        storageService.uploadFile(file, bucketName, folderURL);
+
+        updateUsedStorageOfUser(author.getId());
 
         return findById(fileId);
     }
@@ -90,13 +120,13 @@ public class FileStorageServiceImpl implements FileStorageService {
         return fileModel.getId();
     }
 
-    private Long updateExisting(FileModel file, FileUpdateDto fileUpdateDto, UserModel userModel) {
-        if ((fileUpdateDto.getFileSize() - file.getFileSize()) > userModel.getNotUsedStorage() && fileUpdateDto.getFileSize() > file.getFileSize())
+    private Long updateExisting(FileModel file, FileUpdateDto fileUpdateDto, UserModel authorOfFile, UserModel authorOfUpdate) {
+        if ((fileUpdateDto.getFileSize() - file.getFileSize()) > authorOfFile.getNotUsedStorage() && fileUpdateDto.getFileSize() > file.getFileSize())
             throw new UserNotEnoughMemoryException();
 
         FileModel fileModel = update(fileUpdateDto);
 
-        auditLogService.logUpdate(userModel, fileModel);
+        auditLogService.logUpdate(authorOfUpdate == null ? authorOfFile : authorOfUpdate, fileModel);
 
         return fileModel.getId();
     }
@@ -109,28 +139,46 @@ public class FileStorageServiceImpl implements FileStorageService {
     }
 
     @Override
-    public InputStream downloadFile(Long userId, String fileName, String folderURL) {
+    public FileInputStreamWithAccessDto downloadFile(Long userId, String fileName, String folderURL) {
         String url = createAbsFileURL(userId, fileName, folderURL);
         FileModel fileModel = findByUserIdAndUrl(userId, url);
         UserModel userModel = userService.getById(userId);
 
         auditLogService.logDownload(userModel, fileModel);
 
-        return downloadFileByUserAndFile(userModel, fileModel);
+        return new FileInputStreamWithAccessDto(downloadFileByUserAndFile(userModel, fileModel), Access.ACCESS_AUTHOR);
     }
 
     @Transactional
     @Override
-    public InputStream downloadFileByAccess(Long userId, Long fileId) {
-        checkAccessOnRead(userId, fileId);
+    public FileInputStreamWithAccessDto downloadFileByAccess(Long userId, String bucketName, String fileName, String folderURL) {
+        String url = createAbsFileURL(bucketName, fileName, folderURL);
+        FileModel fileModel = findByUrl(url);
+        UserModel author = findById(fileModel.getId()).getUser();
+        UserModel collaborator;
+        Access access;
 
-        FileModel fileModel = findById(fileId);
+        if (userId != null) {
+            collaborator = userService.getById(userId);
 
-        UserModel author = fileModel.getUser();
+            if (fileModel.isPublic() && !fileAccessService.hasAccessOnRead(userId, fileModel.getId())) {
+                giveAccessOnFileForUser(author, fileModel, collaborator, Access.ACCESS_READER);
+            } else if (!fileModel.isPublic() && !fileAccessService.hasAccessOnRead(userId, fileModel.getId())) {
+                throw new FileAccessDeniedException();
+            }
 
-        auditLogService.logDownload(userService.getById(userId), fileModel);
+            access = fileAccessService.findByUserAndFile(collaborator.getId(), fileModel.getId()).getAccessLevel();
 
-        return downloadFileByUserAndFile(author, fileModel);
+            auditLogService.logDownload(collaborator, fileModel);
+        } else {
+            if (!fileModel.isPublic()) {
+                throw new FileAccessDeniedException();
+            }
+
+            access = Access.ACCESS_READER;
+        }
+
+        return new FileInputStreamWithAccessDto(downloadFileByUserAndFile(author, fileModel), access);
     }
 
     @Transactional
@@ -245,38 +293,90 @@ public class FileStorageServiceImpl implements FileStorageService {
         return url;
     }
 
-    private void deleteEntry(FileModel fileModel) {
-        repository.delete(fileModel);
-        updateUsedStorageOfUser(fileModel.getUser().getId());
+    @Override
+    public FileModel giveAccessOnFileForUser(Long userId, String fileName, String folderURL, Long collaboratorUserId, Access access) {
+        String url = createAbsFileURL(userId, fileName, folderURL);
+        FileModel fileModel = findByUserIdAndUrl(userId, url);
+
+        return giveAccessOnFileForUser(userService.getById(userId), fileModel, userService.getById(collaboratorUserId), access);
     }
 
-    @Transactional
-    @Override
-    public FileModel findById(Long id) {
-        FileModel fileModel = repository
-                .findById(id)
-                .orElseThrow(
-                        () -> new NotFoundEntryException("Not found file by id: " + id)
-                );
+    private FileModel giveAccessOnFileForUser(UserModel author, FileModel fileModel, UserModel collaboratorUser, Access access) {
+        if (fileAccessService.existsByUserAndFile(collaboratorUser.getId(), fileModel.getId())) {
+            FileAccessModel faModel = fileAccessService.findByUserAndFile(collaboratorUser.getId(), fileModel.getId());
 
-        Hibernate.initialize(fileModel.getUser());
+            if (faModel.getAccessLevel() == access) {
+                throw new FileAccessAlreadyException(collaboratorUser.getUsername());
+            } else {
+                FileAccessUpdateDto faUpdateDto = new FileAccessUpdateDto(faModel);
+                faUpdateDto.setAccessLevel(access);
+                fileAccessService.update(faUpdateDto);
+            }
+        } else {
+            fileAccessService.save(new FileAccessCreateDto(fileModel, collaboratorUser, access));
+            auditLogService.logAddAccess(author, fileModel);
+        }
+
+        return findByUrl(fileModel.getUrl());
+    }
+
+    @Override
+    public FileModel revokeAccessOnFileForUser(Long userId, String fileName, String folderURL, Long collaboratorUserId) {
+        String url = createAbsFileURL(userId, fileName, folderURL);
+        FileModel fileModel = findByUserIdAndUrl(userId, url);
+
+        fileAccessService.deleteByUserIdAndFileId(collaboratorUserId, fileModel.getId());
+
+        auditLogService.logRemoveAccess(userService.getById(userId), fileModel);
+
+        return findByUrl(url);
+    }
+
+    @Override
+    public FileModel revokeAllAccessOnFile(Long userId, String fileName, String folderURL) {
+        String url = createAbsFileURL(userId, fileName, folderURL);
+        FileModel fileModel = findByUserIdAndUrl(userId, url);
+
+        fileAccessService.deleteAllAccessesForFile(fileModel.getId());
+
+        auditLogService.logRemoveAccess(userService.getById(userId), fileModel);
+
+        return findByUrl(url);
+    }
+
+    @Override
+    public FileModel makeFilePublic(Long userId, String fileName, String folderURL) {
+        String url = createAbsFileURL(userId, fileName, folderURL);
+        FileUpdateDto fileUpdateDto = new FileUpdateDto(findByUserIdAndUrl(userId, url));
+
+        fileUpdateDto.makePublic();
+
+        FileModel fileModel = update(fileUpdateDto);
+
+        auditLogService.logMakePublic(userService.getById(userId), fileModel);
 
         return fileModel;
     }
 
     @Override
-    public FileModel findByUserIdAndUrl(Long userId, String url) {
-        return repository
-                .getFileModelByUser_IdAndUrl(userId, url)
-                .orElseThrow(
-                        () -> new NotFoundEntryException("Not found file by url: " + url)
-                );
+    public FileModel makeFilePrivate(Long userId, String fileName, String folderURL) {
+        String url = createAbsFileURL(userId, fileName, folderURL);
+        FileUpdateDto fileUpdateDto = new FileUpdateDto(findByUserIdAndUrl(userId, url));
+
+        fileUpdateDto.makePrivate();
+
+        FileModel fileModel = update(fileUpdateDto);
+
+        fileAccessService.deleteAllAccessesReaderForFile(fileModel.getId());
+
+        auditLogService.logMakePrivate(userService.getById(userId), fileModel);
+
+        return fileModel;
     }
 
-    @Override
-    public FileModel findFile(Long userId, String fileName, String folderURL) {
-        String url = createAbsFileURL(userId, fileName, folderURL);
-        return findByUserIdAndUrl(userId, url);
+    private void deleteEntry(FileModel fileModel) {
+        repository.delete(fileModel);
+        updateUsedStorageOfUser(fileModel.getUser().getId());
     }
 
     @Override
@@ -298,12 +398,15 @@ public class FileStorageServiceImpl implements FileStorageService {
                 );
     }
 
-    @Transactional
     @Override
-    public FileModel findOwnerByFileId(Long userId, Long fileId) {
-        checkAccessOnRead(userId, fileId);
+    public FileModel findOwnerByFileId(Long userId, String bucketName, String fileName, String folderURL) {
+        FileModel fileModel = findByUrl(createAbsFileURL(bucketName, fileName, folderURL));
 
-        return findById(fileId);
+        if (fileAccessService.hasAccessOnRead(userId, fileModel.getId())) {
+            return fileModel;
+        } else {
+            throw new FileAccessDeniedException();
+        }
     }
 
     @Override
@@ -327,28 +430,70 @@ public class FileStorageServiceImpl implements FileStorageService {
                 .collect(Collectors.toSet());
     }
 
-    @Override
-    public SharedUrlResponseDto getSharedUrlForFile(ExpireRequestDto expireRequestDto, Long userId, String fileName, String folderURL) {
-        FileModel fileModel = findByUserIdAndUrl(userId, createAbsFileURL(userId, fileName, folderURL));
+    @Transactional
+    protected FileModel findById(Long id) {
+        FileModel fileModel = repository
+                .findById(id)
+                .orElseThrow(
+                        () -> new NotFoundEntryException("Not found file by id: " + id)
+                );
 
-        try {
-            String sharedUrl = storageService.shareFile(getBucketNameByUserId(userId), fileModel, expireRequestDto.calcExpireTime());
-            return new SharedUrlResponseDto(sharedUrl, expireRequestDto.calcExpireTime());
-        } catch (NotPhysicalFileException e) {
-            deleteEntry(fileModel);
-            throw new FilePhysicalNotFoundException(e.getMessage());
-        }
+        Hibernate.initialize(fileModel.getUser());
+
+        return fileModel;
+    }
+
+    private FileModel findByUserIdAndUrl(Long userId, String url) {
+        return repository
+                .getFileModelByUser_IdAndUrl(userId, url)
+                .orElseThrow(
+                        () -> new NotFoundEntryException("Not found file by url: " + url)
+                );
+    }
+
+    public FileModel findByUrl(String url) {
+        return repository
+                .getFileModelByUrl(url)
+                .orElseThrow(
+                        () -> new NotFoundEntryException("Not found file by url: " + url)
+                );
+    }
+
+    public FileModel findFile(Long userId, String fileName, String folderURL) {
+        String url = createAbsFileURL(userId, fileName, folderURL);
+        return findByUserIdAndUrl(userId, url);
+    }
+
+    public FileModel findFile(String bucketName, String fileName, String folderURL) {
+        String url = createAbsFileURL(bucketName, fileName, folderURL);
+        return findByUrl(url);
     }
 
     @Override
-    public ResponseEntity<InputStreamResource> getResourceByInputStream(InputStream inputStream, String fileName) {
-        String encodedFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8).replaceAll("\\+", "%20");
+    public ResponseEntity<InputStreamResource> getResourceForViewByInputStream(FileInputStreamWithAccessDto dto, FileModel fileModel) {
+        return getResponseBuilderWithHeadersForInputStream(fileModel, dto.getAccess(), true).body(new InputStreamResource(dto.getInputStream()));
+    }
+
+    @Override
+    public ResponseEntity<InputStreamResource> getResourceForDownloadByInputStream(FileInputStreamWithAccessDto dto, FileModel fileModel) {
+        return getResponseBuilderWithHeadersForInputStream(fileModel, dto.getAccess(), false).body(new InputStreamResource(dto.getInputStream()));
+    }
+
+    private ResponseEntity.BodyBuilder getResponseBuilderWithHeadersForInputStream(FileModel fileModel, Access access, boolean cache) {
+        String encodedFileName = URLEncoder.encode(fileModel.getFileName(), StandardCharsets.UTF_8).replaceAll("\\+", "%20");
 
         HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + encodedFileName + "\"");
-        headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_OCTET_STREAM_VALUE);
+        headers.setContentType(MediaType.parseMediaType(fileModel.getMimeType()));
+        headers.add("X-Access-Level", access.name());
 
-        return ResponseEntity.ok().headers(headers).body(new InputStreamResource(inputStream));
+        if (cache) {
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + encodedFileName + "\"");
+            headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+        } else {
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + encodedFileName + "\"");
+        }
+
+        return ResponseEntity.ok().headers(headers);
     }
 
     @Override
@@ -374,6 +519,10 @@ public class FileStorageServiceImpl implements FileStorageService {
     private String createAbsFileURL(Long userId, String fileName, String folderURL) {
         String bucketName = getBucketNameByUserId(userId);
 
+        return createAbsFileURL(bucketName, fileName, folderURL);
+    }
+
+    private String createAbsFileURL(String bucketName, String fileName, String folderURL) {
         if (folderURL == null) {
             return String.format("%s/%s", bucketName, fileName);
         } else {
@@ -426,11 +575,5 @@ public class FileStorageServiceImpl implements FileStorageService {
         fileUpdateDto.setFileName(newFileName);
 
         return fileUpdateDto;
-    }
-
-    private void checkAccessOnRead(Long userId, Long fileId) {
-        if (!fileAccessService.hasAccessOnRead(userId, fileId)) {
-            throw new FileAccessDeniedException();
-        }
     }
 }
