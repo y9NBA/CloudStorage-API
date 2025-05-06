@@ -39,6 +39,12 @@ databaseChangeLog:
                   constraints:
                     nullable: false
               - column:
+                  name: is_public
+                  type: boolean
+                  defaultOnNull: false
+                  constraints:
+                    nullable: false
+              - column:
                   name: created_at
                   type: timestamp
                   defaultValue: now()
