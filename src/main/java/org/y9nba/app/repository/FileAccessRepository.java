@@ -12,4 +12,6 @@ public interface FileAccessRepository extends JpaRepository<FileAccessModel, Lon
 
     Optional<FileAccessModel> findByUserIdAndFileId(Long userId, Long fileId);
     Set<FileAccessModel> getFileAccessModelsByUserId(Long userId);
+    Set<FileAccessModel> getFileAccessModelsByFileId(Long fileId);
+    boolean existsByUserIdAndFileId(Long userId, Long fileId);
 }
