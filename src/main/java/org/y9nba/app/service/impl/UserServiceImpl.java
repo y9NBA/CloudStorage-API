@@ -6,6 +6,10 @@ import org.y9nba.app.dto.search.UserSearchDto;
 import org.y9nba.app.dto.user.*;
 import org.y9nba.app.dto.userrole.UserRoleCreateDto;
 import org.y9nba.app.exception.web.*;
+import org.y9nba.app.exception.web.user.info.*;
+import org.y9nba.app.exception.web.user.search.NotFoundUserByEmailException;
+import org.y9nba.app.exception.web.user.search.NotFoundUserByIdException;
+import org.y9nba.app.exception.web.user.search.NotFoundUserByUsernameException;
 import org.y9nba.app.model.UserModel;
 import org.y9nba.app.model.UserRoleModel;
 import org.y9nba.app.repository.UserRepository;
@@ -129,7 +133,7 @@ public class UserServiceImpl implements UserService {
         return repository
                 .findByUsername(username)
                 .orElseThrow(
-                        () -> new NotFoundEntryException("Not found user by username: " + username)
+                        () -> new NotFoundUserByUsernameException(username)
                 );
     }
 
@@ -138,7 +142,7 @@ public class UserServiceImpl implements UserService {
         return repository
                 .findByEmail(email)
                 .orElseThrow(
-                        () -> new NotFoundEntryException("Not found user by email: " + email)
+                        () -> new NotFoundUserByEmailException(email)
                 );
     }
 
@@ -147,7 +151,7 @@ public class UserServiceImpl implements UserService {
         return repository
                 .findById(id)
                 .orElseThrow(
-                        () -> new NotFoundEntryException("Not found user by id: " + id)
+                        () -> new NotFoundUserByIdException(id)
                 );
     }
 

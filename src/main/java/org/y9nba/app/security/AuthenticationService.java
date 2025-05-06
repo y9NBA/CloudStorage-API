@@ -10,7 +10,7 @@ import org.y9nba.app.dto.auth.TokenResponseDto;
 import org.y9nba.app.dto.auth.LoginRequestDto;
 import org.y9nba.app.dto.auth.RegistrationRequestDto;
 import org.y9nba.app.dto.user.UserCreateDto;
-import org.y9nba.app.exception.web.UnAuthorizedException;
+import org.y9nba.app.exception.web.auth.UnAuthorizedException;
 import org.y9nba.app.model.TokenModel;
 import org.y9nba.app.model.UserModel;
 import org.y9nba.app.repository.TokenRepository;

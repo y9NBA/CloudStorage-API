@@ -4,7 +4,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import org.y9nba.app.exception.web.NotFoundEntryException;
+import org.y9nba.app.exception.web.user.search.NotFoundUserByIdException;
+import org.y9nba.app.exception.web.user.search.NotFoundUserByUsernameException;
 import org.y9nba.app.repository.UserRepository;
 
 @Service
@@ -21,7 +22,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         return repository
                 .findByUsername(username)
                 .orElseThrow(
-                        () -> new NotFoundEntryException("Not found user by username: " + username)
+                        () -> new NotFoundUserByUsernameException(username)
                 );
     }
 
@@ -29,7 +30,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         return repository
                 .findById(id)
                 .orElseThrow(
-                        () -> new NotFoundEntryException("Not found user by id: " + id)
+                        () -> new NotFoundUserByIdException(id)
                 );
     }
 }

@@ -1,6 +1,7 @@
-package org.y9nba.app.exception.web;
+package org.y9nba.app.exception.web.file;
 
 import org.springframework.http.HttpStatus;
+import org.y9nba.app.exception.web.AbstractException;
 
 public class FileNotUploadException extends AbstractException {
 

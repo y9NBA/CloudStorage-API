@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Hidden;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
@@ -27,6 +28,30 @@ public class GlobalExceptionController {
                         e.getStatusCode().value()
                 ),
                 e.getStatusCode()
+        );
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> catchIllegalArgumentException(IllegalArgumentException e) {
+        log.error(e.getMessage());
+        return new ResponseEntity<>(
+                new ErrorResponse(
+                        e.getMessage(),
+                        HttpStatus.BAD_REQUEST.value()
+                ),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ErrorResponse> catchAuthenticationException(AuthenticationException e) {
+        log.error(e.getMessage());
+        return new ResponseEntity<>(
+                new ErrorResponse(
+                        e.getMessage(),
+                        HttpStatus.BAD_REQUEST.value()
+                ),
+                HttpStatus.BAD_REQUEST
         );
     }
 

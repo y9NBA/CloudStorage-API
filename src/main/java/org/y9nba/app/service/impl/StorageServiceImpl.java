@@ -1,10 +1,7 @@
 package org.y9nba.app.service.impl;
 
 import io.minio.*;
-import io.minio.http.Method;
-import io.minio.messages.Bucket;
 import lombok.SneakyThrows;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.y9nba.app.dto.file.FileCreateDto;
@@ -12,7 +9,7 @@ import org.y9nba.app.dto.file.FileUpdateDto;
 import org.y9nba.app.exception.local.NotPhysicalFileException;
 import org.y9nba.app.exception.local.PhysicalFileOnUrlAlreadyException;
 import org.y9nba.app.exception.local.PhysicalFilesAndEntriesNotSyncException;
-import org.y9nba.app.exception.web.FileNotUploadException;
+import org.y9nba.app.exception.web.file.FileNotUploadException;
 import org.y9nba.app.model.FileModel;
 import org.y9nba.app.model.UserModel;
 import org.y9nba.app.service.StorageService;
