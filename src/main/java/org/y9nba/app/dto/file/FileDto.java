@@ -18,7 +18,9 @@ public class FileDto {
     private String fileName;
     private Long fileSize;
     private String mimeType;
-    private String url;
+    private String bucketName;
+    private String folderURL;
+    private boolean isPublic;
     private LocalDateTime createdAt;
     private Set<FileAccessDto> fileAccesses;
     private Set<AuditLogDto> auditLogs;
@@ -29,9 +31,24 @@ public class FileDto {
         this.fileName = model.getFileName();
         this.fileSize = model.getFileSize();
         this.mimeType = model.getMimeType();
-        this.url = model.getUrl();
+        this.isPublic = model.getIsPublic();
         this.createdAt = model.getCreatedAt();
         this.fileAccesses = GeneralMapper.toFileAccessDto(model.getFileAccesses());
         this.auditLogs = GeneralMapper.toAuditLogDto(model.getAuditLogs());
+        setFolderURLAndBucket(model.getUrl());
+    }
+
+    public String generateFileURL() {
+        return bucketName + "/" + folderURL + "/" + fileName;
+    }
+
+    public void setFolderURLAndBucket(String absFileUrl) {
+        this.bucketName = absFileUrl.substring(0, absFileUrl.indexOf("/"));
+
+        if (absFileUrl.lastIndexOf("/") == absFileUrl.indexOf("/")) {
+            this.folderURL = "";
+        } else {
+            this.folderURL = absFileUrl.replace(this.bucketName + "/", "").replace("/" + fileName, "");
+        }
     }
 }
