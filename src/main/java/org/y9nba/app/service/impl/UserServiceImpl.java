@@ -40,20 +40,54 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void saveWithManyRoles(UserCreateDto dto, Set<Role> roles) {
-        UserModel model = repository.save(new UserModel(dto));
+    public UserModel createSuperAdmin(UserCreateDto dto) {
+        UserModel model = new UserModel(dto);
+        Set<Role> roles = Set.of(Role.ROLE_SUPER_ADMIN, Role.ROLE_ADMIN);
 
-        Set<UserRoleModel> roleModels = userRoleService.saveAll(
-                roles.stream().map(
-                        e -> new UserRoleCreateDto(model, e)
-                ).collect(Collectors.toSet())
+        model.setEnabled(true);
+        model.setStorageLimit(0L);
+
+        UserModel savedModel = repository.save(model);
+
+        userRoleService.saveAll(
+                roles
+                        .stream()
+                        .map(
+                                e -> new UserRoleCreateDto(savedModel, e)
+                        )
+                        .collect(Collectors.toSet())
         );
+
+        return getById(savedModel.getId());
     }
 
     @Override
-    public void saveWithOneRole(UserCreateDto dto, Role role) {
-        UserModel model = repository.save(new UserModel(dto));
-        userRoleService.save(new UserRoleCreateDto(model, role));
+    public UserModel createAdmin(UserCreateDto dto) {
+        UserModel model = new UserModel(dto);
+
+        model.setEnabled(true);
+        model.setStorageLimit(0L);
+
+        model = repository.save(model);
+
+        userRoleService.save(new UserRoleCreateDto(model, Role.ROLE_ADMIN));
+
+        return getById(model.getId());
+    }
+
+    @Override
+    public UserModel createUser(UserCreateDto dto) {
+        UserModel model = new UserModel(dto);
+
+        if (dto.isOauth2()) {
+            model.setEnabled(true);
+        }
+
+        model = repository.save(model);
+
+        userRoleService.save(new UserRoleCreateDto(model, Role.ROLE_USER));
+
+        return getById(model.getId());
     }
 
     @Override
@@ -323,5 +357,37 @@ public class UserServiceImpl implements UserService {
                 .filter(u -> !u.getId().equals(userId))
                 .map(UserSearchDto::new)
                 .collect(Collectors.toSet());
+    }
+
+    @Override
+    public UserModel getSuperAdmin() {
+        UserModel superAdmin;
+        Set<UserModel> superAdmins = userRoleService
+                .getAllUsersByRole(Role.ROLE_SUPER_ADMIN)
+                .stream()
+                .map(UserRoleModel::getId)
+                .map(UserRoleModel.UserRoleId::getUserId)
+                .map(this::getById)
+                .collect(Collectors.toSet());
+
+        if (superAdmins.size() > 1) {
+            superAdmins
+                    .stream()
+                    .map(UserModel::getId)
+                    .forEach(this::deleteById);
+
+            superAdmin = null;
+        } else if (superAdmins.size() == 1) {
+            superAdmin = superAdmins.stream().findFirst().orElse(null);
+        } else {
+            superAdmin = null;
+        }
+
+        return superAdmin;
+    }
+
+    @Override
+    public UserModel updateSuperAdmin(UserModel superAdminWithUpdates) {
+        return repository.save(superAdminWithUpdates);
     }
 }

@@ -1,6 +1,5 @@
 package org.y9nba.app.service;
 
-import org.y9nba.app.constant.Role;
 import org.y9nba.app.dto.search.UserSearchDto;
 import org.y9nba.app.dto.user.*;
 import org.y9nba.app.model.UserModel;
@@ -9,8 +8,9 @@ import java.util.Set;
 import java.util.UUID;
 
 public interface UserService {
-    void saveWithManyRoles(UserCreateDto dto, Set<Role> role);
-    void saveWithOneRole(UserCreateDto dto, Role role);
+    UserModel createSuperAdmin(UserCreateDto dto);
+    UserModel createAdmin(UserCreateDto dto);
+    UserModel createUser(UserCreateDto dto);
     void update(Long userId, UserUpdatePasswordDto dto);
     void update(Long userId, UserUpdateUsernameDto dto);
     String update(Long userId, UserUpdateDto dto);
@@ -29,5 +29,9 @@ public interface UserService {
     boolean existsByUsername(String username);
     boolean existsByEmail(String email);
     boolean existsById(Long id);
-    Set<UserSearchDto> getAllUsers(Long userId);
+    String resendActivationByEmail(String email);
+    String resetPasswordByEmail(String email);
+    Set<UserSearchDto> getAllUsers(String username, String email, UUID bucketName, Long userId);
+    UserModel getSuperAdmin();
+    UserModel updateSuperAdmin(UserModel superAdminWithUpdates);
 }

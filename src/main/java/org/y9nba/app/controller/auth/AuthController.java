@@ -9,19 +9,20 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
 import org.y9nba.app.dto.auth.TokenResponseDto;
 import org.y9nba.app.dto.auth.LoginRequestDto;
 import org.y9nba.app.dto.auth.RegistrationRequestDto;
 import org.y9nba.app.dto.response.ErrorResponse;
 import org.y9nba.app.dto.response.Response;
+import org.y9nba.app.dto.user.UserEmailRequestDto;
 import org.y9nba.app.exception.web.user.info.EmailAlreadyException;
 import org.y9nba.app.exception.web.user.info.UsernameAlreadyException;
 import org.y9nba.app.security.AuthenticationService;
 import org.y9nba.app.service.UserService;
+
+import java.io.IOException;
 
 @Tag(
         name = "Authentication Controller",
@@ -67,7 +68,7 @@ public class AuthController {
                             mediaType = "application/json",
                             schema = @Schema(implementation = Response.class),
                             examples = @ExampleObject(
-                                    value = "{\"message\": \"Регистрация прошла успешно\"}"
+                                    value = "{\"message\": \"Письмо с подтверждением регистрации отправлено\"}"
                             )
                     )),
             @ApiResponse(
@@ -93,9 +94,7 @@ public class AuthController {
             throw new EmailAlreadyException();
         }
 
-        authenticationService.register(registrationDto);
-
-        return new Response("Регистрация прошла успешно");
+        return new Response(authenticationService.register(registrationDto));
     }
 
     @Operation(
@@ -162,7 +161,16 @@ public class AuthController {
             )
     })
     @PostMapping("/refresh_token")
-    public TokenResponseDto refreshToken(HttpServletRequest request, HttpServletResponse response) {
-        return authenticationService.refreshToken(request, response);
+    public TokenResponseDto refreshToken(HttpServletRequest request) {
+        return authenticationService.refreshToken(request);
+    }
+
+    @PostMapping("/login/oauth2/google")
+    public TokenResponseDto authenticateWithGoogle() {
+        return authenticationService.authenticateWithGoogle(SecurityContextHolder.getContext().getAuthentication());
+    }
+
+    @GetMapping("/logout")
+    public void logout() {    // Добавил для обозначения в Swagger
     }
 }

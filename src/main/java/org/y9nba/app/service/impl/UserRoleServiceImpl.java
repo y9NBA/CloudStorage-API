@@ -1,6 +1,7 @@
 package org.y9nba.app.service.impl;
 
 import org.springframework.stereotype.Service;
+import org.y9nba.app.constant.Role;
 import org.y9nba.app.dto.userrole.UserRoleCreateDto;
 import org.y9nba.app.dto.userrole.UserRoleDto;
 import org.y9nba.app.dto.userrole.UserRoleUpdateDto;
@@ -62,5 +63,10 @@ public class UserRoleServiceImpl implements UserRoleService {
     @Override
     public Set<UserRoleDto> findByUser(Long userId) {
         return null;
+    }
+
+    @Override
+    public Set<UserRoleModel> getAllUsersByRole(Role role) {
+        return repository.findAllById_Role(role);
     }
 }

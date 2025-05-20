@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -77,15 +78,18 @@ public class SecurityConfig {
                                     "/v3/api-docs/**",
                                     "/h2-console/**",
                                     "/sharing/view/**",
-                                    "/sharing/download/**"
+                                    "/sharing/download/**",
+                                    "/confirm/**",
+                                    "/recovery/**"
                             ).permitAll();
 
                             auth.anyRequest().authenticated();
                         }
                 )
+                .oauth2Login(Customizer.withDefaults())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .logout(log -> {
-                    log.logoutUrl("/logout");
+                    log.logoutUrl("/auth/logout");
                     log.addLogoutHandler(customLogoutHandler);
                     log.logoutSuccessHandler((request, response, authentication) ->
                             SecurityContextHolder.clearContext());
