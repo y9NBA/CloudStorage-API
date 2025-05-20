@@ -1,28 +1,32 @@
 package org.y9nba.app.security;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
-import org.y9nba.app.constant.Role;
 import org.y9nba.app.dto.auth.TokenResponseDto;
 import org.y9nba.app.dto.auth.LoginRequestDto;
 import org.y9nba.app.dto.auth.RegistrationRequestDto;
 import org.y9nba.app.dto.user.UserCreateDto;
+import org.y9nba.app.exception.web.auth.OAuth2GoogleNotUserException;
 import org.y9nba.app.exception.web.auth.UnAuthorizedException;
-import org.y9nba.app.model.TokenModel;
 import org.y9nba.app.model.UserModel;
-import org.y9nba.app.repository.TokenRepository;
+import org.y9nba.app.service.impl.ConfirmServiceImpl;
 import org.y9nba.app.service.impl.UserServiceImpl;
 import org.y9nba.app.util.PasswordUtil;
 
-import java.util.Set;
+import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class AuthenticationService {
 
     private final UserServiceImpl userService;
+
+    private final ConfirmServiceImpl confirmService;
 
     private final JwtService jwtService;
 
@@ -30,22 +34,19 @@ public class AuthenticationService {
 
     private final AuthenticationManager authenticationManager;
 
-    private final TokenRepository tokenRepository;
 
-
-    public AuthenticationService(UserServiceImpl userService,
+    public AuthenticationService(UserServiceImpl userService, ConfirmServiceImpl confirmService,
                                  JwtService jwtService,
                                  PasswordUtil passwordUtil,
-                                 AuthenticationManager authenticationManager,
-                                 TokenRepository tokenRepository) {
+                                 AuthenticationManager authenticationManager) {
         this.userService = userService;
+        this.confirmService = confirmService;
         this.jwtService = jwtService;
         this.passwordUtil = passwordUtil;
         this.authenticationManager = authenticationManager;
-        this.tokenRepository = tokenRepository;
     }
 
-    public void register(RegistrationRequestDto request) {
+    public String register(RegistrationRequestDto request) {
 
         UserCreateDto userCreateDto = new UserCreateDto(
                 request.getUsername(),
@@ -53,32 +54,9 @@ public class AuthenticationService {
                 passwordUtil.encode(request.getPassword())
         );
 
-        userService.saveWithOneRole(userCreateDto, Role.ROLE_USER);
-    }
+        UserModel user = userService.createUser(userCreateDto);
 
-    private void revokeAllToken(UserModel user) {
-
-        Set<TokenModel> validTokens = tokenRepository.findAllByUser(user);
-
-        if(!validTokens.isEmpty()) {
-            validTokens.forEach(
-                    t -> t.setLoggedOut(true)
-            );
-        }
-
-        tokenRepository.saveAll(validTokens);
-    }
-
-    private void saveUserToken(String accessToken, String refreshToken, UserModel user) {
-
-        TokenModel token = new TokenModel();
-
-        token.setAccessToken(accessToken);
-        token.setRefreshToken(refreshToken);
-        token.setLoggedOut(false);
-        token.setUser(user);
-
-        tokenRepository.save(token);
+        return confirmService.sendActivateAccountConfirmation(user);
     }
 
     public TokenResponseDto authenticate(LoginRequestDto request) {
@@ -95,14 +73,14 @@ public class AuthenticationService {
         String accessToken = jwtService.generateAccessToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
 
-        revokeAllToken(user);
+        jwtService.revokeAllToken(user);
 
-        saveUserToken(accessToken, refreshToken, user);
+        jwtService.saveUserToken(accessToken, refreshToken, user);
 
         return new TokenResponseDto(accessToken, refreshToken);
     }
 
-    public TokenResponseDto refreshToken(HttpServletRequest request, HttpServletResponse response) {
+    public TokenResponseDto refreshToken(HttpServletRequest request) {
         String token = jwtService.getTokenByRequest(request);
         String username = jwtService.getUsernameByAuthRequest(request);
 
@@ -113,14 +91,47 @@ public class AuthenticationService {
             String accessToken = jwtService.generateAccessToken(user);
             String refreshToken = jwtService.generateRefreshToken(user);
 
-            revokeAllToken(user);
+            jwtService.revokeAllToken(user);
 
-            saveUserToken(accessToken, refreshToken, user);
+            jwtService.saveUserToken(accessToken, refreshToken, user);
 
             return new TokenResponseDto(accessToken, refreshToken);
 
         }
 
         throw new UnAuthorizedException();
+    }
+
+    public TokenResponseDto authenticateWithGoogle(Authentication authentication) {
+        if (authentication instanceof OAuth2AuthenticationToken oAuth2AuthenticationToken) {
+            OAuth2User oAuth2User = oAuth2AuthenticationToken.getPrincipal();
+
+            if (oAuth2User != null) {
+                Map<String, Object> attributes = oAuth2User.getAttributes();
+                UserModel user = userService.getByEmail(attributes.get("email").toString());
+
+                if (user == null) {
+                    UserCreateDto userCreateDto = new UserCreateDto(
+                            attributes.get("name").toString(),
+                            attributes.get("email").toString(),
+                            passwordUtil.encode(UUID.randomUUID().toString()),
+                            true
+                    );
+
+                    user = userService.createUser(userCreateDto);
+                }
+
+                String accessToken = jwtService.generateAccessToken(user);
+                String refreshToken = jwtService.generateRefreshToken(user);
+
+                jwtService.revokeAllToken(user);
+
+                jwtService.saveUserToken(accessToken, refreshToken, user);
+
+                return new TokenResponseDto(accessToken, refreshToken);
+            }
+        }
+
+        throw new OAuth2GoogleNotUserException();
     }
 }

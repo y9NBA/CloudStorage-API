@@ -10,12 +10,16 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
+import org.y9nba.app.constant.OneTimeTokenType;
 import org.y9nba.app.exception.web.auth.UnAuthorizedException;
+import org.y9nba.app.model.TokenModel;
 import org.y9nba.app.model.UserModel;
+import org.y9nba.app.repository.OneTimeTokenRepository;
 import org.y9nba.app.repository.TokenRepository;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
+import java.util.Set;
 import java.util.function.Function;
 
 @Service
@@ -31,9 +35,11 @@ public class JwtService {
     private long refreshTokenExpiration;
 
     private final TokenRepository tokenRepository;
+    private final OneTimeTokenRepository oneTimeTokenRepository;
 
-    public JwtService(TokenRepository tokenRepository) {
+    public JwtService(TokenRepository tokenRepository, OneTimeTokenRepository oneTimeTokenRepository) {
         this.tokenRepository = tokenRepository;
+        this.oneTimeTokenRepository = oneTimeTokenRepository;
     }
 
 
@@ -61,6 +67,47 @@ public class JwtService {
                 && isValidRefreshToken;
     }
 
+    public boolean isValidOneTime(String token, OneTimeTokenType tokenType) {
+
+        Long userId = Long.valueOf(extractUserId(token));
+
+        boolean isValidOneTimeToken = oneTimeTokenRepository
+                .findByUser_IdAndTypeAndToken(
+                        userId,
+                        tokenType,
+                        token
+                )
+                .map(t -> !t.isUsed())
+                .orElse(false);
+
+        return isAccessTokenExpired(token)
+                && isValidOneTimeToken;
+    }
+
+    public void revokeAllToken(UserModel user) {
+
+        Set<TokenModel> validTokens = tokenRepository.findAllByUser(user);
+
+        if (!validTokens.isEmpty()) {
+            validTokens.forEach(
+                    t -> t.setLoggedOut(true)
+            );
+        }
+
+        tokenRepository.saveAll(validTokens);
+    }
+
+    public void saveUserToken(String accessToken, String refreshToken, UserModel user) {
+
+        TokenModel token = new TokenModel();
+
+        token.setAccessToken(accessToken);
+        token.setRefreshToken(refreshToken);
+        token.setLoggedOut(false);
+        token.setUser(user);
+
+        tokenRepository.save(token);
+    }
 
     private boolean isAccessTokenExpired(String token) {
         return !extractExpiration(token).before(new Date());
@@ -81,6 +128,11 @@ public class JwtService {
     public <T> T extractClaim(String token, Function<Claims, T> resolver) {
         Claims claims = extractAllClaims(token);
         return resolver.apply(claims);
+    }
+
+    public String extractClaim(String token, String key) {
+        Claims claims = extractAllClaims(token);
+        return claims.get(key, String.class);
     }
 
     private Claims extractAllClaims(String token) {
@@ -104,15 +156,24 @@ public class JwtService {
         return generateToken(user, refreshTokenExpiration);
     }
 
+    public JwtBuilder getOneTimeTokenBuilder(UserModel user, long expiryTime) {
+
+        return getJwtBuilderByUser(user, expiryTime);
+    }
+
     private String generateToken(UserModel user, long expiryTime) {
-        JwtBuilder builder = Jwts.builder()
+        JwtBuilder builder = getJwtBuilderByUser(user, expiryTime);
+
+        return builder.compact();
+    }
+
+    private JwtBuilder getJwtBuilderByUser(UserModel user, long expiryTime) {
+        return Jwts.builder()
                 .setId(String.valueOf(user.getId()))
                 .setSubject(user.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expiryTime))
                 .signWith(getSigningKey());
-
-        return builder.compact();
     }
 
     private SecretKey getSigningKey() {

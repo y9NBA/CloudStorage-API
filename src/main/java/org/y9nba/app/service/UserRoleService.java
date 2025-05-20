@@ -1,5 +1,6 @@
 package org.y9nba.app.service;
 
+import org.y9nba.app.constant.Role;
 import org.y9nba.app.dto.userrole.UserRoleCreateDto;
 import org.y9nba.app.dto.userrole.UserRoleDto;
 import org.y9nba.app.dto.userrole.UserRoleUpdateDto;
@@ -16,4 +17,5 @@ public interface UserRoleService {
     UserRoleModel findById(UserRoleModel.UserRoleId id);
     boolean existsById(UserRoleModel.UserRoleId id);
     Set<UserRoleDto> findByUser(Long userId);
+    Set<UserRoleModel> getAllUsersByRole(Role role);
 }

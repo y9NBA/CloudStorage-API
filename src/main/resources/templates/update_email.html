@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Подтверждение смены email</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; color: #333; }
+        .container { max-width: 600px; margin: 20px auto; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
+        h1 { color: #007bff; }
+        p { line-height: 1.6; }
+        a { color: #007bff; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .button { display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; }
+        .button:hover { background-color: #0056b3; }
+        .footer { margin-top: 20px; text-align: center; color: #777; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Подтверждение смены email</h1>
+    <p>Здравствуйте!</p>
+    <p>Для подтверждения смены вашего email, пожалуйста, перейдите по ссылке ниже:</p>
+    <p><a th:href="${updateEmailURL}" class="button">Подтвердить смену email</a></p>
+    <p>Если кнопка не работает, скопируйте и вставьте ссылку в ваш браузер:</p>
+    <p><a th:href="${updateEmailURL}" th:text="${updateEmailURL}"></a></p>
+    <div class="footer">С уважением, <span th:text="${emailSenderName}"></span></div>
+</div>
+</body>
+</html>

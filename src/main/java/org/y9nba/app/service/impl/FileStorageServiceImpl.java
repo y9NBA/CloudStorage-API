@@ -17,7 +17,6 @@ import org.y9nba.app.dto.fileaccess.FileAccessUpdateDto;
 import org.y9nba.app.exception.local.NotPhysicalFileException;
 import org.y9nba.app.exception.local.PhysicalFileOnUrlAlreadyException;
 import org.y9nba.app.exception.local.PhysicalFilesAndEntriesNotSyncException;
-import org.y9nba.app.exception.web.*;
 import org.y9nba.app.exception.web.file.FileNewUrlAlreadyException;
 import org.y9nba.app.exception.web.file.FilePhysicalNotFoundException;
 import org.y9nba.app.exception.web.file.FilePhysicalOnUrlException;
@@ -32,7 +31,7 @@ import org.y9nba.app.model.UserModel;
 import org.y9nba.app.repository.FileRepository;
 import org.y9nba.app.service.FileStorageService;
 
-import java.io.InputStream;
+import java.io.*;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Set;
@@ -510,9 +509,7 @@ public class FileStorageServiceImpl implements FileStorageService {
             storageService.synchronizeFile(userModel.getBucketName(), findByUserId(userId), userModel);
         } catch (PhysicalFilesAndEntriesNotSyncException e) {
             e.getFileModelsWithoutPhysicalFile().forEach(this::deleteEntry);
-            e.getFilesWithoutEntryInDB().forEach(fileCreateDto -> {
-                createNew(fileCreateDto, userModel);
-            });
+            e.getFilesWithoutEntryInDB().forEach(fileCreateDto -> createNew(fileCreateDto, userModel));
 
             updateUsedStorageOfUser(userId);
         }

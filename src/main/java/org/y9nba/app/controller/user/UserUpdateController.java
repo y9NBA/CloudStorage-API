@@ -50,8 +50,8 @@ public class UserUpdateController {
     })
     @PutMapping("/email")
     public Response updateEmail(@AuthenticationPrincipal UserModel user, @RequestBody UserUpdateEmailDto dto) {
-        userService.update(user.getId(), dto);
-        return new Response("Email успешно обновлен на: " + dto.getEmail());
+        String res = userService.tryUpdateEmail(user.getId(), dto);
+        return new Response(res);
     }
 
     @Operation(summary = "Обновить имя пользователя", description = "Обновляет имя пользователя.")
@@ -76,7 +76,7 @@ public class UserUpdateController {
     })
     @PutMapping("/all")
     public Response updateUser(@AuthenticationPrincipal UserModel user, @RequestBody UserUpdateDto dto) {
-        userService.update(user.getId(), dto);
-        return new Response("Данные успешно обновлены");
+        String resultUpd = userService.update(user.getId(), dto);
+        return new Response("Данные успешно обновлены. " + resultUpd);
     }
 }

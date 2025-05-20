@@ -31,7 +31,7 @@ public class FileModel {
     @Column(name = "mime_type", nullable = false)
     private String mimeType;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 1000)
     private String url;
 
     @Column(nullable = false)
@@ -62,6 +62,7 @@ public class FileModel {
         this.url = dto.getUrl();
         this.user = dto.getUser();
         this.isPublic = dto.getIsPublic();
+        this.createdAt = dto.getCreatedAt();
     }
 
     public Boolean isPublic() {

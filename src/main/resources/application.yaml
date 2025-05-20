@@ -25,14 +25,45 @@ spring:
       hibernate:
         format_sql: true
     open-in-view: false
+
   servlet:
     multipart:
       max-file-size: 50MB
       max-request-size: 50MB
 
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    personal: ${MAIL_PERSONAL}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  thymeleaf:
+    cache: false
+    check-template-location: true
+    prefix: classpath:/templates/
+    suffix: .html
+
 server:
   servlet:
     context-path: /api/v1/
+
+domain:
+  url: ${DOMAIN_URL}
 
 token:
   signing:
@@ -45,3 +76,9 @@ minio:
     name: minioadmin
     secret: minioadmin
   url: http://localhost:9000
+
+initializer:
+  super_admin:
+    username: superadmin
+    email: superadmin@cloudstorage.ru
+    password: superadmin
