@@ -4,14 +4,13 @@ import io.swagger.v3.oas.annotations.Hidden;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.web.authentication.preauth.PreAuthenticatedCredentialsNotFoundException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 import org.y9nba.app.dto.response.ErrorResponse;
 import org.y9nba.app.exception.web.AbstractException;
@@ -58,6 +57,17 @@ public class GlobalExceptionController {
         );
     }
 
+    @ExceptionHandler(DisabledException.class)
+    public ResponseEntity<ErrorResponse> catchDisabledException() {
+        return new ResponseEntity<>(
+                new ErrorResponse(
+                        "Аккаунт заблокирован. Попробуйте восстановить аккаунт.",
+                        HttpStatus.FORBIDDEN.value()
+                ),
+                HttpStatus.FORBIDDEN
+        );
+    }
+
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ErrorResponse> catchAuthenticationException(AuthenticationException e) {
         log.error(e.getMessage());
@@ -67,6 +77,17 @@ public class GlobalExceptionController {
                         HttpStatus.NO_CONTENT.value()
                 ),
                 HttpStatus.NO_CONTENT
+        );
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> catchMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException e) {
+        return new ResponseEntity<>(
+                new ErrorResponse(
+                        "Некорректно переданы данные",
+                        HttpStatus.BAD_REQUEST.value()
+                ),
+                HttpStatus.BAD_REQUEST
         );
     }
 
