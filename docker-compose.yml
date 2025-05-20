@@ -10,19 +10,28 @@ services:
     depends_on:
       - service-db
     environment:
-      - SERVER_PORT=8080
+      - SERVER_PORT=${SERVER_PORT}
+      - DOMAIN_URL=${DOMAIN_URL}
       - TOKEN_SIGNING_KEY=${TOKEN_SIGNING_KEY}
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://service-db:5432/cloudstorage?currentSchema=cloudstorage
-      - MINIO_ACCESS_NAME=minioadmin
-      - MINIO_ACCESS_SECRET=minioadmin
-      - MINIO_URL=http://minio:9000
+      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
+      - MINIO_ACCESS_NAME=${MINIO_ACCESS_NAME}
+      - MINIO_ACCESS_SECRET=${MINIO_ACCESS_SECRET}
+      - MINIO_URL=${MINIO_URL}
+      - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT-ID=${GOOGLE_CLIENT_ID}
+      - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT-SECRET=${GOOGLE_CLIENT_SECRET}
+      - SPRING_MAIL_PERSONAL=${MAIL_PERSONAL}
+      - SPRING_MAIL_USERNAME=${MAIL_USERNAME}
+      - SPRING_MAIL_PASSWORD=${MAIL_PASSWORD}
+      - INITIALIZER_SUPER_ADMIN_USERNAME=${INITIALIZER_SUPER_ADMIN_USERNAME}
+      - INITIALIZER_SUPER_ADMIN_EMAIL=${INITIALIZER_SUPER_ADMIN_EMAIL}
+      - INITIALIZER_SUPER_ADMIN_PASSWORD=${INITIALIZER_SUPER_ADMIN_PASSWORD}
 
   service-db:
     image: postgres:14.7-alpine
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      PGTZ: Europe/Moscow
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGTZ: ${TZ}
     ports:
       - "15432:5432"
     volumes:
@@ -36,8 +45,8 @@ services:
     image: dpage/pgadmin4:7
     restart: always
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@admin.com
-      PGADMIN_DEFAULT_PASSWORD: root
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
     ports:
       - "5050:80"
     volumes:
@@ -53,9 +62,9 @@ services:
       - minio-data:/data
       - /etc/localtime:/etc/localtime:ro
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
-      TZ: Europe/Moscow
+      MINIO_ROOT_USER: ${MINIO_ACCESS_NAME}
+      MINIO_ROOT_PASSWORD: ${MINIO_ACCESS_SECRET}
+      TZ: ${TZ}
     command: server /data --console-address :9090 --address :9000
 
 volumes:
