@@ -9,37 +9,25 @@ databaseChangeLog:
             columns:
               - column:
                   name: username
-                  value: 'JohnDoe'
+                  value: 'user'
               - column:
                   name: password
-                  value: '$2a$12$90gKq9flHjPyUpUCxKnuDeRXO5MGq9IiRmVOph0z8X9ClHPEgyvE.'
+                  value: '$2y$10$EJtO/IRCFd7WK37KeBQYue7waFvyhUpAa.K.xpCWJz1rFiNNt5UQG'    # 12345678
               - column:
                   name: email
-                  value: 'johndoe@example.com'
+                  value: 'user@example.com'
               - column:
                   name: bucket_name
                   value: 'da77c9ef-70f7-4b6a-a6c8-f3f521274d6f'
               - column:
                   name: storage_limit
-                  value: '10485760'
+                  value: '1073741824'
+              - column:
+                  name: is_enabled
+                  valueBoolean: 'true'
 
   - changeSet:
       id: 9
-      author: y9nba
-      changes:
-        - insert:
-            tableName: user_role
-            schemaName: cloudstorage
-            columns:
-              - column:
-                  name: user_id
-                  value: '1'
-              - column:
-                  name: role
-                  value: 'ROLE_ADMIN'
-
-  - changeSet:
-      id: 10
       author: y9nba
       changes:
         - insert:
