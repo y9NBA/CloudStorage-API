@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 @Getter
 @Setter
 @NoArgsConstructor
+@ToString(of = {"id", "username", "email"})
 public class UserModel implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -41,6 +42,9 @@ public class UserModel implements UserDetails {
     @Column(name = "used_storage", nullable = false)
     private Long usedStorage = 0L;
 
+    @Column(name = "is_enabled", nullable = false)
+    private boolean enabled = false;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -58,6 +62,9 @@ public class UserModel implements UserDetails {
 
     @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     private Set<TokenModel> tokens;
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    private Set<OneTimeTokenModel> oneTimeTokens;
 
     public UserModel(UserCreateDto dto) {
         this.username = dto.getUsername();
@@ -94,7 +101,7 @@ public class UserModel implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return UserDetails.super.isEnabled();
+        return this.enabled;
     }
 
     public String getBucketName() {
