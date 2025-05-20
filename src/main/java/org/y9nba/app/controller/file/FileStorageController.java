@@ -15,7 +15,6 @@ import org.y9nba.app.model.FileModel;
 import org.y9nba.app.model.UserModel;
 import org.y9nba.app.service.impl.FileStorageServiceImpl;
 
-import java.io.InputStream;
 import java.util.Set;
 
 @Tag(

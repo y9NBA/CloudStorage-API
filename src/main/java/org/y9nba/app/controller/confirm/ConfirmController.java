@@ -1,8 +1,6 @@
 package org.y9nba.app.controller.confirm;
 
-import io.swagger.v3.oas.annotations.Hidden;
 import org.springframework.web.bind.annotation.*;
-import org.y9nba.app.constant.OneTimeTokenType;
 import org.y9nba.app.dto.response.Response;
 import org.y9nba.app.dto.user.UserResetPasswordDto;
 import org.y9nba.app.service.impl.OneTimeTokenServiceImpl;

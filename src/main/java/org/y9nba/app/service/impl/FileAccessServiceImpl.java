@@ -26,7 +26,7 @@ public class FileAccessServiceImpl implements FileAccessService {
     }
 
     @Override
-    public FileAccessModel save(FileAccessCreateDto dto) {    // TODO: сделать методы на добавление и удаление доступа к файлу
+    public FileAccessModel save(FileAccessCreateDto dto) {
         return repository.save(new FileAccessModel(dto));
     }
 

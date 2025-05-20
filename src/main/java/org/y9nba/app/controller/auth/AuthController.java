@@ -8,7 +8,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.y9nba.app.dto.auth.TokenResponseDto;
@@ -16,13 +15,10 @@ import org.y9nba.app.dto.auth.LoginRequestDto;
 import org.y9nba.app.dto.auth.RegistrationRequestDto;
 import org.y9nba.app.dto.response.ErrorResponse;
 import org.y9nba.app.dto.response.Response;
-import org.y9nba.app.dto.user.UserEmailRequestDto;
 import org.y9nba.app.exception.web.user.info.EmailAlreadyException;
 import org.y9nba.app.exception.web.user.info.UsernameAlreadyException;
 import org.y9nba.app.security.AuthenticationService;
 import org.y9nba.app.service.UserService;
-
-import java.io.IOException;
 
 @Tag(
         name = "Authentication Controller",

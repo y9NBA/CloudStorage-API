@@ -9,7 +9,6 @@ import org.y9nba.app.dto.file.FileInputStreamWithAccessDto;
 import org.y9nba.app.dto.file.FileUpdateDto;
 import org.y9nba.app.model.FileModel;
 
-import java.io.InputStream;
 import java.util.Set;
 
 public interface FileStorageService {

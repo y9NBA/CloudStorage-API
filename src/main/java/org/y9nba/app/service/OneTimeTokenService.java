@@ -1,7 +1,6 @@
 package org.y9nba.app.service;
 
 import org.y9nba.app.constant.OneTimeTokenType;
-import org.y9nba.app.model.OneTimeTokenModel;
 import org.y9nba.app.model.UserModel;
 
 import java.util.UUID;
