@@ -18,7 +18,7 @@ import org.y9nba.app.dto.response.Response;
 import org.y9nba.app.exception.web.user.info.EmailAlreadyException;
 import org.y9nba.app.exception.web.user.info.UsernameAlreadyException;
 import org.y9nba.app.security.AuthenticationService;
-import org.y9nba.app.service.UserService;
+import org.y9nba.app.service.impl.user.UserServiceImpl;
 
 @Tag(
         name = "Authentication Controller",
@@ -29,9 +29,9 @@ import org.y9nba.app.service.UserService;
 public class AuthController {
 
     private final AuthenticationService authenticationService;
-    private final UserService userService;
+    private final UserServiceImpl userService;
 
-    public AuthController(AuthenticationService authenticationService, UserService userService) {
+    public AuthController(AuthenticationService authenticationService, UserServiceImpl userService) {
         this.authenticationService = authenticationService;
         this.userService = userService;
     }
@@ -105,7 +105,7 @@ public class AuthController {
                             examples = @ExampleObject(
                                     value = """
                                                 {
-                                                  "username": "john_doe",
+                                                  "username": "john_doe|john@example.com",
                                                   "password": "securePassword123"
                                                 }
                                             """
@@ -130,8 +130,8 @@ public class AuthController {
             )
     })
     @PostMapping("/login")
-    public TokenResponseDto authenticate(@RequestBody LoginRequestDto request) {
-        return authenticationService.authenticate(request);
+    public TokenResponseDto authenticate(@RequestBody LoginRequestDto loginRequestDto, HttpServletRequest request) {
+        return authenticationService.authenticate(loginRequestDto, request);
     }
 
     @Operation(
@@ -161,11 +161,43 @@ public class AuthController {
         return authenticationService.refreshToken(request);
     }
 
+    @Operation(
+            summary = "Аутентификация через Google",
+            description = "Аутентификация пользователя с использованием Google OAuth2"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Успешная аутентификация через Google",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = TokenResponseDto.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Ошибка аутентификации через Google",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = "{\"message\": \"Произошла какая-то ошибка при авторизации через Google\"}")
+                    )
+            )
+    })
     @PostMapping("/login/oauth2/google")
-    public TokenResponseDto authenticateWithGoogle() {
-        return authenticationService.authenticateWithGoogle(SecurityContextHolder.getContext().getAuthentication());
+    public TokenResponseDto authenticateWithGoogle(HttpServletRequest request) {
+        return authenticationService.authenticateWithGoogle(SecurityContextHolder.getContext().getAuthentication(), request);
     }
 
+    @Operation(
+            summary = "Выход из системы",
+            description = "Завершение сессии пользователя"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "Успешный выход из системы"
+            )
+    })
     @GetMapping("/logout")
     public void logout() {    // Добавил для обозначения в Swagger
     }

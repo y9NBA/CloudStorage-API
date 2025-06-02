@@ -5,8 +5,8 @@ import lombok.Setter;
 import org.y9nba.app.dto.auditlog.AuditLogDto;
 import org.y9nba.app.dto.fileaccess.FileAccessDto;
 import org.y9nba.app.mapper.GeneralMapper;
-import org.y9nba.app.model.FileModel;
-import org.y9nba.app.model.UserModel;
+import org.y9nba.app.dao.entity.File;
+import org.y9nba.app.dao.entity.User;
 
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -19,13 +19,13 @@ public class FileUpdateDto {
     private Long fileSize;
     private String mimeType;
     private String url;
-    private UserModel user;
+    private User user;
     private Boolean isPublic;
     private LocalDateTime createdAt;
     private Set<FileAccessDto> fileAccesses;
     private Set<AuditLogDto> auditLogs;
 
-    public FileUpdateDto(FileModel model) {
+    public FileUpdateDto(File model) {
         this.id = model.getId();
         this.fileName = model.getFileName();
         this.fileSize = model.getFileSize();

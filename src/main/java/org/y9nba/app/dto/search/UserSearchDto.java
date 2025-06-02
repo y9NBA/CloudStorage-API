@@ -1,7 +1,7 @@
 package org.y9nba.app.dto.search;
 
 import lombok.Getter;
-import org.y9nba.app.model.UserModel;
+import org.y9nba.app.dao.entity.User;
 
 @Getter
 public class UserSearchDto {
@@ -9,7 +9,7 @@ public class UserSearchDto {
     private final String username;
     private final String email;
 
-    public UserSearchDto(UserModel model) {
+    public UserSearchDto(User model) {
         this.id = model.getId();
         this.username = model.getUsername();
         this.email = model.getEmail();

@@ -6,13 +6,13 @@ databaseChangeLog:
   - include:
       file: db/changelog/create-file_table.yaml
   - include:
-      file: db/changelog/create-user_role_table.yaml
+      file: db/changelog/create-warning_table.yaml
   - include:
       file: db/changelog/create-file_access_table.yaml
   - include:
       file: db/changelog/create-audit_log_table.yaml
   - include:
-      file: db/changelog/create-token_table.yaml
+      file: db/changelog/create-session_table.yaml
   - include:
       file: db/changelog/create-one_time_token_table.yaml
   - include:

@@ -4,7 +4,7 @@ databaseChangeLog:
       author: y9nba
       changes:
         - createTable:
-            tableName: file_access
+            tableName: file_accesses
             schemaName: cloudstorage
             columns:
               - column:
@@ -35,17 +35,17 @@ databaseChangeLog:
                   constraints:
                     nullable: false
         - addForeignKeyConstraint:
-            baseTableName: file_access
+            baseTableName: file_accesses
             baseColumnNames: file_id
-            referencedTableName: file
+            referencedTableName: files
             referencedColumnNames: id
             constraintName: fk_file_access_file
             referencedTableSchemaName: cloudstorage
             baseTableSchemaName: cloudstorage
         - addForeignKeyConstraint:
-            baseTableName: file_access
+            baseTableName: file_accesses
             baseColumnNames: user_id
-            referencedTableName: user
+            referencedTableName: users
             referencedColumnNames: id
             constraintName: fk_file_access_user
             referencedTableSchemaName: cloudstorage

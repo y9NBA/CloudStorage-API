@@ -4,7 +4,7 @@ databaseChangeLog:
       author: y9nba
       changes:
         - insert:
-            tableName: user
+            tableName: users
             schemaName: cloudstorage
             columns:
               - column:
@@ -25,18 +25,6 @@ databaseChangeLog:
               - column:
                   name: is_enabled
                   valueBoolean: 'true'
-
-  - changeSet:
-      id: 9
-      author: y9nba
-      changes:
-        - insert:
-            tableName: user_role
-            schemaName: cloudstorage
-            columns:
-              - column:
-                  name: user_id
-                  value: '1'
               - column:
                   name: role
                   value: 'ROLE_USER'

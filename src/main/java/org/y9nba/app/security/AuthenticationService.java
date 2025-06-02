@@ -1,81 +1,102 @@
 package org.y9nba.app.security;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
+import org.y9nba.app.dao.entity.Session;
 import org.y9nba.app.dto.auth.TokenResponseDto;
 import org.y9nba.app.dto.auth.LoginRequestDto;
 import org.y9nba.app.dto.auth.RegistrationRequestDto;
 import org.y9nba.app.dto.user.UserCreateDto;
+import org.y9nba.app.exception.web.auth.NotValidEmailException;
 import org.y9nba.app.exception.web.auth.OAuth2GoogleNotUserException;
 import org.y9nba.app.exception.web.auth.UnAuthorizedException;
-import org.y9nba.app.model.UserModel;
-import org.y9nba.app.service.impl.ConfirmServiceImpl;
-import org.y9nba.app.service.impl.UserServiceImpl;
+import org.y9nba.app.dao.entity.User;
+import org.y9nba.app.service.impl.email.ConfirmServiceImpl;
+import org.y9nba.app.service.impl.token.SessionServiceImpl;
+import org.y9nba.app.service.impl.user.UserServiceImpl;
 import org.y9nba.app.util.PasswordUtil;
+import org.y9nba.app.util.StringUtil;
 
 import java.util.Map;
 import java.util.UUID;
 
 @Service
+@Slf4j
 public class AuthenticationService {
 
     private final UserServiceImpl userService;
-
     private final ConfirmServiceImpl confirmService;
-
     private final JwtService jwtService;
-
-    private final PasswordUtil passwordUtil;
+    private final SessionServiceImpl sessionService;
 
     private final AuthenticationManager authenticationManager;
 
+    private final StringUtil stringUtil;
 
-    public AuthenticationService(UserServiceImpl userService, ConfirmServiceImpl confirmService,
+    public AuthenticationService(UserServiceImpl userService,
+                                 ConfirmServiceImpl confirmService,
                                  JwtService jwtService,
-                                 PasswordUtil passwordUtil,
-                                 AuthenticationManager authenticationManager) {
+                                 SessionServiceImpl sessionService,
+                                 AuthenticationManager authenticationManager, StringUtil stringUtil) {
         this.userService = userService;
         this.confirmService = confirmService;
         this.jwtService = jwtService;
-        this.passwordUtil = passwordUtil;
+        this.sessionService = sessionService;
         this.authenticationManager = authenticationManager;
+        this.stringUtil = stringUtil;
     }
 
-    public String register(RegistrationRequestDto request) {
+    public String register(RegistrationRequestDto registrationRequestDto) {
+
+        if (!stringUtil.isValidEmail(registrationRequestDto.getEmail())) {
+            throw new NotValidEmailException();
+        }
 
         UserCreateDto userCreateDto = new UserCreateDto(
-                request.getUsername(),
-                request.getEmail(),
-                passwordUtil.encode(request.getPassword())
+                registrationRequestDto.getUsername(),
+                registrationRequestDto.getEmail(),
+                registrationRequestDto.getPassword()
         );
 
-        UserModel user = userService.createUser(userCreateDto);
+        User user = userService.createUser(userCreateDto);
 
         return confirmService.sendActivateAccountConfirmation(user);
     }
 
-    public TokenResponseDto authenticate(LoginRequestDto request) {
+    public TokenResponseDto authenticate(LoginRequestDto loginRequestDto, HttpServletRequest request) {
+
+        User user;
+
+        if (stringUtil.isValidEmail(loginRequestDto.getLogin())) {
+            user = userService.getByEmail(loginRequestDto.getLogin());
+        } else {
+            user = userService.getByUsername(loginRequestDto.getLogin());
+        }
 
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        request.getUsername(),
-                        request.getPassword()
+                        user.getUsername(),
+                        loginRequestDto.getPassword()
                 )
         );
 
-        UserModel user = userService.getByUsername(request.getUsername());
+        Session session = sessionService.getSessionByUserIdAndRequest(user.getId(), request);
 
-        String accessToken = jwtService.generateAccessToken(user);
-        String refreshToken = jwtService.generateRefreshToken(user);
+        if (session != null) {
+            sessionService.revokeSession(session);
+        }
 
-        jwtService.revokeAllToken(user);
+        session = sessionService.createSession(user, request);
 
-        jwtService.saveUserToken(accessToken, refreshToken, user);
+        String accessToken = jwtService.generateAccessToken(user, session.getId());
+        String refreshToken = jwtService.generateRefreshToken(user, session.getId());
 
         return new TokenResponseDto(accessToken, refreshToken);
     }
@@ -84,49 +105,48 @@ public class AuthenticationService {
         String token = jwtService.getTokenByRequest(request);
         String username = jwtService.getUsernameByAuthRequest(request);
 
-        UserModel user = userService.getByUsername(username);
+        User user = userService.getByUsername(username);
 
         if (jwtService.isValidRefresh(token, user)) {
 
-            String accessToken = jwtService.generateAccessToken(user);
-            String refreshToken = jwtService.generateRefreshToken(user);
+            UUID sessionId = jwtService.getSessionIdByToken(token);
 
-            jwtService.revokeAllToken(user);
-
-            jwtService.saveUserToken(accessToken, refreshToken, user);
+            String accessToken = jwtService.generateAccessToken(user, sessionId);
+            String refreshToken = jwtService.generateRefreshToken(user, sessionId);
 
             return new TokenResponseDto(accessToken, refreshToken);
-
         }
 
         throw new UnAuthorizedException();
     }
 
-    public TokenResponseDto authenticateWithGoogle(Authentication authentication) {
+    public TokenResponseDto authenticateWithGoogle(Authentication authentication, HttpServletRequest request) {
         if (authentication instanceof OAuth2AuthenticationToken oAuth2AuthenticationToken) {
             OAuth2User oAuth2User = oAuth2AuthenticationToken.getPrincipal();
 
             if (oAuth2User != null) {
                 Map<String, Object> attributes = oAuth2User.getAttributes();
-                UserModel user = userService.getByEmail(attributes.get("email").toString());
+                User user = userService.getByEmail(attributes.get("email").toString());
 
                 if (user == null) {
+                    String username = attributes.get("name").toString();
+                    String email = attributes.get("email").toString();
+                    String password = UUID.randomUUID().toString();
+
                     UserCreateDto userCreateDto = new UserCreateDto(
-                            attributes.get("name").toString(),
-                            attributes.get("email").toString(),
-                            passwordUtil.encode(UUID.randomUUID().toString()),
+                            username,
+                            email,
+                            password,
                             true
                     );
 
                     user = userService.createUser(userCreateDto);
                 }
 
-                String accessToken = jwtService.generateAccessToken(user);
-                String refreshToken = jwtService.generateRefreshToken(user);
+                Session session = sessionService.createSession(user, request);
 
-                jwtService.revokeAllToken(user);
-
-                jwtService.saveUserToken(accessToken, refreshToken, user);
+                String accessToken = jwtService.generateAccessToken(user, session.getId());
+                String refreshToken = jwtService.generateRefreshToken(user, session.getId());
 
                 return new TokenResponseDto(accessToken, refreshToken);
             }
@@ -135,3 +155,4 @@ public class AuthenticationService {
         throw new OAuth2GoogleNotUserException();
     }
 }
+

@@ -11,8 +11,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-import org.y9nba.app.model.UserModel;
-import org.y9nba.app.service.impl.UserDetailsServiceImpl;
+import org.y9nba.app.dao.entity.User;
+import org.y9nba.app.service.impl.token.SessionServiceImpl;
+import org.y9nba.app.service.impl.user.UserDetailsServiceImpl;
 
 import java.io.IOException;
 
@@ -23,11 +24,13 @@ public class JwtFilter extends OncePerRequestFilter {
 
     private final UserDetailsServiceImpl userDetailsService;
 
-    public JwtFilter(JwtService jwtService, UserDetailsServiceImpl userDetailsService) {
+    private final SessionServiceImpl sessionService;
+
+    public JwtFilter(JwtService jwtService, UserDetailsServiceImpl userDetailsService, SessionServiceImpl sessionService) {
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
+        this.sessionService = sessionService;
     }
-
 
     @Override
     protected void doFilterInternal(
@@ -49,7 +52,7 @@ public class JwtFilter extends OncePerRequestFilter {
         if (userIdAsString != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = userDetailsService.loadUserByUserId(Long.valueOf(userIdAsString));
 
-            if (jwtService.isValid(token, (UserModel) userDetails)) {
+            if (jwtService.isValid(token, (User) userDetails)) {
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userDetails,
                         null,
@@ -61,6 +64,8 @@ public class JwtFilter extends OncePerRequestFilter {
                 );
 
                 SecurityContextHolder.getContext().setAuthentication(authToken);
+
+                sessionService.updateLastActive(jwtService.getSessionIdByToken(token));
             }
         }
 

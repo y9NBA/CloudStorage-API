@@ -4,7 +4,7 @@ databaseChangeLog:
       author: y9nba
       changes:
         - createTable:
-            tableName: user
+            tableName: users
             schemaName: cloudstorage
             columns:
               - column:
@@ -40,7 +40,13 @@ databaseChangeLog:
               - column:
                   name: is_enabled
                   type: boolean
-                  defaultOnNull: false
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_banned
+                  type: boolean
+                  defaultValueBoolean: false
                   constraints:
                     nullable: false
               - column:
@@ -59,5 +65,11 @@ databaseChangeLog:
                   name: used_storage
                   type: bigint
                   defaultValue: '0'
+                  constraints:
+                    nullable: false
+              - column:
+                  name: role
+                  type: varchar(20)
+                  defaultValue: 'ROLE_USER'
                   constraints:
                     nullable: false

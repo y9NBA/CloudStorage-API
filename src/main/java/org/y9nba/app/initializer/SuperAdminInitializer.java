@@ -6,8 +6,8 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.y9nba.app.dto.user.UserCreateDto;
-import org.y9nba.app.model.UserModel;
-import org.y9nba.app.service.impl.UserServiceImpl;
+import org.y9nba.app.dao.entity.User;
+import org.y9nba.app.service.impl.user.UserServiceImpl;
 import org.y9nba.app.util.PasswordUtil;
 
 @Component
@@ -31,7 +31,7 @@ public class SuperAdminInitializer {
 
     @EventListener(ApplicationReadyEvent.class)
     public void initializeSuperAdmin() {
-        UserModel superAdmin = userService.getSuperAdmin();
+        User superAdmin = userService.getSuperAdmin();
 
         if (superAdmin == null) {
             superAdmin = userService.createSuperAdmin(
@@ -48,7 +48,7 @@ public class SuperAdminInitializer {
             superAdmin.setEmail(superAdminEmail);
             superAdmin.setPassword(passwordUtil.encode(superAdminPassword));
 
-            userService.updateSuperAdmin(superAdmin);
+            superAdmin = userService.updateSuperAdmin(superAdmin);
 
             log.info("Updating super admin: {}", superAdmin);
         }
