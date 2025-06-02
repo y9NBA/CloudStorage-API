@@ -14,7 +14,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor
-public class OneTimeToken {     // TODO: перестать хранить токен в бд, билдить в токен UUID one time и вновь передавать токен в ссылке
+public class OneTimeToken {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
