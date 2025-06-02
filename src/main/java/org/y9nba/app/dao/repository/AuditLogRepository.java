@@ -1,13 +1,13 @@
-package org.y9nba.app.repository;
+package org.y9nba.app.dao.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import org.y9nba.app.model.AuditLogModel;
+import org.y9nba.app.dao.entity.AuditLog;
 
 import java.util.Set;
 
 @Repository
-public interface AuditLogRepository extends JpaRepository<AuditLogModel, Long> {
+public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
 
-    Set<AuditLogModel> getAuditLogModelsByUserId(Long userId);
+    Set<AuditLog> getAuditLogsByUserId(Long userId);
 }

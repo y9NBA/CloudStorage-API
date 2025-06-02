@@ -1,19 +1,21 @@
-package org.y9nba.app.repository;
+package org.y9nba.app.dao.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import org.y9nba.app.constant.OneTimeTokenType;
-import org.y9nba.app.model.OneTimeTokenModel;
+import org.y9nba.app.dao.entity.OneTimeToken;
+import org.y9nba.app.dao.entity.User;
 
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
 @Repository
-public interface OneTimeTokenRepository extends JpaRepository<OneTimeTokenModel, UUID> {
+public interface OneTimeTokenRepository extends JpaRepository<OneTimeToken, UUID> {
 
-    Optional<OneTimeTokenModel> findByToken(String token);
-    Optional<OneTimeTokenModel> findByUser_IdAndTypeAndToken(Long userId, OneTimeTokenType type, String token);
-    Set<OneTimeTokenModel> findAllByUser_Id(Long userId);
-    Set<OneTimeTokenModel> findAllByUser_IdAndType(Long userId, OneTimeTokenType type);
+    Optional<OneTimeToken> findByIdAndUser_IdAndType(UUID id, Long userId, OneTimeTokenType type);
+    Set<OneTimeToken> findAllByUser_Id(Long userId);
+    Set<OneTimeToken> findAllByUser_IdAndType(Long userId, OneTimeTokenType type);
+
+    UUID user(User user);
 }

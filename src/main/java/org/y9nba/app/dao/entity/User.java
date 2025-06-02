@@ -1,4 +1,4 @@
-package org.y9nba.app.model;
+package org.y9nba.app.dao.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -16,12 +16,12 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Entity
-@Table(name = "\"user\"")
+@Table(name = "users")
 @Getter
 @Setter
 @NoArgsConstructor
 @ToString(of = {"id", "username", "email"})
-public class UserModel implements UserDetails {
+public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -47,28 +47,35 @@ public class UserModel implements UserDetails {
     @Column(name = "is_enabled", nullable = false)
     private boolean enabled = false;
 
+    @Column(name = "is_banned", nullable = false)
+    private boolean banned = false;
+
+    @Column(name = "role", nullable = false, length = 20)
+    @Enumerated(EnumType.STRING)
+    private Role role;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    private Set<UserRoleModel> userRoles;
+    private Set<File> files;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    private Set<FileModel> files;
+    private Set<AuditLog> auditLogs;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    private Set<AuditLogModel> auditLogs;
+    private Set<FileAccess> fileAccesses;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    private Set<FileAccessModel> fileAccesses;
+    private Set<Session> sessions;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    private Set<TokenModel> tokens;
+    private Set<OneTimeToken> oneTimeTokens;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    private Set<OneTimeTokenModel> oneTimeTokens;
+    private Set<Warning> warnings;
 
-    public UserModel(UserCreateDto dto) {
+    public User(UserCreateDto dto) {
         this.username = dto.getUsername();
         this.password = dto.getHashPassword();
         this.email = dto.getEmail();
@@ -77,19 +84,8 @@ public class UserModel implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        Set<Role> roles = userRoles
-                .stream()
-                .map(UserRoleModel::getId)
-                .map(UserRoleModel.UserRoleId::getRole)
-                .collect(Collectors.toSet());
-
-        Set<String> authorities = new HashSet<>();
-
-        for (Role role : roles) {
-            authorities.add(role.name());
-            authorities.addAll(role.getAuthorities());
-        }
-
+        Set<String> authorities = new HashSet<>(role.getAuthorities());
+        authorities.add(this.role.name());
         return authorities
                 .stream()
                 .map(SimpleGrantedAuthority::new)
@@ -103,7 +99,7 @@ public class UserModel implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return UserDetails.super.isAccountNonLocked();
+        return !this.banned;
     }
 
     @Override
@@ -122,12 +118,5 @@ public class UserModel implements UserDetails {
 
     public Long getNotUsedStorage() {
         return storageLimit - usedStorage;
-    }
-
-    public Set<String> getRoles() {
-        return userRoles
-                .stream()
-                .map(ur -> ur.getId().getRole().name())
-                .collect(Collectors.toSet());
     }
 }

@@ -6,26 +6,27 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
-@Table(name = "token")
+@Table(name = "sessions")
 @Getter
 @Setter
 @NoArgsConstructor
-public class Token {
+public class Session {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id")
-    private Long id;
+    private UUID id;
 
-    @Column(name = "access_token")
-    private String accessToken;
+    @Column(name = "device_type")
+    private String deviceType;
 
-    @Column(name = "refresh_token")
-    private String refreshToken;
+    @Column(name = "operating_system")
+    private String operatingSystem;
 
-    @Column(name = "user_agent")
-    private String userAgent;
+    @Column(name = "browser")
+    private String browser;
 
     @Column(name = "ip_address")
     private String ipAddress;

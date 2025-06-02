@@ -1,4 +1,4 @@
-package org.y9nba.app.model;
+package org.y9nba.app.dao.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -9,18 +9,18 @@ import java.time.LocalDateTime;
 import java.util.Set;
 
 @Entity
-@Table(name = "file")
+@Table(name = "files")
 @Getter
 @Setter
 @NoArgsConstructor
-public class FileModel {
+public class File {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    private UserModel user;
+    private User user;
 
     @Column(name = "file_name", nullable = false)
     private String fileName;
@@ -41,12 +41,12 @@ public class FileModel {
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @OneToMany(mappedBy = "file", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    private Set<FileAccessModel> fileAccesses;
+    private Set<FileAccess> fileAccesses;
 
     @OneToMany(mappedBy = "file", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    private Set<AuditLogModel> auditLogs;
+    private Set<AuditLog> auditLogs;
 
-    public FileModel(FileCreateDto dto) {
+    public File(FileCreateDto dto) {
         this.fileName = dto.getFileName();
         this.fileSize = dto.getFileSize();
         this.mimeType = dto.getMimeType();
@@ -54,7 +54,7 @@ public class FileModel {
         this.user = dto.getUser();
     }
 
-    public FileModel(FileUpdateDto dto) {
+    public File(FileUpdateDto dto) {
         this.id = dto.getId();
         this.fileName = dto.getFileName();
         this.fileSize = dto.getFileSize();

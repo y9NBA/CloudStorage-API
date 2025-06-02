@@ -1,4 +1,4 @@
-package org.y9nba.app.model;
+package org.y9nba.app.dao.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -8,34 +8,34 @@ import org.y9nba.app.dto.fileaccess.FileAccessCreateDto;
 import org.y9nba.app.dto.fileaccess.FileAccessUpdateDto;
 
 @Entity
-@Table(name = "file_access")
+@Table(name = "file_accesses")
 @Getter
 @Setter
 @NoArgsConstructor
-public class FileAccessModel {
+public class FileAccess {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "file_id")
-    private FileModel file;
+    private File file;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    private UserModel user;
+    private User user;
 
     @Column(name = "access_level", nullable = false, length = 50)
     @Enumerated(EnumType.STRING)
     private Access accessLevel;
 
-    public FileAccessModel(FileAccessCreateDto dto) {
+    public FileAccess(FileAccessCreateDto dto) {
         this.user = dto.getUser();
         this.file = dto.getFile();
         this.accessLevel = dto.getAccessLevel();
     }
 
-    public FileAccessModel(FileAccessUpdateDto dto) {
+    public FileAccess(FileAccessUpdateDto dto) {
         this.id = dto.getId();
         this.user = dto.getUser();
         this.file = dto.getFile();

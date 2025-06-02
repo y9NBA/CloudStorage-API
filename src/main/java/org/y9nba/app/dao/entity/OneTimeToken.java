@@ -1,4 +1,4 @@
-package org.y9nba.app.model;
+package org.y9nba.app.dao.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -10,33 +10,28 @@ import org.y9nba.app.dto.onetimetoken.OneTimeTokenCreateDto;
 import java.util.UUID;
 
 @Entity
-@Table(name = "one_time_token")
+@Table(name = "one_time_tokens")
 @Getter
 @Setter
 @NoArgsConstructor
-public class OneTimeTokenModel {
+public class OneTimeToken {     // TODO: перестать хранить токен в бд, билдить в токен UUID one time и вновь передавать токен в ссылке
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
-
-    @Column(name = "token", length = 320)
-    private String token;
 
     @Column(name = "type", length = 20)
     @Enumerated(EnumType.STRING)
     private OneTimeTokenType type;
 
     @Column(name = "is_used")
-    private boolean isUsed;
+    private boolean isUsed = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    private UserModel user;
+    private User user;
 
-    public OneTimeTokenModel(OneTimeTokenCreateDto dto) {
-        this.token = dto.getToken();
+    public OneTimeToken(OneTimeTokenCreateDto dto) {
         this.type = dto.getType();
-        this.isUsed = false;
-        this.user = dto.getUserModel();
+        this.user = dto.getUser();
     }
 }
