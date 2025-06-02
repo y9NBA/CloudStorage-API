@@ -1,16 +1,15 @@
 databaseChangeLog:
   - changeSet:
-      id: 7
+      id: 4
       author: y9nba
       changes:
         - createTable:
-            tableName: sessions
+            tableName: warnings
             schemaName: cloudstorage
             columns:
               - column:
                   name: id
-                  type: UUID
-                  defaultValue: gen_random_uuid()
+                  type: bigserial
                   constraints:
                     primaryKey: true
                     nullable: false
@@ -20,47 +19,40 @@ databaseChangeLog:
                   constraints:
                     nullable: false
               - column:
-                  name: device_type
-                  type: varchar(255)
+                  name: admin_id
+                  type: bigint
                   constraints:
                     nullable: false
               - column:
-                  name: operating_system
-                  type: varchar(255)
+                  name: reason
+                  type: varchar(50)
                   constraints:
                     nullable: false
               - column:
-                  name: browser
-                  type: varchar(255)
-                  constraints:
-                    nullable: false
-              - column:
-                  name: ip_address
-                  type: varchar(15)
-                  constraints:
-                    nullable: false
-              - column:
-                  name: login_time
+                  name: created_at
                   type: timestamp
                   defaultValue: now()
                   constraints:
                     nullable: false
               - column:
-                  name: last_active
-                  type: timestamp
-                  defaultValue: now()
-                  constraints:
-                    nullable: false
-              - column:
-                  name: is_logged_out
+                  name: is_active
                   type: bool
+                  defaultValueBoolean: true
                   constraints:
                     nullable: false
         - addForeignKeyConstraint:
-            baseTableName: sessions
+            baseTableName: warnings
             baseColumnNames: user_id
             referencedTableName: users
             referencedColumnNames: id
-            constraintName: fk_session_user
+            constraintName: fk_warning_user
+            referencedTableSchemaName: cloudstorage
+            baseTableSchemaName: cloudstorage
+        - addForeignKeyConstraint:
+            baseTableName: warnings
+            baseColumnNames: admin_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_warning_admin
             referencedTableSchemaName: cloudstorage
             baseTableSchemaName: cloudstorage
