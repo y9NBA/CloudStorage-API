@@ -1,4 +1,4 @@
-package org.y9nba.app.service.impl;
+package org.y9nba.app.service.impl.file;
 
 import jakarta.transaction.Transactional;
 import org.hibernate.Hibernate;
@@ -29,7 +29,7 @@ import org.y9nba.app.dao.entity.FileAccess;
 import org.y9nba.app.dao.entity.File;
 import org.y9nba.app.dao.entity.User;
 import org.y9nba.app.dao.repository.FileRepository;
-import org.y9nba.app.service.face.FileStorageService;
+import org.y9nba.app.service.face.file.FileStorageService;
 import org.y9nba.app.service.impl.user.UserServiceImpl;
 
 import java.io.*;
@@ -296,7 +296,35 @@ public class FileStorageServiceImpl implements FileStorageService {
         deleteEntry(file);
         storageService.deleteFile(getBucketNameByUserId(userId), file);
 
+        updateUsedStorageOfUser(userId);
+
         return url;
+    }
+
+    @Override
+    public String deleteFilesByFolder(Long userId, String folderURL) {
+        refreshFiles(userId);
+
+        Set<File> files = findByUserIdAndFolderUrl(userId, folderURL);
+        String bucketName = getBucketNameByUserId(userId);
+
+        storageService.deleteFiles(bucketName, files);
+        files.forEach(this::deleteEntry);
+
+        updateUsedStorageOfUser(userId);
+
+        return bucketName + "/" + folderURL;
+    }
+
+    @Override
+    public void deleteAllFilesByDeletedUserId(Long userId) {
+        Set<File> allFiles = findByUserId(userId);
+
+        storageService.deleteBucket(
+                getBucketNameByUserId(userId)
+        );
+
+        allFiles.forEach(this::deleteEntry);
     }
 
     @Override
@@ -392,13 +420,13 @@ public class FileStorageServiceImpl implements FileStorageService {
 
     @Override
     public Set<File> findByUserId(Long userId) {
-        return repository.getFileModelsByUser_Id(userId);
+        return repository.getFilesByUser_Id(userId);
     }
 
     @Override
     public Set<File> findByUserIdAndFolderUrl(Long userId, String folderURL) {
         return repository
-                .getFileModelsByUser_IdAndUrlContaining(
+                .getFilesByUser_IdAndUrlContaining(
                         userId,
                         getBucketNameByUserId(userId) + "/" + folderURL
                 );
@@ -451,7 +479,7 @@ public class FileStorageServiceImpl implements FileStorageService {
 
     private File findByUserIdAndUrl(Long userId, String url) {
         return repository
-                .getFileModelByUser_IdAndUrl(userId, url)
+                .getFileByUser_IdAndUrl(userId, url)
                 .orElseThrow(
                         () -> new NotFoundFileByURLException(url)
                 );
@@ -459,7 +487,7 @@ public class FileStorageServiceImpl implements FileStorageService {
 
     public File findByUrl(String url) {
         return repository
-                .getFileModelByUrl(url)
+                .getFileByUrl(url)
                 .orElseThrow(
                         () -> new NotFoundFileByURLException(url)
                 );
@@ -550,7 +578,7 @@ public class FileStorageServiceImpl implements FileStorageService {
         String fileNameWithoutExt = file.getFileName().substring(0, file.getFileName().lastIndexOf("."));
         String ext = file.getFileName().substring(file.getFileName().lastIndexOf("."));
 
-        int count = repository.getFileModelsByUser_IdAndUrlContaining(user.getId(), urlForSearch).size();
+        int count = repository.getFilesByUser_IdAndUrlContaining(user.getId(), urlForSearch).size();
 
         return new FileCreateDto(
                 fileNameWithoutExt + "(" + count + ")" + ext,

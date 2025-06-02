@@ -1,16 +1,38 @@
 package org.y9nba.app.controller.fileaccess;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.y9nba.app.dto.fileaccess.FileAccessGiveRequestDto;
 import org.y9nba.app.dto.response.Response;
-import org.y9nba.app.model.FileModel;
-import org.y9nba.app.model.UserModel;
-import org.y9nba.app.service.impl.FileStorageServiceImpl;
-import org.y9nba.app.service.impl.UserServiceImpl;
+import org.y9nba.app.dao.entity.File;
+import org.y9nba.app.dao.entity.User;
+import org.y9nba.app.service.impl.file.FileStorageServiceImpl;
+import org.y9nba.app.service.impl.user.UserServiceImpl;
 
+@Tag(
+        name = "File Access Controller",
+        description = "Управление доступом к файлам"
+)
 @RestController
 @RequestMapping("/access")
+@ApiResponses({
+        @ApiResponse(
+                responseCode = "401",
+                description = "Пользователь не авторизован",
+                content = @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = Response.class),
+                        examples = @ExampleObject(value = "{\"message\": \"UNAUTHORIZED\"}")
+                )
+        )
+})
 public class FileAccessController {
 
     private final FileStorageServiceImpl fileStorageService;
@@ -22,52 +44,97 @@ public class FileAccessController {
     }
 
     @PostMapping("/give")
-    public Response giveAccess(@RequestParam String fileName, @RequestParam(required = false) String folderUrl, @RequestBody FileAccessGiveRequestDto fileAccessGiveRequestDto, @AuthenticationPrincipal UserModel userModel) {
-        UserModel collaboratorUser = userService.getById(fileAccessGiveRequestDto.getCollaboratorId());
-        FileModel fileModel = fileStorageService.giveAccessOnFileForUser(
-                userModel.getId(),
+    @Operation(summary = "Предоставить доступ к файлу определенному пользователю")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Пользователь получил доступ к файлу",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = Response.class)
+            )
+    )
+    public Response giveAccess(@RequestParam String fileName, @RequestParam(required = false) String folderUrl, @RequestBody FileAccessGiveRequestDto fileAccessGiveRequestDto, @AuthenticationPrincipal User user) {
+        User collaboratorUser = userService.getById(fileAccessGiveRequestDto.getCollaboratorId());
+        File file = fileStorageService.giveAccessOnFileForUser(
+                user.getId(),
                 fileName,
                 folderUrl,
                 fileAccessGiveRequestDto.getCollaboratorId(),
                 fileAccessGiveRequestDto.extractAccessLevel()
         );
 
-        return new Response("Пользователю " + collaboratorUser.getUsername() + " дан доступ " + fileAccessGiveRequestDto.extractAccessLevel().toString() + " к файлу " + fileModel.getUrl());
+        return new Response("Пользователю " + collaboratorUser.getUsername() + " дан доступ " + fileAccessGiveRequestDto.extractAccessLevel().toString() + " к файлу " + file.getUrl());
     }
 
     @DeleteMapping("/revoke")
-    public Response revokeAccess(@RequestParam String fileName, @RequestParam(required = false) String folderUrl, @RequestParam Long collaboratorUserId, @AuthenticationPrincipal UserModel userModel) {
-        UserModel collaboratorUser = userService.getById(collaboratorUserId);
-        FileModel fileModel = fileStorageService.revokeAccessOnFileForUser(
-                userModel.getId(),
+    @Operation(summary = "Отключить доступ к файлу определенному пользователю")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Пользователь больше не имеет доступа к файлу",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = Response.class)
+            )
+    )
+    public Response revokeAccess(@RequestParam String fileName, @RequestParam(required = false) String folderUrl, @RequestParam Long collaboratorUserId, @AuthenticationPrincipal User user) {
+        User collaboratorUser = userService.getById(collaboratorUserId);
+        File file = fileStorageService.revokeAccessOnFileForUser(
+                user.getId(),
                 fileName,
                 folderUrl,
                 collaboratorUserId
         );
 
-        return new Response("Пользовтелю " + collaboratorUser.getUsername() + " отключен доступ к файлу " + fileModel.getUrl());
+        return new Response("Пользователю " + collaboratorUser.getUsername() + " отключен доступ к файлу " + file.getUrl());
     }
 
     @DeleteMapping("/revoke/all")
-    public Response revokeAllAccess(@RequestParam String fileName, @RequestParam(required = false) String folderUrl, @AuthenticationPrincipal UserModel userModel) {
-        FileModel fileModel = fileStorageService.revokeAllAccessOnFile(
-                userModel.getId(),
+    @Operation(summary = "Отключить доступ к файлу всем пользователям, которым он был предоставлен")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Доступ отключен всем пользователям, которым был предоставлен доступ к файлу",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = Response.class)
+            )
+    )
+    public Response revokeAllAccess(@RequestParam String fileName, @RequestParam(required = false) String folderUrl, @AuthenticationPrincipal User user) {
+        File file = fileStorageService.revokeAllAccessOnFile(
+                user.getId(),
                 fileName,
                 folderUrl
         );
 
-        return new Response("Для всех пользователей отключен доступ к файлу " + fileModel.getUrl());
+        return new Response("Для всех пользователей отключен доступ к файлу " + file.getUrl());
     }
 
     @PutMapping("/open/file")
-    public Response makeFileIsOpen(@RequestParam String fileName, @RequestParam(required = false) String folderUrl, @AuthenticationPrincipal UserModel userModel) {
-        FileModel fileModel = fileStorageService.makeFilePublic(userModel.getId(), fileName, folderUrl);
-        return new Response("Все имеют доступ на чтение к файлу " + fileModel.getUrl());
+    @Operation(summary = "Сделать файл публичным")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Файл могут читать все, у кого есть ссылка",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = Response.class)
+            )
+    )
+    public Response makeFileIsOpen(@RequestParam String fileName, @RequestParam(required = false) String folderUrl, @AuthenticationPrincipal User user) {
+        File file = fileStorageService.makeFilePublic(user.getId(), fileName, folderUrl);
+        return new Response("Все имеют доступ на чтение к файлу " + file.getUrl());
     }
 
     @PutMapping("/close/file")
-    public Response makeFileIsClose(@RequestParam String fileName, @RequestParam(required = false) String folderUrl, @AuthenticationPrincipal UserModel userModel) {
-        FileModel fileModel = fileStorageService.makeFilePrivate(userModel.getId(), fileName, folderUrl);
-        return new Response("Никто не имеет доступа на чтение к файлу " + fileModel.getUrl());
+    @Operation(summary = "Сделать файл приватным")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Доступ к файлу закрыт для всех",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = Response.class)
+            )
+    )
+    public Response makeFileIsClose(@RequestParam String fileName, @RequestParam(required = false) String folderUrl, @AuthenticationPrincipal User user) {
+        File file = fileStorageService.makeFilePrivate(user.getId(), fileName, folderUrl);
+        return new Response("Никто не имеет доступа на чтение к файлу " + file.getUrl());
     }
 }

@@ -1,10 +1,11 @@
-package org.y9nba.app.service.impl;
+package org.y9nba.app.service.impl.email;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.y9nba.app.constant.OneTimeTokenType;
 import org.y9nba.app.dao.entity.User;
-import org.y9nba.app.service.face.ConfirmService;
+import org.y9nba.app.service.face.email.ConfirmService;
+import org.y9nba.app.service.impl.token.OneTimeTokenServiceImpl;
 
 import java.util.UUID;
 
@@ -25,11 +26,11 @@ public class ConfirmServiceImpl implements ConfirmService {
 
     @Override
     public String sendUpdateEmailConfirmation(User user, String newEmail) {
-        UUID tokenId = oneTimeTokenService.createUpdateEmailToken(user, newEmail);
+        String token = oneTimeTokenService.createUpdateEmailToken(user, newEmail);
 
         emailService.sendUpdateEmailConfirmationMessage(
                 newEmail,
-                domainURL + "confirm/update-email/" + tokenId
+                domainURL + "confirm/update-email/token?key=" + token
         );
 
         return "Письмо с подтверждением смены почты отправлено на: " + newEmail;
@@ -37,21 +38,21 @@ public class ConfirmServiceImpl implements ConfirmService {
 
     @Override
     public void sendRollbackUpdateEmailConfirmation(User user, String oldEmail) {
-        UUID tokenId = oneTimeTokenService.createRollbackEmailToken(user, oldEmail);
+        String token = oneTimeTokenService.createRollbackEmailToken(user, oldEmail);
 
         emailService.sendRollbackUpdateEmailConfirmationMessage(
                 oldEmail,
-                domainURL + "confirm/rollback-email/" + tokenId
+                domainURL + "confirm/rollback-email/token?key=" + token
         );
     }
 
     @Override
     public String sendActivateAccountConfirmation(User user) {
-        UUID tokenId = oneTimeTokenService.createActivationToken(user);
+        String token = oneTimeTokenService.createActivationToken(user);
 
         emailService.sendActivationAccountConfirmationMessage(
                 user.getEmail(),
-                domainURL + "confirm/activate/" + tokenId
+                domainURL + "confirm/activate/token?key=" + token
         );
 
         return "Письмо с подтверждением регистрации отправлено на: " + user.getEmail() + " :)";
@@ -59,30 +60,37 @@ public class ConfirmServiceImpl implements ConfirmService {
 
     @Override
     public String sendResetPasswordConfirmation(User user) {
-        UUID tokenId = oneTimeTokenService.createResetPasswordToken(user);
+        String token = oneTimeTokenService.createResetPasswordToken(user);
 
         emailService.sendResetPasswordConfirmationMessage(
                 user.getEmail(),
-                domainURL + "confirm/reset-password/" + tokenId
+                domainURL + "confirm/reset-password/token?key=" + token
         );
 
         return "Письмо с инструкцией по сбросу пароля отправлено на: " + user.getEmail();
     }
 
     @Override
-    public String sendAccountDeletionConfirmation(User user) {
-        return null;
+    public String sendAccountDeleteConfirmation(User user) {
+        String token = oneTimeTokenService.createDeleteAccountToken(user);
+
+        emailService.sendDeleteAccountConfirmationMessage(
+                user.getEmail(),
+                domainURL + "confirm/delete-account/token?key=" + token
+        );
+
+        return "Письмо с подтверждением удаления аккаунта отправлено на: " + user.getEmail();
     }
 
     @Override
     public String sendResetPasswordInformation(User user, String newPassword) {
-        UUID tokenId = oneTimeTokenService.createRollbackPasswordToken(user);
+        String token = oneTimeTokenService.createRollbackPasswordToken(user);
 
         emailService.sendResetPasswordInfoMessage(
                 user.getEmail(),
                 user.getUsername(),
                 newPassword,
-                domainURL + "confirm/rollback-password/" + tokenId
+                domainURL + "confirm/rollback-password/token?key=" + token
 
         );
 
@@ -91,20 +99,15 @@ public class ConfirmServiceImpl implements ConfirmService {
 
     @Override
     public String sendResetPasswordInformation(User user) {
-        UUID tokenId = oneTimeTokenService.createRollbackPasswordToken(user);
+        String token = oneTimeTokenService.createRollbackPasswordToken(user);
 
         emailService.sendResetPasswordInfoMessage(
                 user.getEmail(),
-                domainURL + "confirm/rollback-password/" + tokenId
+                domainURL + "confirm/rollback-password/token?key=" + token
 
         );
 
         return "Пароль успешно изменён";
-    }
-
-    @Override
-    public String sendAuthenticationInformation(User user) {
-        return null;
     }
 
     @Override
@@ -131,7 +134,7 @@ public class ConfirmServiceImpl implements ConfirmService {
 
     @Override
     public void confirmDeleteAccount(Long userId, String deleteAccountToken) {
-
+        checkAndRevokeAllOneTimeTokenWithType(userId, deleteAccountToken, OneTimeTokenType.DELETE_ACCOUNT);
     }
 
     @Override

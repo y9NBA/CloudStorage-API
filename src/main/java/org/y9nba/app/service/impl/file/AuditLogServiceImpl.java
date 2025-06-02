@@ -1,4 +1,4 @@
-package org.y9nba.app.service.impl;
+package org.y9nba.app.service.impl.file;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -10,7 +10,7 @@ import org.y9nba.app.dao.entity.AuditLog;
 import org.y9nba.app.dao.entity.File;
 import org.y9nba.app.dao.entity.User;
 import org.y9nba.app.dao.repository.AuditLogRepository;
-import org.y9nba.app.service.face.AuditLogService;
+import org.y9nba.app.service.face.file.AuditLogService;
 
 import java.util.Set;
 

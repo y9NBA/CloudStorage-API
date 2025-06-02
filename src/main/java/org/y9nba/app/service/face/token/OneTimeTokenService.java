@@ -1,4 +1,4 @@
-package org.y9nba.app.service.face;
+package org.y9nba.app.service.face.token;
 
 import org.y9nba.app.constant.OneTimeTokenType;
 import org.y9nba.app.dao.entity.User;
@@ -6,12 +6,12 @@ import org.y9nba.app.dao.entity.User;
 import java.util.UUID;
 
 public interface OneTimeTokenService {
-    UUID createActivationToken(User user);
-    UUID createResetPasswordToken(User user);
-    UUID createRollbackPasswordToken(User user);
-    UUID createRollbackEmailToken(User user, String oldEmail);
-    UUID createUpdateEmailToken(User user, String newEmail);
-    String findTokenById(UUID oneTimeTokenId);
+    String createActivationToken(User user);
+    String createResetPasswordToken(User user);
+    String createRollbackPasswordToken(User user);
+    String createRollbackEmailToken(User user, String oldEmail);
+    String createUpdateEmailToken(User user, String newEmail);
+    String createDeleteAccountToken(User user);
     void checkOneTimeToken(String token, OneTimeTokenType type);
     void revokeOneTimeToken(String token);
     void revokeAllOneTimeTokenWithType(Long userId, OneTimeTokenType type);

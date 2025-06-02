@@ -7,8 +7,8 @@ import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.stereotype.Component;
 import org.y9nba.app.dto.response.Response;
 import org.y9nba.app.exception.web.auth.UnAuthorizedException;
-import org.y9nba.app.model.TokenModel;
-import org.y9nba.app.repository.TokenRepository;
+import org.y9nba.app.dao.entity.Session;
+import org.y9nba.app.service.impl.token.SessionServiceImpl;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -16,10 +16,13 @@ import java.nio.charset.StandardCharsets;
 @Component
 public class CustomLogoutHandler implements LogoutHandler {
 
-    private final TokenRepository tokenRepository;
+    private final SessionServiceImpl sessionService;
 
-    public CustomLogoutHandler(TokenRepository tokenRepository) {
-        this.tokenRepository = tokenRepository;
+    private final JwtService jwtService;
+
+    public CustomLogoutHandler(SessionServiceImpl sessionService, JwtService jwtService) {
+        this.sessionService = sessionService;
+        this.jwtService = jwtService;
     }
 
     @Override
@@ -37,11 +40,11 @@ public class CustomLogoutHandler implements LogoutHandler {
         } else {
             String token = authHeader.substring(7);
 
-            TokenModel tokenEntity = tokenRepository.findByAccessToken(token).orElse(null);
+            Session session = sessionService.getSessionById(jwtService.getSessionIdByToken(token));
 
-            if (tokenEntity != null && !tokenEntity.isLoggedOut()) {
-                tokenEntity.setLoggedOut(true);
-                tokenRepository.save(tokenEntity);
+            if (session != null) {
+
+                sessionService.revokeSession(session);
 
                 try {
                     response.getWriter().printf(new Response("Вы успешно вышли из системы").asJSON());

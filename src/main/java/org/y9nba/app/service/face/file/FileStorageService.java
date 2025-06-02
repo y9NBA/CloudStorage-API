@@ -1,4 +1,4 @@
-package org.y9nba.app.service.face;
+package org.y9nba.app.service.face.file;
 
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +22,8 @@ public interface FileStorageService {
     File save(FileCreateDto dto);
     File update(FileUpdateDto dto);
     String deleteFile(Long userId, String fileName, String folderURL);
+    String deleteFilesByFolder(Long userId, String folderURL);
+    void deleteAllFilesByDeletedUserId(Long userId);
     File giveAccessOnFileForUser(Long userId, String fileName, String folderURL, Long collaboratorUserId, Access access);
     File revokeAccessOnFileForUser(Long userId, String fileName, String folderURL, Long collaboratorUserId);
     File revokeAllAccessOnFile(Long userId, String fileName, String folderURL);

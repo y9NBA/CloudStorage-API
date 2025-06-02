@@ -1,4 +1,4 @@
-package org.y9nba.app.service.impl;
+package org.y9nba.app.service.impl.file;
 
 import org.hibernate.Hibernate;
 import org.springframework.http.HttpStatus;
@@ -11,7 +11,7 @@ import org.y9nba.app.dto.fileaccess.FileAccessUpdateDto;
 import org.y9nba.app.exception.web.file.access.NotFoundFileAccessByUserAndFileException;
 import org.y9nba.app.dao.entity.FileAccess;
 import org.y9nba.app.dao.repository.FileAccessRepository;
-import org.y9nba.app.service.face.FileAccessService;
+import org.y9nba.app.service.face.file.FileAccessService;
 
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -64,14 +64,14 @@ public class FileAccessServiceImpl implements FileAccessService {
 
     @Override
     public void deleteAllAccessesForFile(Long fileId) {
-        deleteAll(repository.getFileAccessModelsByFileId(fileId));
+        deleteAll(repository.getFileAccessesByFileId(fileId));
     }
 
     @Override
     public void deleteAllAccessesReaderForFile(Long fileId) {
         deleteAll(
                 repository
-                        .getFileAccessModelsByFileId(fileId)
+                        .getFileAccessesByFileId(fileId)
                         .stream()
                         .filter(
                                 fa -> fa.getAccessLevel().equals(Access.ACCESS_READER)
@@ -120,7 +120,7 @@ public class FileAccessServiceImpl implements FileAccessService {
     @Transactional
     @Override
     public Set<FileAccess> findByUser(Long userId) {
-        Set<FileAccess> fileAccesses = repository.getFileAccessModelsByUserId(userId);
+        Set<FileAccess> fileAccesses = repository.getFileAccessesByUserId(userId);
         fileAccesses.forEach(fa -> Hibernate.initialize(fa.getFile()));
         return fileAccesses;
     }

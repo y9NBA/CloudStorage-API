@@ -12,14 +12,14 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.y9nba.app.constant.OneTimeTokenType;
 import org.y9nba.app.exception.web.auth.UnAuthorizedException;
-import org.y9nba.app.model.TokenModel;
-import org.y9nba.app.model.UserModel;
-import org.y9nba.app.repository.OneTimeTokenRepository;
-import org.y9nba.app.repository.TokenRepository;
+import org.y9nba.app.dao.entity.User;
+import org.y9nba.app.dao.repository.OneTimeTokenRepository;
+import org.y9nba.app.dao.repository.SessionRepository;
+import org.y9nba.app.service.impl.token.SessionServiceImpl;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
-import java.util.Set;
+import java.util.UUID;
 import java.util.function.Function;
 
 @Service
@@ -34,48 +34,48 @@ public class JwtService {
     @Value("${token.signing.refresh_token}")
     private long refreshTokenExpiration;
 
-    private final TokenRepository tokenRepository;
+    private final SessionServiceImpl sessionService;
+    private final SessionRepository sessionRepository;
     private final OneTimeTokenRepository oneTimeTokenRepository;
 
-    public JwtService(TokenRepository tokenRepository, OneTimeTokenRepository oneTimeTokenRepository) {
-        this.tokenRepository = tokenRepository;
+    public JwtService(SessionServiceImpl sessionService, SessionRepository sessionRepository, OneTimeTokenRepository oneTimeTokenRepository) {
+        this.sessionService = sessionService;
+        this.sessionRepository = sessionRepository;
         this.oneTimeTokenRepository = oneTimeTokenRepository;
     }
 
-
-    public boolean isValid(String token, UserModel user) {
-
-        String userIdAsString = extractUserId(token);
-
-        boolean isValidToken = tokenRepository.findByAccessToken(token)
-                .map(t -> !t.isLoggedOut()).orElse(false);
-
-        return userIdAsString.equals(user.getId().toString())
-                && isAccessTokenExpired(token)
-                && isValidToken;
+    public boolean isValid(String token, User user) {
+        return isValidToken(token, user)
+                && isAccessTokenExpired(token);
     }
 
-    public boolean isValidRefresh(String token, UserModel user) {
+    public boolean isValidRefresh(String token, User user) {
+        return isValidToken(token, user)
+                && isAccessTokenExpired(token);
+    }
 
-        String userIdAsString = extractUserId(token);
+    private boolean isValidToken(String token, User user) {
+        Long userId = Long.parseLong(extractUserId(token));
+        UUID sessionId = getSessionIdByToken(token);
 
-        boolean isValidRefreshToken = tokenRepository.findByRefreshToken(token)
-                .map(t -> !t.isLoggedOut()).orElse(false);
+        boolean isValidToken = sessionRepository
+                .findById(sessionId)
+                .map(
+                        s -> !s.isLoggedOut()
+                ).orElse(false);
 
-        return userIdAsString.equals(user.getId().toString())
-                && isAccessTokenExpired(token)
-                && isValidRefreshToken;
+        return isValidToken && userId.equals(user.getId());
     }
 
     public boolean isValidOneTime(String token, OneTimeTokenType tokenType) {
-
         Long userId = Long.valueOf(extractUserId(token));
+        UUID oneTimeTokenId = getOneTimeTokenIdByToken(token);
 
         boolean isValidOneTimeToken = oneTimeTokenRepository
-                .findByUser_IdAndTypeAndToken(
+                .findByIdAndUser_IdAndType(
+                        oneTimeTokenId,
                         userId,
-                        tokenType,
-                        token
+                        tokenType
                 )
                 .map(t -> !t.isUsed())
                 .orElse(false);
@@ -84,29 +84,8 @@ public class JwtService {
                 && isValidOneTimeToken;
     }
 
-    public void revokeAllToken(UserModel user) {
-
-        Set<TokenModel> validTokens = tokenRepository.findAllByUser(user);
-
-        if (!validTokens.isEmpty()) {
-            validTokens.forEach(
-                    t -> t.setLoggedOut(true)
-            );
-        }
-
-        tokenRepository.saveAll(validTokens);
-    }
-
-    public void saveUserToken(String accessToken, String refreshToken, UserModel user) {
-
-        TokenModel token = new TokenModel();
-
-        token.setAccessToken(accessToken);
-        token.setRefreshToken(refreshToken);
-        token.setLoggedOut(false);
-        token.setUser(user);
-
-        tokenRepository.save(token);
+    public void revokeAllSession(Long userId) {
+        sessionService.revokeAllSessionsByUserId(userId);
     }
 
     private boolean isAccessTokenExpired(String token) {
@@ -123,6 +102,14 @@ public class JwtService {
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
+    }
+
+    public String extractSessionId(String token) {
+        return extractClaim(token, "sessionId");
+    }
+
+    public String extractOneTimeTokenId(String token) {
+        return extractClaim(token, "oneTimeTokenId");
     }
 
     public <T> T extractClaim(String token, Function<Claims, T> resolver) {
@@ -146,28 +133,30 @@ public class JwtService {
                 .getBody();
     }
 
-    public String generateAccessToken(UserModel user) {
+    public String generateAccessToken(User user, UUID sessionId) {
 
-        return generateToken(user, accessTokenExpiration);
+        return generateToken(user, accessTokenExpiration, sessionId);
     }
 
-    public String generateRefreshToken(UserModel user) {
+    public String generateRefreshToken(User user, UUID sessionId) {
 
-        return generateToken(user, refreshTokenExpiration);
+        return generateToken(user, refreshTokenExpiration, sessionId);
     }
 
-    public JwtBuilder getOneTimeTokenBuilder(UserModel user, long expiryTime) {
+    public JwtBuilder getOneTimeTokenBuilder(User user, long expiryTime) {
 
         return getJwtBuilderByUser(user, expiryTime);
     }
 
-    private String generateToken(UserModel user, long expiryTime) {
+    private String generateToken(User user, long expiryTime, UUID sessionId) {
         JwtBuilder builder = getJwtBuilderByUser(user, expiryTime);
+
+        builder.claim("sessionId", sessionId);
 
         return builder.compact();
     }
 
-    private JwtBuilder getJwtBuilderByUser(UserModel user, long expiryTime) {
+    private JwtBuilder getJwtBuilderByUser(User user, long expiryTime) {
         return Jwts.builder()
                 .setId(String.valueOf(user.getId()))
                 .setSubject(user.getUsername())
@@ -196,5 +185,13 @@ public class JwtService {
     public String getUsernameByAuthRequest(HttpServletRequest request) {
         String token = getTokenByRequest(request);
         return extractUsername(token);
+    }
+
+    public UUID getSessionIdByToken(String token) {
+        return UUID.fromString(extractSessionId(token));
+    }
+
+    public UUID getOneTimeTokenIdByToken(String token) {
+        return UUID.fromString(extractOneTimeTokenId(token));
     }
 }

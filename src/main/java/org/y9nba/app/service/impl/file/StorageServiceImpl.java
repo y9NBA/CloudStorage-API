@@ -1,6 +1,7 @@
-package org.y9nba.app.service.impl;
+package org.y9nba.app.service.impl.file;
 
 import io.minio.*;
+import io.minio.messages.Item;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -12,7 +13,7 @@ import org.y9nba.app.exception.local.PhysicalFilesAndEntriesNotSyncException;
 import org.y9nba.app.exception.web.file.FileNotUploadException;
 import org.y9nba.app.dao.entity.File;
 import org.y9nba.app.dao.entity.User;
-import org.y9nba.app.service.face.StorageService;
+import org.y9nba.app.service.face.file.StorageService;
 
 import java.io.InputStream;
 import java.util.List;
@@ -80,7 +81,7 @@ public class StorageServiceImpl implements StorageService {
     }
 
     @Override
-    public void downloadManyFiles(String username, List<File> files) {
+    public void downloadFolder(String username, List<File> files) {    // TODO: доделать скачку кучи файлов в виде архива
 
     }
 
@@ -108,10 +109,11 @@ public class StorageServiceImpl implements StorageService {
                     .build();
             minioClient.copyObject(copyArgs);
 
-            deleteFileByUrl(bucketName, oldFileURL);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+
+        deleteFileByUrl(bucketName, oldFileURL);
     }
 
     @Override
@@ -121,7 +123,7 @@ public class StorageServiceImpl implements StorageService {
         String fileURL = getCorrectUrl(file.getUrl());
         String copyFileURL = getCorrectUrl(fileCrtDto.getUrl());
 
-        checkURLs(bucketName, fileURL, copyFileURL,  new File(fileCrtDto));
+        checkURLs(bucketName, fileURL, copyFileURL, new File(fileCrtDto));
 
         try {
             CopySource copySource = CopySource.builder().bucket(bucketName).object(fileURL).build();
@@ -137,6 +139,10 @@ public class StorageServiceImpl implements StorageService {
     }
 
     private void deleteFileByUrl(String bucketName, String fileURL) {
+        if (!isFileExist(bucketName, fileURL)) {
+            return;
+        }
+
         try {
             RemoveObjectArgs rmvArgs = RemoveObjectArgs.builder().bucket(bucketName).object(fileURL).build();
             minioClient.removeObject(rmvArgs);
@@ -204,6 +210,43 @@ public class StorageServiceImpl implements StorageService {
 
         if (!fileModelsWithoutPhysicalFile.isEmpty() || !filesWithoutEntryInDB.isEmpty())
             throw new PhysicalFilesAndEntriesNotSyncException(fileModelsWithoutPhysicalFile, filesWithoutEntryInDB);
+    }
+
+    @Override
+    public void deleteBucket(String bucketName) {
+        createBucket(bucketName);
+
+        Iterable<Result<Item>> results = minioClient.listObjects(ListObjectsArgs.builder()
+                .bucket(bucketName)
+                .build());
+
+        try {
+            for (Result<Item> result : results) {
+                minioClient.removeObject(RemoveObjectArgs.builder()
+                        .bucket(bucketName)
+                        .object(result.get().objectName())
+                        .build());
+            }
+
+            minioClient.removeBucket(RemoveBucketArgs.builder()
+                    .bucket(bucketName)
+                    .build());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void deleteFiles(String bucketName, Set<File> files) {
+        createBucket(bucketName);
+
+        files
+                .stream()
+                .map(File::getUrl)
+                .map(this::getCorrectUrl)
+                .forEach(
+                        fileURL -> deleteFileByUrl(bucketName, fileURL)
+                );
     }
 
     private boolean isFileExistByUrl(String bucketName, String fileURL) {

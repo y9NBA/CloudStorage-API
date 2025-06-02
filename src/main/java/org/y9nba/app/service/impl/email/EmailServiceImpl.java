@@ -1,4 +1,4 @@
-package org.y9nba.app.service.impl;
+package org.y9nba.app.service.impl.email;
 
 import jakarta.mail.internet.MimeMessage;
 import lombok.SneakyThrows;
@@ -10,7 +10,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
-import org.y9nba.app.service.face.EmailService;
+import org.y9nba.app.service.face.email.EmailService;
 
 import java.util.Map;
 
@@ -120,6 +120,62 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     @Async("emailTaskExecutor")
+    public void sendBannedInfoMessage(String email, String username) {
+        sendEmailWithTemplate(
+                email,
+                "Аккаунт заблокирован",
+                "ban_account_info",
+                Map.of(
+                        "username", username,
+                        "emailSenderName", emailSenderName
+                )
+        );
+    }
+
+    @Override
+    @Async("emailTaskExecutor")
+    public void sendUnbannedInfoMessage(String email, String username) {
+        sendEmailWithTemplate(
+                email,
+                "Ваш аккаунт разблокирован",
+                "unban_account_info",
+                Map.of(
+                        "username", username,
+                        "emailSenderName", emailSenderName
+                )
+        );
+    }
+
+    @Override
+    @Async("emailTaskExecutor")
+    public void sendWarningOfPublicFileInfoMessage(String email, String fileURL) {
+        sendEmailWithTemplate(
+                email,
+                "Предупреждение о файле",
+                "warning_of_public_file_info",
+                Map.of(
+                        "fileURL", fileURL,
+                        "emailSenderName", emailSenderName
+                )
+        );
+    }
+
+    @Override
+    @Async("emailTaskExecutor")
+    public void sendNotificationOfPublicFileInfoMessage(String email, String fileURL) {
+        sendEmailWithTemplate(
+                email,
+                "Уведомление о файле",
+                "notification_of_public_file_info",
+                Map.of(
+                        "fileURL", fileURL,
+                        "emailSenderName", emailSenderName
+                )
+        );
+    }
+
+    @Override
+    @Async("emailTaskExecutor")
     public void sendResetPasswordConfirmationMessage(String email, String resetPasswordURL) {
         sendEmailWithTemplate(
                 email,
@@ -141,6 +197,20 @@ public class EmailServiceImpl implements EmailService {
                 "rollback_update_email",
                 Map.of(
                         "rollbackUpdateEmailURL", rollbackUpdateEmailURL,
+                        "emailSenderName", emailSenderName
+                )
+        );
+    }
+
+    @Override
+    @Async("emailTaskExecutor")
+    public void sendDeleteAccountConfirmationMessage(String email, String deleteAccountURL) {
+        sendEmailWithTemplate(
+                email,
+                "Удаление аккаунта",
+                "delete_account_confirmation",
+                Map.of(
+                        "deleteAccountURL", deleteAccountURL,
                         "emailSenderName", emailSenderName
                 )
         );

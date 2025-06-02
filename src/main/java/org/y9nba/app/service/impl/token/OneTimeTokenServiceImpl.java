@@ -1,5 +1,6 @@
-package org.y9nba.app.service.impl;
+package org.y9nba.app.service.impl.token;
 
+import io.jsonwebtoken.JwtBuilder;
 import org.springframework.stereotype.Service;
 import org.y9nba.app.constant.OneTimeTokenType;
 import org.y9nba.app.dto.onetimetoken.OneTimeTokenCreateDto;
@@ -8,7 +9,7 @@ import org.y9nba.app.dao.entity.OneTimeToken;
 import org.y9nba.app.dao.entity.User;
 import org.y9nba.app.dao.repository.OneTimeTokenRepository;
 import org.y9nba.app.security.JwtService;
-import org.y9nba.app.service.face.OneTimeTokenService;
+import org.y9nba.app.service.face.token.OneTimeTokenService;
 
 import java.util.Set;
 import java.util.UUID;
@@ -28,66 +29,75 @@ public class OneTimeTokenServiceImpl implements OneTimeTokenService {
     }
 
     @Override
-    public UUID createActivationToken(User user) {
+    public String createActivationToken(User user) {
         OneTimeTokenCreateDto dto = new OneTimeTokenCreateDto(
                 user,
-                generateToken(user),
                 OneTimeTokenType.ACTIVATION
         );
 
-        return save(dto).getId();
+        UUID oneTimeTokenId = save(dto).getId();
+
+        return generateToken(user, oneTimeTokenId);
     }
 
     @Override
-    public UUID createResetPasswordToken(User user) {
+    public String createResetPasswordToken(User user) {
         OneTimeTokenCreateDto dto = new OneTimeTokenCreateDto(
                 user,
-                generateToken(user),
                 OneTimeTokenType.RESET_PASSWORD
         );
 
-        return save(dto).getId();
+        UUID oneTimeTokenId = save(dto).getId();
+
+        return generateToken(user, oneTimeTokenId);
     }
 
     @Override
-    public UUID createRollbackPasswordToken(User user) {
+    public String createRollbackPasswordToken(User user) {
         OneTimeTokenCreateDto dto = new OneTimeTokenCreateDto(
                 user,
-                generateTokenWithHashPassword(user),
                 OneTimeTokenType.ROLLBACK_PASSWORD
         );
 
-        return save(dto).getId();
+        UUID oneTimeTokenId = save(dto).getId();
+
+        return generateTokenWithHashPassword(user, oneTimeTokenId);
     }
 
     @Override
-    public UUID createRollbackEmailToken(User user, String oldEmail) {
+    public String createRollbackEmailToken(User user, String oldEmail) {
         OneTimeTokenCreateDto dto = new OneTimeTokenCreateDto(
                 user,
-                generateTokenWithEmail(user, oldEmail, true),
                 OneTimeTokenType.ROLLBACK_EMAIL
         );
 
-        return save(dto).getId();
+        UUID oneTimeTokenId = save(dto).getId();
+
+        return generateTokenWithEmail(user, oneTimeTokenId, oldEmail, true);
     }
 
     @Override
-    public UUID createUpdateEmailToken(User user, String newEmail) {
+    public String createUpdateEmailToken(User user, String newEmail) {
         OneTimeTokenCreateDto dto = new OneTimeTokenCreateDto(
                 user,
-                generateTokenWithEmail(user, newEmail, false),
                 OneTimeTokenType.UPDATE_EMAIL
         );
 
-        return save(dto).getId();
+        UUID oneTimeTokenId = save(dto).getId();
+
+        return generateTokenWithEmail(user, oneTimeTokenId, newEmail, false);
     }
 
     @Override
-    public String findTokenById(UUID oneTimeTokenId) {
-        return repository
-                .findById(oneTimeTokenId)
-                .orElseThrow(OneTimeTokenNotValidException::new)
-                .getToken();
+    public String createDeleteAccountToken(User user) {
+        OneTimeTokenCreateDto dto = new OneTimeTokenCreateDto(
+                user,
+                OneTimeTokenType.DELETE_ACCOUNT
+        );
+
+        UUID oneTimeTokenId = save(dto).getId();
+
+        return generateToken(user, oneTimeTokenId);
     }
 
     @Override
@@ -99,7 +109,9 @@ public class OneTimeTokenServiceImpl implements OneTimeTokenService {
 
     @Override
     public void revokeOneTimeToken(String token) {
-        repository.findByToken(token).ifPresent(t -> {
+        repository.findById(
+                jwtService.getOneTimeTokenIdByToken(token)
+        ).ifPresent(t -> {
             t.setUsed(true);
             repository.save(t);
         });
@@ -134,21 +146,26 @@ public class OneTimeTokenServiceImpl implements OneTimeTokenService {
         return repository.save(new OneTimeToken(dto));
     }
 
-    private String generateToken(User user) {
-        return jwtService.getOneTimeTokenBuilder(user, expiryTime).compact();
+    private String generateToken(User user, UUID onetimeTokenId) {
+        return getOneTimeTokenBuilderWithUUIDEntry(user, onetimeTokenId, expiryTime)
+                .compact();
     }
 
-    private String generateTokenWithEmail(User user, String email, boolean rollback) {
-        return jwtService
-                .getOneTimeTokenBuilder(user, rollback ? expiryTimeRollback : expiryTime)
+    private String generateTokenWithEmail(User user, UUID onetimeTokenId, String email, boolean rollback) {
+        return getOneTimeTokenBuilderWithUUIDEntry(user, onetimeTokenId, rollback ? expiryTimeRollback : expiryTime)
                 .claim("email", email)
                 .compact();
     }
 
-    private String generateTokenWithHashPassword(User user) {
-        return jwtService
-                .getOneTimeTokenBuilder(user, expiryTimeRollback)
+    private String generateTokenWithHashPassword(User user, UUID onetimeTokenId) {
+        return getOneTimeTokenBuilderWithUUIDEntry(user, onetimeTokenId, expiryTimeRollback)
                 .claim("hashPassword", user.getPassword())
                 .compact();
+    }
+
+    private JwtBuilder getOneTimeTokenBuilderWithUUIDEntry(User user, UUID onetimeTokenId, Long expiry) {
+        return jwtService
+                .getOneTimeTokenBuilder(user, expiry)
+                .claim("oneTimeTokenId", onetimeTokenId.toString());
     }
 }
