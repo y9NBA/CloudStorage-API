@@ -3,11 +3,13 @@ package org.y9nba.app.service.impl.user;
 import org.springframework.stereotype.Service;
 import org.y9nba.app.dao.entity.User;
 import org.y9nba.app.dto.user.update.UserUpdateEmailDto;
+import org.y9nba.app.exception.web.auth.NotValidEmailException;
 import org.y9nba.app.exception.web.user.info.EmailAlreadyException;
 import org.y9nba.app.exception.web.user.info.EmailDuplicateException;
 import org.y9nba.app.security.JwtService;
 import org.y9nba.app.service.face.user.UserEmailService;
 import org.y9nba.app.service.impl.email.ConfirmServiceImpl;
+import org.y9nba.app.util.StringUtil;
 
 @Service
 public class UserEmailServiceImpl implements UserEmailService {
@@ -16,10 +18,13 @@ public class UserEmailServiceImpl implements UserEmailService {
     private final ConfirmServiceImpl confirmService;
     private final JwtService jwtService;
 
-    public UserEmailServiceImpl(UserServiceImpl userService, ConfirmServiceImpl confirmService, JwtService jwtService) {
+    private final StringUtil stringUtil;
+
+    public UserEmailServiceImpl(UserServiceImpl userService, ConfirmServiceImpl confirmService, JwtService jwtService, StringUtil stringUtil) {
         this.userService = userService;
         this.confirmService = confirmService;
         this.jwtService = jwtService;
+        this.stringUtil = stringUtil;
     }
 
     @Override
@@ -65,6 +70,11 @@ public class UserEmailServiceImpl implements UserEmailService {
     }
 
     private void checkEmail(String email, String newEmail) {
+
+        if (!stringUtil.isValidEmail(newEmail)) {
+            throw new NotValidEmailException();
+        }
+
         if (newEmail.equals(email)) {
             throw new EmailDuplicateException();
         }

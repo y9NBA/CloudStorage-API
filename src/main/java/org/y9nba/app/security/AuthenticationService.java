@@ -22,6 +22,7 @@ import org.y9nba.app.service.impl.email.ConfirmServiceImpl;
 import org.y9nba.app.service.impl.token.SessionServiceImpl;
 import org.y9nba.app.service.impl.user.UserServiceImpl;
 import org.y9nba.app.util.PasswordUtil;
+import org.y9nba.app.util.StringUtil;
 
 import java.util.Map;
 import java.util.UUID;
@@ -37,22 +38,24 @@ public class AuthenticationService {
 
     private final AuthenticationManager authenticationManager;
 
+    private final StringUtil stringUtil;
 
     public AuthenticationService(UserServiceImpl userService,
                                  ConfirmServiceImpl confirmService,
                                  JwtService jwtService,
                                  SessionServiceImpl sessionService,
-                                 AuthenticationManager authenticationManager) {
+                                 AuthenticationManager authenticationManager, StringUtil stringUtil) {
         this.userService = userService;
         this.confirmService = confirmService;
         this.jwtService = jwtService;
         this.sessionService = sessionService;
         this.authenticationManager = authenticationManager;
+        this.stringUtil = stringUtil;
     }
 
     public String register(RegistrationRequestDto registrationRequestDto) {
 
-        if (!isValidEmail(registrationRequestDto.getEmail())) {
+        if (!stringUtil.isValidEmail(registrationRequestDto.getEmail())) {
             throw new NotValidEmailException();
         }
 
@@ -71,7 +74,7 @@ public class AuthenticationService {
 
         User user;
 
-        if (isValidEmail(loginRequestDto.getLogin())) {
+        if (stringUtil.isValidEmail(loginRequestDto.getLogin())) {
             user = userService.getByEmail(loginRequestDto.getLogin());
         } else {
             user = userService.getByUsername(loginRequestDto.getLogin());
@@ -150,11 +153,6 @@ public class AuthenticationService {
         }
 
         throw new OAuth2GoogleNotUserException();
-    }
-
-    private boolean isValidEmail(String email) {
-        String emailRegex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
-        return email.matches(emailRegex);
     }
 }
 
