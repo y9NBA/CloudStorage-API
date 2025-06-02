@@ -2,7 +2,7 @@ package org.y9nba.app.dto.file;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.y9nba.app.model.UserModel;
+import org.y9nba.app.dao.entity.User;
 
 @AllArgsConstructor
 @Getter
@@ -11,5 +11,5 @@ public class FileCreateDto {
     private Long fileSize;
     private String mimeType;
     private String url;
-    private UserModel user;
+    private User user;
 }

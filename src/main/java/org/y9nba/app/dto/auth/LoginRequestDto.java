@@ -8,8 +8,8 @@ import lombok.Getter;
 @Getter
 public class LoginRequestDto {
 
-    @Schema(description = "Имя пользователя", example = "john_doe")
-    private final String username;
+    @Schema(description = "Имя или почта", example = "john_doe|john@example.com")
+    private final String login;
 
     @Schema(description = "Пароль", example = "securePassword123")
     private final String password;
