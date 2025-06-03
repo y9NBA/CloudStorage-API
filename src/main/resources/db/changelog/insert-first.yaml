@@ -12,7 +12,7 @@ databaseChangeLog:
                   value: 'user'
               - column:
                   name: password
-                  value: '$2y$10$EJtO/IRCFd7WK37KeBQYue7waFvyhUpAa.K.xpCWJz1rFiNNt5UQG'    # 12345678
+                  value: '$2a$10$.ntvAOEXgNhyYKAETVLAsu8h6HyQRwjzfH9TTzyM8POtuXXaqLag6'    # 12345678
               - column:
                   name: email
                   value: 'user@example.com'

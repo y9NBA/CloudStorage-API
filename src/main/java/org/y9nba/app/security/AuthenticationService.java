@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
@@ -21,7 +20,6 @@ import org.y9nba.app.dao.entity.User;
 import org.y9nba.app.service.impl.email.ConfirmServiceImpl;
 import org.y9nba.app.service.impl.token.SessionServiceImpl;
 import org.y9nba.app.service.impl.user.UserServiceImpl;
-import org.y9nba.app.util.PasswordUtil;
 import org.y9nba.app.util.StringUtil;
 
 import java.util.Map;
@@ -95,8 +93,8 @@ public class AuthenticationService {
 
         session = sessionService.createSession(user, request);
 
-        String accessToken = jwtService.generateAccessToken(user, session.getId());
-        String refreshToken = jwtService.generateRefreshToken(user, session.getId());
+        String accessToken = jwtService.generateAccessToken(user, session.getId(), session.getVersion());
+        String refreshToken = jwtService.generateRefreshToken(user, session.getId(), session.getVersion());
 
         return new TokenResponseDto(accessToken, refreshToken);
     }
@@ -111,8 +109,10 @@ public class AuthenticationService {
 
             UUID sessionId = jwtService.getSessionIdByToken(token);
 
-            String accessToken = jwtService.generateAccessToken(user, sessionId);
-            String refreshToken = jwtService.generateRefreshToken(user, sessionId);
+            Long version = sessionService.refreshSession(sessionId);
+
+            String accessToken = jwtService.generateAccessToken(user, sessionId, version);
+            String refreshToken = jwtService.generateRefreshToken(user, sessionId, version);
 
             return new TokenResponseDto(accessToken, refreshToken);
         }
@@ -145,8 +145,8 @@ public class AuthenticationService {
 
                 Session session = sessionService.createSession(user, request);
 
-                String accessToken = jwtService.generateAccessToken(user, session.getId());
-                String refreshToken = jwtService.generateRefreshToken(user, session.getId());
+                String accessToken = jwtService.generateAccessToken(user, session.getId(), session.getVersion());
+                String refreshToken = jwtService.generateRefreshToken(user, session.getId(), session.getVersion());
 
                 return new TokenResponseDto(accessToken, refreshToken);
             }

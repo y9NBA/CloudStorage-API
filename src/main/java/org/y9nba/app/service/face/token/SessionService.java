@@ -10,6 +10,7 @@ import java.util.UUID;
 public interface SessionService {
     Session createSession(User user, HttpServletRequest request);
     void updateLastActive(UUID sessionId);
+    Long refreshSession(UUID sessionId);
     void revokeAllSessionsByUserId(Long useId);
     void revokeSession(UUID sessionId);
     void revokeSession(Session session);

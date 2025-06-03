@@ -15,6 +15,11 @@ databaseChangeLog:
                     primaryKey: true
                     nullable: false
               - column:
+                  name: version
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
                   name: user_id
                   type: bigint
                   constraints:

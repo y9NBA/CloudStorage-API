@@ -19,6 +19,9 @@ public class Session {
     @Column(name = "id")
     private UUID id;
 
+    @Column(name = "version")
+    private Long version = 1L;
+
     @Column(name = "device_type")
     private String deviceType;
 
