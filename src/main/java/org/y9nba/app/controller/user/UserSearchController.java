@@ -87,7 +87,7 @@ public class UserSearchController {
         if (user.getId().equals(id)) {
             return new UserProfileDto(user);
         } else {
-            return new UserSearchDto(userService.getById(id));
+            return new UserSearchDto(userSearchService.getUserById(id));
         }
     }
 }

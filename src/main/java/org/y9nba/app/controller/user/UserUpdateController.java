@@ -21,7 +21,7 @@ import org.y9nba.app.service.impl.user.UserEmailServiceImpl;
 import org.y9nba.app.service.impl.user.UserServiceImpl;
 
 @Tag(
-        name = "User  Update",
+        name = "User Update Controller",
         description = "Контроллер для обновления данных аутентифицированного пользователя"
 )
 @RestController

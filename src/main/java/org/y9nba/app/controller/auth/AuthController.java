@@ -105,7 +105,7 @@ public class AuthController {
                             examples = @ExampleObject(
                                     value = """
                                                 {
-                                                  "username": "john_doe|john@example.com",
+                                                  "login": "john_doe|john@example.com",
                                                   "password": "securePassword123"
                                                 }
                                             """

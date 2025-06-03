@@ -30,6 +30,7 @@ import org.y9nba.app.dao.entity.File;
 import org.y9nba.app.dao.entity.User;
 import org.y9nba.app.dao.repository.FileRepository;
 import org.y9nba.app.service.face.file.FileStorageService;
+import org.y9nba.app.service.impl.user.UserSearchServiceImpl;
 import org.y9nba.app.service.impl.user.UserServiceImpl;
 
 import java.io.*;
@@ -46,13 +47,15 @@ public class FileStorageServiceImpl implements FileStorageService {
     private final AuditLogServiceImpl auditLogService;
     private final FileAccessServiceImpl fileAccessService;
     private final StorageServiceImpl storageService;
+    private final UserSearchServiceImpl userSearchService;
 
-    public FileStorageServiceImpl(FileRepository repository, UserServiceImpl userService, AuditLogServiceImpl auditLogService, FileAccessServiceImpl fileAccessService, StorageServiceImpl storageService) {
+    public FileStorageServiceImpl(FileRepository repository, UserServiceImpl userService, AuditLogServiceImpl auditLogService, FileAccessServiceImpl fileAccessService, StorageServiceImpl storageService, UserSearchServiceImpl userSearchService) {
         this.repository = repository;
         this.userService = userService;
         this.auditLogService = auditLogService;
         this.fileAccessService = fileAccessService;
         this.storageService = storageService;
+        this.userSearchService = userSearchService;
     }
 
     @Transactional
@@ -165,7 +168,7 @@ public class FileStorageServiceImpl implements FileStorageService {
         Access access;
 
         if (userId != null) {
-            collaborator = userService.getById(userId);
+            collaborator = userSearchService.getUserById(userId);
 
             if (file.isPublic() && !fileAccessService.hasAccessOnRead(userId, file.getId())) {
                 giveAccessOnFileForUser(author, file, collaborator, Access.ACCESS_READER);
@@ -332,7 +335,7 @@ public class FileStorageServiceImpl implements FileStorageService {
         String url = createAbsFileURL(userId, fileName, folderURL);
         File file = findByUserIdAndUrl(userId, url);
 
-        return giveAccessOnFileForUser(userService.getById(userId), file, userService.getById(collaboratorUserId), access);
+        return giveAccessOnFileForUser(userService.getById(userId), file, userSearchService.getUserById(collaboratorUserId), access);
     }
 
     private File giveAccessOnFileForUser(User author, File file, User collaboratorUser, Access access) {
@@ -358,7 +361,7 @@ public class FileStorageServiceImpl implements FileStorageService {
     public File revokeAccessOnFileForUser(Long userId, String fileName, String folderURL, Long collaboratorUserId) {
         String url = createAbsFileURL(userId, fileName, folderURL);
         File file = findByUserIdAndUrl(userId, url);
-
+        // TODO: если не id пользователя с ролью ROLE_USER, то выбрасывать исключение
         fileAccessService.deleteByUserIdAndFileId(collaboratorUserId, file.getId());
 
         auditLogService.logRemoveAccess(userService.getById(userId), file);

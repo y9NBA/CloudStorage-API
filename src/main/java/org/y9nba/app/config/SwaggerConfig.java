@@ -17,7 +17,7 @@ import org.springframework.context.annotation.Configuration;
         info = @Info(
                 title = "Cloud Storage API",
                 description = "API облачного хранилища",
-                version = "0.0.3",
+                version = "1.0.0",
                 contact = @Contact(
                         name = "y9nba",
                         url = "https://github.com/y9NBA"
