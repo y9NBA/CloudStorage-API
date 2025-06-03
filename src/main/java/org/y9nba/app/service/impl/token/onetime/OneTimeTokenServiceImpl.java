@@ -138,8 +138,8 @@ public class OneTimeTokenServiceImpl implements OneTimeTokenService {
     }
 
     @Override
-    public Long extractUserIdFromToken(String token) {
-        return Long.valueOf(jwtService.extractUserId(token));
+    public Long getUserIdByOneTimeToken(String token) {
+        return jwtService.getUserIdByToken(token);
     }
 
     private OneTimeToken save(OneTimeTokenCreateDto dto) {

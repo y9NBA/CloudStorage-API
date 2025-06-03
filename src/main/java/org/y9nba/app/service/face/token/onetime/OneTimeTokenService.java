@@ -3,8 +3,6 @@ package org.y9nba.app.service.face.token;
 import org.y9nba.app.constant.OneTimeTokenType;
 import org.y9nba.app.dao.entity.User;
 
-import java.util.UUID;
-
 public interface OneTimeTokenService {
     String createActivationToken(User user);
     String createResetPasswordToken(User user);
@@ -17,5 +15,5 @@ public interface OneTimeTokenService {
     void revokeAllOneTimeTokenWithType(Long userId, OneTimeTokenType type);
     String extractEmailFromToken(String token);
     String extractHashPasswordFromToken(String token);
-    Long extractUserIdFromToken(String token);
+    Long getUserIdByOneTimeToken(String token);
 }

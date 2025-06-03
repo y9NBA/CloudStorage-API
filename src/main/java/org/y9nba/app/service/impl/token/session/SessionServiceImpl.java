@@ -107,11 +107,6 @@ public class SessionServiceImpl implements SessionService {
     }
 
     @Override
-    public void deleteAllLogoutSessions() {
-        repository.deleteAllByLoggedOutIsTrue();
-    }
-
-    @Override
     public Session getSessionByUserIdAndRequest(Long userId, HttpServletRequest request) {
         DeviceInfoDto deviceInfoDto = userAgentUtil.parseUserAgent(request.getHeader("User-Agent"));
 

@@ -15,7 +15,6 @@ public interface SessionService {
     void revokeSession(UUID sessionId);
     void revokeSession(Session session);
     void revokeAllSessionsExceptCurrent(Long userId, UUID sessionId);
-    void deleteAllLogoutSessions();
     Session getSessionByUserIdAndRequest(Long userId, HttpServletRequest request);
     Session getSessionById(UUID sessionId);
     Set<Session> getAllSessionsByUserIdExceptCurrent(Long userId, UUID currentSessionId);
