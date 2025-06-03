@@ -10,7 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 import org.y9nba.app.dto.response.Response;
 import org.y9nba.app.dto.user.update.UserResetPasswordDto;
-import org.y9nba.app.service.impl.token.OneTimeTokenServiceImpl;
+import org.y9nba.app.service.impl.token.onetime.OneTimeTokenServiceImpl;
 import org.y9nba.app.service.impl.user.UserActivationServiceImpl;
 import org.y9nba.app.service.impl.user.UserDeleteServiceImpl;
 import org.y9nba.app.service.impl.user.UserEmailServiceImpl;
@@ -63,7 +63,7 @@ public class ConfirmController {
             )
     )
     public Response activate(@RequestParam(name = "key") String activationToken) {
-        Long userId = oneTimeTokenService.extractUserIdFromToken(activationToken);
+        Long userId = oneTimeTokenService.getUserIdByOneTimeToken(activationToken);
         return new Response(userActivationService.activateUser (userId, activationToken));
     }
 
@@ -81,7 +81,7 @@ public class ConfirmController {
             )
     )
     public Response updateEmail(@RequestParam(name = "key") String updateEmailToken) {
-        Long userId = oneTimeTokenService.extractUserIdFromToken(updateEmailToken);
+        Long userId = oneTimeTokenService.getUserIdByOneTimeToken(updateEmailToken);
         return new Response(userEmailService.updateEmail(userId, updateEmailToken));
     }
 
@@ -99,7 +99,7 @@ public class ConfirmController {
             )
     )
     public Response resetPassword(@RequestParam(name = "key") String resetPasswordToken) {
-        Long userId = oneTimeTokenService.extractUserIdFromToken(resetPasswordToken);
+        Long userId = oneTimeTokenService.getUserIdByOneTimeToken(resetPasswordToken);
         return new Response(userPasswordService.resetPassword(userId, null, resetPasswordToken));
     }
 
@@ -117,7 +117,7 @@ public class ConfirmController {
             )
     )
     public Response resetPassword(@RequestParam(name = "key") String resetPasswordToken, @RequestBody UserResetPasswordDto dto) {
-        Long userId = oneTimeTokenService.extractUserIdFromToken(resetPasswordToken);
+        Long userId = oneTimeTokenService.getUserIdByOneTimeToken(resetPasswordToken);
         return new Response(userPasswordService.resetPassword(userId, dto, resetPasswordToken));
     }
 
@@ -135,7 +135,7 @@ public class ConfirmController {
             )
     )
     public Response rollbackPassword(@RequestParam(name = "key") String rollbackPasswordToken) {
-        Long userId = oneTimeTokenService.extractUserIdFromToken(rollbackPasswordToken);
+        Long userId = oneTimeTokenService.getUserIdByOneTimeToken(rollbackPasswordToken);
         return new Response(userPasswordService.rollbackPassword(userId, rollbackPasswordToken));
     }
 
@@ -153,7 +153,7 @@ public class ConfirmController {
             )
     )
     public Response rollbackEmail(@RequestParam(name = "key") String rollbackEmailToken) {
-        Long userId = oneTimeTokenService.extractUserIdFromToken(rollbackEmailToken);
+        Long userId = oneTimeTokenService.getUserIdByOneTimeToken(rollbackEmailToken);
         return new Response(userEmailService.rollbackEmail(userId, rollbackEmailToken));
     }
 
@@ -171,7 +171,7 @@ public class ConfirmController {
             )
     )
     public Response deleteAccount(@RequestParam(name = "key") String deleteAccountToken) {
-        Long userId = oneTimeTokenService.extractUserIdFromToken(deleteAccountToken);
+        Long userId = oneTimeTokenService.getUserIdByOneTimeToken(deleteAccountToken);
         return new Response(userDeleteService.deleteUser (userId, deleteAccountToken));
     }
 }

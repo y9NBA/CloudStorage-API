@@ -6,7 +6,7 @@ import org.y9nba.app.exception.web.admin.BanUserAlreadyException;
 import org.y9nba.app.exception.web.admin.UnBanUserAlreadyException;
 import org.y9nba.app.service.face.admin.BanService;
 import org.y9nba.app.service.impl.email.LockedAccountInfoServiceImpl;
-import org.y9nba.app.service.impl.token.SessionServiceImpl;
+import org.y9nba.app.service.impl.token.session.SessionServiceImpl;
 import org.y9nba.app.service.impl.user.UserServiceImpl;
 
 @Service

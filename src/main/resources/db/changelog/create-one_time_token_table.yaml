@@ -29,6 +29,12 @@ databaseChangeLog:
                   type: bool
                   constraints:
                     nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValue: now()
+                  constraints:
+                    nullable: false
         - addForeignKeyConstraint:
             baseTableName: one_time_tokens
             baseColumnNames: user_id

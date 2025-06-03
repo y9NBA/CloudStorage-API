@@ -1,4 +1,4 @@
-package org.y9nba.app.service.impl.token;
+package org.y9nba.app.service.impl.token.session;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
@@ -6,7 +6,8 @@ import org.y9nba.app.dao.entity.Session;
 import org.y9nba.app.dao.entity.User;
 import org.y9nba.app.dao.repository.SessionRepository;
 import org.y9nba.app.dto.useragent.DeviceInfoDto;
-import org.y9nba.app.service.face.token.SessionService;
+import org.y9nba.app.exception.web.auth.UnAuthorizedException;
+import org.y9nba.app.service.face.token.session.SessionService;
 import org.y9nba.app.util.UserAgentUtil;
 
 import java.time.LocalDateTime;
@@ -64,7 +65,7 @@ public class SessionServiceImpl implements SessionService {
 
         if (!sessions.isEmpty()) {
             sessions.forEach(session ->
-                session.setLoggedOut(true)
+                    session.setLoggedOut(true)
             );
         }
 
@@ -73,12 +74,23 @@ public class SessionServiceImpl implements SessionService {
 
     @Override
     public void updateLastActive(UUID sessionId) {
-        Session session = repository.findById(sessionId).orElse(null);
+        Session session = repository
+                .findById(sessionId)
+                .orElseThrow(UnAuthorizedException::new);
 
-        if (session != null) {
-            session.setLastActive(LocalDateTime.now());
-            repository.save(session);
-        }
+        session.setLastActive(LocalDateTime.now());
+        repository.save(session);
+    }
+
+    @Override
+    public Long refreshSession(UUID sessionId) {
+        Session session = repository
+                .findById(sessionId)
+                .orElseThrow(UnAuthorizedException::new);
+
+        session.setVersion(session.getVersion() + 1);
+        repository.save(session);
+        return session.getVersion();
     }
 
     @Override
@@ -87,16 +99,11 @@ public class SessionServiceImpl implements SessionService {
 
         if (!sessions.isEmpty()) {
             sessions.forEach(session ->
-                session.setLoggedOut(true)
+                    session.setLoggedOut(true)
             );
         }
 
         repository.saveAll(sessions);
-    }
-
-    @Override
-    public void deleteAllLogoutSessions() {
-        repository.deleteAllByLoggedOutIsTrue();
     }
 
     @Override
@@ -116,7 +123,9 @@ public class SessionServiceImpl implements SessionService {
 
     @Override
     public Session getSessionById(UUID sessionId) {
-        Session session = repository.findById(sessionId).orElse(null);
+        Session session = repository
+                .findById(sessionId)
+                .orElse(null);
 
         if (session != null && !session.isLoggedOut()) {
             return session;

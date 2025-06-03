@@ -5,9 +5,7 @@ import org.springframework.stereotype.Service;
 import org.y9nba.app.constant.OneTimeTokenType;
 import org.y9nba.app.dao.entity.User;
 import org.y9nba.app.service.face.email.ConfirmService;
-import org.y9nba.app.service.impl.token.OneTimeTokenServiceImpl;
-
-import java.util.UUID;
+import org.y9nba.app.service.impl.token.onetime.OneTimeTokenServiceImpl;
 
 @Service
 public class ConfirmServiceImpl implements ConfirmService {
