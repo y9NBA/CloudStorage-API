@@ -6,6 +6,6 @@ import org.y9nba.app.exception.web.AbstractException;
 public class NotUseRevokeSessionOnCurrentSession extends AbstractException {
 
     public NotUseRevokeSessionOnCurrentSession() {
-        super("Вы не можете завершить текущую сессию. Для завершения текущей сессии просто выйдите из аккаунта.", HttpStatus.BAD_REQUEST);
+        super("Вы не можете завершить текущую сессию, для завершения текущей сессии просто выйдите из аккаунта", HttpStatus.BAD_REQUEST);
     }
 }

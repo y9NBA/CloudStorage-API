@@ -1,5 +1,6 @@
 package org.y9nba.app.controller.advice;
 
+import io.jsonwebtoken.JwtException;
 import io.swagger.v3.oas.annotations.Hidden;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -16,6 +17,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 import org.y9nba.app.dto.response.ErrorResponse;
 import org.y9nba.app.exception.web.AbstractException;
+import org.y9nba.app.exception.web.token.TokenNotValidException;
 
 @Hidden
 @ControllerAdvice

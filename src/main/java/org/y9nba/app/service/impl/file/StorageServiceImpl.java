@@ -13,6 +13,7 @@ import org.y9nba.app.exception.local.PhysicalFilesAndEntriesNotSyncException;
 import org.y9nba.app.exception.web.file.FileNotUploadException;
 import org.y9nba.app.dao.entity.File;
 import org.y9nba.app.dao.entity.User;
+import org.y9nba.app.exception.web.file.FileStorageException;
 import org.y9nba.app.service.face.file.StorageService;
 
 import java.io.InputStream;
@@ -76,7 +77,7 @@ public class StorageServiceImpl implements StorageService {
             GetObjectArgs getArgs = GetObjectArgs.builder().bucket(bucketName).object(fileURL).build();
             return minioClient.getObject(getArgs);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new FileStorageException();
         }
     }
 
@@ -110,7 +111,7 @@ public class StorageServiceImpl implements StorageService {
             minioClient.copyObject(copyArgs);
 
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new FileStorageException();
         }
 
         deleteFileByUrl(bucketName, oldFileURL);
@@ -134,7 +135,7 @@ public class StorageServiceImpl implements StorageService {
                     .build();
             minioClient.copyObject(copyArgs);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new FileStorageException();
         }
     }
 
@@ -147,7 +148,7 @@ public class StorageServiceImpl implements StorageService {
             RemoveObjectArgs rmvArgs = RemoveObjectArgs.builder().bucket(bucketName).object(fileURL).build();
             minioClient.removeObject(rmvArgs);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new FileStorageException();
         }
     }
 
@@ -204,7 +205,7 @@ public class StorageServiceImpl implements StorageService {
                     ));
                 }
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                throw new FileStorageException();
             }
         });
 
@@ -232,7 +233,7 @@ public class StorageServiceImpl implements StorageService {
                     .bucket(bucketName)
                     .build());
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new FileStorageException();
         }
     }
 
@@ -253,7 +254,7 @@ public class StorageServiceImpl implements StorageService {
         try {
             return minioClient.statObject(StatObjectArgs.builder().bucket(bucketName).object(fileURL).build()) != null;
         } catch (Exception e) {
-            return false;
+            throw new FileStorageException();
         }
     }
 
@@ -263,7 +264,7 @@ public class StorageServiceImpl implements StorageService {
                 minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
             }
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new FileStorageException();
         }
     }
 
@@ -281,7 +282,7 @@ public class StorageServiceImpl implements StorageService {
             StatObjectArgs args = StatObjectArgs.builder().bucket(bucketName).object(fileURL).build();
             return minioClient.statObject(args);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new FileStorageException();
         }
     }
 
@@ -299,7 +300,7 @@ public class StorageServiceImpl implements StorageService {
                     .headers()
                     .get("Content-Type");
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new FileStorageException();
         }
     }
 }

@@ -6,6 +6,6 @@ import org.y9nba.app.exception.web.AbstractException;
 public class NotFoundFileByURLException extends AbstractException {
 
     public NotFoundFileByURLException(String url) {
-        super("Файл по адресу [" + url + "] не найден.", HttpStatus.NOT_FOUND);
+        super("Файл по адресу [" + url + "] не найден", HttpStatus.NOT_FOUND);
     }
 }
