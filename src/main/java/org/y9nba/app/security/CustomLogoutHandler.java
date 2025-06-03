@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 import org.y9nba.app.dto.response.Response;
 import org.y9nba.app.exception.web.auth.UnAuthorizedException;
 import org.y9nba.app.dao.entity.Session;
-import org.y9nba.app.service.impl.token.SessionServiceImpl;
+import org.y9nba.app.service.impl.token.session.SessionServiceImpl;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

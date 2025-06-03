@@ -1,4 +1,4 @@
-package org.y9nba.app.service.face.token;
+package org.y9nba.app.service.face.token.session;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.y9nba.app.dao.entity.Session;

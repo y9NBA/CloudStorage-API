@@ -16,7 +16,7 @@ import org.y9nba.app.exception.web.auth.UnAuthorizedException;
 import org.y9nba.app.dao.entity.User;
 import org.y9nba.app.dao.repository.OneTimeTokenRepository;
 import org.y9nba.app.dao.repository.SessionRepository;
-import org.y9nba.app.service.impl.token.SessionServiceImpl;
+import org.y9nba.app.service.impl.token.session.SessionServiceImpl;
 
 import javax.crypto.SecretKey;
 import java.util.*;
@@ -47,12 +47,12 @@ public class JwtService {
 
     public boolean isValid(String token, User user) {
         return isValidToken(token, user)
-                && isAccessTokenExpired(token);
+                && isTokenExpired(token);
     }
 
     public boolean isValidRefresh(String token, User user) {
         return isValidToken(token, user)
-                && isAccessTokenExpired(token);
+                && isTokenExpired(token);
     }
 
     private boolean isValidToken(String token, User user) {
@@ -63,7 +63,8 @@ public class JwtService {
         boolean isValidToken = sessionRepository
                 .findById(sessionId)
                 .map(
-                        s -> !s.isLoggedOut() && s.getVersion().equals(version)
+                        s -> !s.isLoggedOut()
+                                && s.getVersion().equals(version)
                 ).orElse(false);
 
         return isValidToken && userId.equals(user.getId());
@@ -82,7 +83,7 @@ public class JwtService {
                 .map(t -> !t.isUsed())
                 .orElse(false);
 
-        return isAccessTokenExpired(token)
+        return isTokenExpired(token)
                 && isValidOneTimeToken;
     }
 
@@ -90,7 +91,7 @@ public class JwtService {
         sessionService.revokeAllSessionsByUserId(userId);
     }
 
-    private boolean isAccessTokenExpired(String token) {
+    public boolean isTokenExpired(String token) {
         return !extractExpiration(token).before(new Date());
     }
 
@@ -98,23 +99,23 @@ public class JwtService {
         return extractClaim(token, Claims::getExpiration);
     }
 
-    public String extractUserId(String token) {
+    private String extractUserId(String token) {
         return extractClaim(token, Claims::getId);
     }
 
-    public String extractUsername(String token) {
+    private String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
-    public String extractSessionId(String token) {
+    private String extractSessionId(String token) {
         return extractClaim(token, "sessionId");
     }
 
-    public String extractOneTimeTokenId(String token) {
+    private String extractOneTimeTokenId(String token) {
         return extractClaim(token, "oneTimeTokenId");
     }
 
-    public String extractVersionTokenByToken(String token) {
+    private String extractVersionTokenByToken(String token) {
         return extractClaim(token, "version");
     }
 
@@ -201,6 +202,10 @@ public class JwtService {
         }
 
         return authorizationHeader.substring(7);
+    }
+
+    public Long getUserIdByToken(String token) {
+        return Long.valueOf(extractUserId(token));
     }
 
     public String getUsernameByAuthRequest(HttpServletRequest request) {

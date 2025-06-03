@@ -1,4 +1,4 @@
-package org.y9nba.app.service.impl.token;
+package org.y9nba.app.service.impl.token.session;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
@@ -7,7 +7,7 @@ import org.y9nba.app.dao.entity.User;
 import org.y9nba.app.dao.repository.SessionRepository;
 import org.y9nba.app.dto.useragent.DeviceInfoDto;
 import org.y9nba.app.exception.web.auth.UnAuthorizedException;
-import org.y9nba.app.service.face.token.SessionService;
+import org.y9nba.app.service.face.token.session.SessionService;
 import org.y9nba.app.util.UserAgentUtil;
 
 import java.time.LocalDateTime;

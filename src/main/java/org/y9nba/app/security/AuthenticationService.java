@@ -18,7 +18,7 @@ import org.y9nba.app.exception.web.auth.OAuth2GoogleNotUserException;
 import org.y9nba.app.exception.web.auth.UnAuthorizedException;
 import org.y9nba.app.dao.entity.User;
 import org.y9nba.app.service.impl.email.ConfirmServiceImpl;
-import org.y9nba.app.service.impl.token.SessionServiceImpl;
+import org.y9nba.app.service.impl.token.session.SessionServiceImpl;
 import org.y9nba.app.service.impl.user.UserServiceImpl;
 import org.y9nba.app.util.StringUtil;
 

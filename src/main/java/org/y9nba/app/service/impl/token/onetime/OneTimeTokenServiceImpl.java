@@ -1,4 +1,4 @@
-package org.y9nba.app.service.impl.token;
+package org.y9nba.app.service.impl.token.onetime;
 
 import io.jsonwebtoken.JwtBuilder;
 import org.springframework.stereotype.Service;
@@ -9,7 +9,7 @@ import org.y9nba.app.dao.entity.OneTimeToken;
 import org.y9nba.app.dao.entity.User;
 import org.y9nba.app.dao.repository.OneTimeTokenRepository;
 import org.y9nba.app.security.JwtService;
-import org.y9nba.app.service.face.token.OneTimeTokenService;
+import org.y9nba.app.service.face.token.onetime.OneTimeTokenService;
 
 import java.util.Set;
 import java.util.UUID;
@@ -19,9 +19,6 @@ public class OneTimeTokenServiceImpl implements OneTimeTokenService {
 
     private final OneTimeTokenRepository repository;
     private final JwtService jwtService;
-
-    private final Long expiryTime = 3600000L;    // 1 час
-    private final Long expiryTimeRollback = 86400000L;    // 24 часа
 
     public OneTimeTokenServiceImpl(OneTimeTokenRepository repository, JwtService jwtService) {
         this.repository = repository;
@@ -37,7 +34,7 @@ public class OneTimeTokenServiceImpl implements OneTimeTokenService {
 
         UUID oneTimeTokenId = save(dto).getId();
 
-        return generateToken(user, oneTimeTokenId);
+        return generateToken(user, oneTimeTokenId, OneTimeTokenType.ACTIVATION.getExpireTime());
     }
 
     @Override
@@ -49,7 +46,11 @@ public class OneTimeTokenServiceImpl implements OneTimeTokenService {
 
         UUID oneTimeTokenId = save(dto).getId();
 
-        return generateToken(user, oneTimeTokenId);
+        return generateToken(
+                user,
+                oneTimeTokenId,
+                OneTimeTokenType.RESET_PASSWORD.getExpireTime()
+        );
     }
 
     @Override
@@ -61,7 +62,11 @@ public class OneTimeTokenServiceImpl implements OneTimeTokenService {
 
         UUID oneTimeTokenId = save(dto).getId();
 
-        return generateTokenWithHashPassword(user, oneTimeTokenId);
+        return generateTokenWithHashPassword(
+                user,
+                oneTimeTokenId,
+                OneTimeTokenType.ROLLBACK_PASSWORD.getExpireTime()
+        );
     }
 
     @Override
@@ -73,7 +78,12 @@ public class OneTimeTokenServiceImpl implements OneTimeTokenService {
 
         UUID oneTimeTokenId = save(dto).getId();
 
-        return generateTokenWithEmail(user, oneTimeTokenId, oldEmail, true);
+        return generateTokenWithEmail(
+                user,
+                oneTimeTokenId,
+                OneTimeTokenType.ROLLBACK_EMAIL.getExpireTime(),
+                oldEmail
+        );
     }
 
     @Override
@@ -85,7 +95,12 @@ public class OneTimeTokenServiceImpl implements OneTimeTokenService {
 
         UUID oneTimeTokenId = save(dto).getId();
 
-        return generateTokenWithEmail(user, oneTimeTokenId, newEmail, false);
+        return generateTokenWithEmail(
+                user,
+                oneTimeTokenId,
+                OneTimeTokenType.UPDATE_EMAIL.getExpireTime(),
+                newEmail
+        );
     }
 
     @Override
@@ -97,7 +112,11 @@ public class OneTimeTokenServiceImpl implements OneTimeTokenService {
 
         UUID oneTimeTokenId = save(dto).getId();
 
-        return generateToken(user, oneTimeTokenId);
+        return generateToken(
+                user,
+                oneTimeTokenId,
+                OneTimeTokenType.DELETE_ACCOUNT.getExpireTime()
+        );
     }
 
     @Override
@@ -146,19 +165,19 @@ public class OneTimeTokenServiceImpl implements OneTimeTokenService {
         return repository.save(new OneTimeToken(dto));
     }
 
-    private String generateToken(User user, UUID onetimeTokenId) {
+    private String generateToken(User user, UUID onetimeTokenId, Long expiryTime) {
         return getOneTimeTokenBuilderWithUUIDEntry(user, onetimeTokenId, expiryTime)
                 .compact();
     }
 
-    private String generateTokenWithEmail(User user, UUID onetimeTokenId, String email, boolean rollback) {
-        return getOneTimeTokenBuilderWithUUIDEntry(user, onetimeTokenId, rollback ? expiryTimeRollback : expiryTime)
+    private String generateTokenWithEmail(User user, UUID onetimeTokenId, Long expiryTime, String email) {
+        return getOneTimeTokenBuilderWithUUIDEntry(user, onetimeTokenId, expiryTime)
                 .claim("email", email)
                 .compact();
     }
 
-    private String generateTokenWithHashPassword(User user, UUID onetimeTokenId) {
-        return getOneTimeTokenBuilderWithUUIDEntry(user, onetimeTokenId, expiryTimeRollback)
+    private String generateTokenWithHashPassword(User user, UUID onetimeTokenId, Long expiryTime) {
+        return getOneTimeTokenBuilderWithUUIDEntry(user, onetimeTokenId, expiryTime)
                 .claim("hashPassword", user.getPassword())
                 .compact();
     }

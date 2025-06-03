@@ -12,7 +12,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.y9nba.app.dao.entity.User;
-import org.y9nba.app.service.impl.token.SessionServiceImpl;
+import org.y9nba.app.service.impl.token.session.SessionServiceImpl;
 import org.y9nba.app.service.impl.user.UserDetailsServiceImpl;
 
 import java.io.IOException;
@@ -47,10 +47,10 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String token = authHeader.substring(7);
 
-        String userIdAsString = jwtService.extractUserId(token);
+        Long userIdAsString = jwtService.getUserIdByToken(token);
 
         if (userIdAsString != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = userDetailsService.loadUserByUserId(Long.valueOf(userIdAsString));
+            UserDetails userDetails = userDetailsService.loadUserByUserId(userIdAsString);
 
             if (jwtService.isValid(token, (User) userDetails)) {
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(

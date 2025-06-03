@@ -1,4 +1,4 @@
-package org.y9nba.app.service.face.token;
+package org.y9nba.app.service.face.token.onetime;
 
 import org.y9nba.app.constant.OneTimeTokenType;
 import org.y9nba.app.dao.entity.User;
