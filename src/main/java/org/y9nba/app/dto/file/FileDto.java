@@ -15,15 +15,6 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 public class FileDto extends FilePresentDto {
-    private Long id;
-    private Long userId;
-    private String fileName;
-    private Long fileSize;
-    private String mimeType;
-    private String bucketName;
-    private String folderURL;
-    private boolean isPublic;
-    private LocalDateTime createdAt;
     private Set<FileAccessDto> fileAccesses;
     private Set<AuditLogDto> auditLogs;
 

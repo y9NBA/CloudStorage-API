@@ -4,6 +4,8 @@ import org.springframework.stereotype.Service;
 import org.y9nba.app.constant.Role;
 import org.y9nba.app.dao.entity.User;
 import org.y9nba.app.dao.repository.UserRepository;
+import org.y9nba.app.exception.web.admin.NotFoundAdminByIdException;
+import org.y9nba.app.exception.web.user.search.NotFoundUserByIdException;
 import org.y9nba.app.service.face.user.UserSearchService;
 
 import java.util.HashSet;
@@ -19,6 +21,30 @@ public class UserSearchServiceImpl implements UserSearchService {
 
     public UserSearchServiceImpl(UserRepository repository) {
         this.repository = repository;
+    }
+
+    @Override
+    public User getUserById(Long id) {
+        return repository
+                .findAllByRole(Role.ROLE_USER)
+                .stream()
+                .filter(u -> u.getId().equals(id))
+                .findFirst()
+                .orElseThrow(
+                        () -> new NotFoundUserByIdException(id)
+                );
+    }
+
+    @Override
+    public User getAdminById(Long id) {
+        return repository
+                .findAllByRole(Role.ROLE_USER)
+                .stream()
+                .filter(u -> u.getId().equals(id))
+                .findFirst()
+                .orElseThrow(
+                        () -> new NotFoundAdminByIdException(id)
+                );
     }
 
     @Override

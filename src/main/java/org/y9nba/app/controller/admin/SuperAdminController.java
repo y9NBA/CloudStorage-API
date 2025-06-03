@@ -92,7 +92,7 @@ public class SuperAdminController {
             )
     )
     public UserInfoDto getAdminInfo(@RequestParam(name = "id") Long id) {
-        return new UserInfoDto(userService.getById(id));
+        return new UserInfoDto(userSearchService.getAdminById(id));
     }
 
     @PostMapping("/create/admin")
