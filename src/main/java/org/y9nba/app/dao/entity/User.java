@@ -6,7 +6,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.y9nba.app.constant.Role;
-import org.y9nba.app.dto.admin.AdminCreateDto;
 import org.y9nba.app.dto.user.UserCreateDto;
 
 import java.time.LocalDateTime;

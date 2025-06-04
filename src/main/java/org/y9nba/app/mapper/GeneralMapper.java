@@ -9,7 +9,6 @@ import org.y9nba.app.dto.search.AdminInfoDto;
 import org.y9nba.app.dto.search.UserInfoDto;
 import org.y9nba.app.dto.search.UserSearchDto;
 import org.y9nba.app.dto.session.SessionDto;
-import org.y9nba.app.dto.user.UserDto;
 import org.y9nba.app.dto.warning.WarningDto;
 
 import java.util.Set;
@@ -46,14 +45,6 @@ public class GeneralMapper {
         }
 
         return models.stream().map(FileAccessDto::new).collect(Collectors.toSet());
-    }
-
-    public static Set<UserDto> toUserDto(Set<User> models) {
-        if (models == null) {
-            return Set.of();
-        }
-
-        return models.stream().map(UserDto::new).collect(Collectors.toSet());
     }
 
     public static Set<AdminInfoDto> toAdminInfoDto(Set<User> models) {

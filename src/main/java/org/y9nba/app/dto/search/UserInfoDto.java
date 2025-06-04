@@ -1,11 +1,9 @@
 package org.y9nba.app.dto.search;
 
 import lombok.Getter;
-import org.y9nba.app.constant.Role;
 import org.y9nba.app.dao.entity.User;
 
 import java.time.LocalDateTime;
-import java.util.Set;
 
 @Getter
 public class UserInfoDto {
