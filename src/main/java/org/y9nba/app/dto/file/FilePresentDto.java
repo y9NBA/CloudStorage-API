@@ -30,7 +30,7 @@ public class FilePresentDto {
         this.mimeType = model.getMimeType();
         this.isPublic = model.getIsPublic();
         this.createdAt = model.getCreatedAt();
-        this.isShared = model.getFileAccesses().size() > 1;
+        this.isShared = model.getFileAccesses() != null && model.getFileAccesses().size() > 1;
         setFolderURLAndBucket(model.getUrl());
     }
 
