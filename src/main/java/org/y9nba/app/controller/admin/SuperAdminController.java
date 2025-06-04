@@ -10,13 +10,14 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.y9nba.app.dto.admin.AdminCreateDto;
 import org.y9nba.app.dto.response.Response;
+import org.y9nba.app.dto.search.AdminInfoDto;
 import org.y9nba.app.dto.search.UserInfoDto;
-import org.y9nba.app.dto.user.UserCreateDto;
 import org.y9nba.app.mapper.GeneralMapper;
 import org.y9nba.app.dao.entity.User;
+import org.y9nba.app.service.impl.admin.SuperAdminServiceImpl;
 import org.y9nba.app.service.impl.user.UserSearchServiceImpl;
-import org.y9nba.app.service.impl.user.UserServiceImpl;
 
 import java.util.Set;
 import java.util.UUID;
@@ -49,12 +50,12 @@ import java.util.UUID;
 })
 public class SuperAdminController {
 
-    private final UserServiceImpl userService;
     private final UserSearchServiceImpl userSearchService;
+    private final SuperAdminServiceImpl superAdminService;
 
-    public SuperAdminController(UserServiceImpl userService, UserSearchServiceImpl userSearchService) {
-        this.userService = userService;
+    public SuperAdminController(UserSearchServiceImpl userSearchService, SuperAdminServiceImpl superAdminService) {
         this.userSearchService = userSearchService;
+        this.superAdminService = superAdminService;
     }
 
     @GetMapping("/list/admins")
@@ -71,8 +72,8 @@ public class SuperAdminController {
                     schema = @Schema(implementation = UserInfoDto.class)
             )
     )
-    public Set<UserInfoDto> getAllAdminsInfo(@RequestParam(required = false) UUID bucketName, @RequestParam(required = false) String email, @RequestParam(required = false) String username, @AuthenticationPrincipal User user) {
-        return GeneralMapper.toUserInfoDto(
+    public Set<AdminInfoDto> getAllAdminsInfo(@RequestParam(required = false) UUID bucketName, @RequestParam(required = false) String email, @RequestParam(required = false) String username, @AuthenticationPrincipal User user) {
+        return GeneralMapper.toAdminInfoDto(
                 userSearchService.getAllAdmins(username, email, bucketName, user.getId())
         );
     }
@@ -91,8 +92,8 @@ public class SuperAdminController {
                     schema = @Schema(implementation = UserInfoDto.class)
             )
     )
-    public UserInfoDto getAdminInfo(@RequestParam(name = "id") Long id) {
-        return new UserInfoDto(userSearchService.getAdminById(id));
+    public AdminInfoDto getAdminInfo(@RequestParam(name = "id") Long id) {
+        return new AdminInfoDto(userSearchService.getAdminById(id));
     }
 
     @PostMapping("/create/admin")
@@ -109,11 +110,11 @@ public class SuperAdminController {
                     schema = @Schema(implementation = UserInfoDto.class)
             )
     )
-    public UserInfoDto createNewAdmin(@RequestBody UserCreateDto dto) {
-        return new UserInfoDto(userService.createAdmin(dto));
+    public AdminInfoDto createNewAdmin(@RequestBody AdminCreateDto dto) {
+        return new AdminInfoDto(superAdminService.createAdmin(dto));
     }
 
-    @PostMapping("/delete/admin")
+    @DeleteMapping("/delete/admin")
     @PreAuthorize("hasAuthority('DELETE_ADMIN')")
     @Operation(
             summary = "Удалить администратора",
@@ -128,7 +129,7 @@ public class SuperAdminController {
             )
     )
     public Response deleteAdmin(@RequestParam(name = "id") Long adminId) {
-        userService.deleteById(adminId);
+        superAdminService.deleteAdminById(adminId);
         return new Response("Админ успешно удален");
     }
 }

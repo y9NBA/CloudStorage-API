@@ -3,6 +3,7 @@ package org.y9nba.app.service.impl.user;
 import org.springframework.stereotype.Service;
 import org.y9nba.app.dao.entity.User;
 import org.y9nba.app.dto.user.update.UserResetPasswordDto;
+import org.y9nba.app.exception.web.auth.AccountLockedException;
 import org.y9nba.app.exception.web.user.info.PasswordDuplicateException;
 import org.y9nba.app.security.JwtService;
 import org.y9nba.app.service.face.user.UserPasswordService;
@@ -27,6 +28,11 @@ public class UserPasswordServiceImpl implements UserPasswordService {
     @Override
     public String resetPasswordByEmail(String email) {
         User model = userService.getByEmail(email);
+
+        if (model.isBanned()) {
+            throw new AccountLockedException();
+        }
+
         return confirmService.sendResetPasswordConfirmation(model);
     }
 

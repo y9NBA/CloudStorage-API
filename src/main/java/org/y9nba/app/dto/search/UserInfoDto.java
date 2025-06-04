@@ -16,7 +16,6 @@ public class UserInfoDto {
     private final Long storageLimit;
     private final Long userStorage;
     private final LocalDateTime createdAt;
-    private final Role role;
 
     public UserInfoDto(User model) {
         this.id = model.getId();
@@ -26,6 +25,5 @@ public class UserInfoDto {
         this.storageLimit = model.getStorageLimit();
         this.userStorage = model.getUsedStorage();
         this.createdAt = model.getCreatedAt();
-        this.role = model.getRole();
     }
 }

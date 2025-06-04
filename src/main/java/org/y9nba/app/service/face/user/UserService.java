@@ -6,8 +6,6 @@ import org.y9nba.app.dto.user.update.UserUpdatePasswordDto;
 import org.y9nba.app.dto.user.update.UserUpdateUsernameDto;
 
 public interface UserService {
-    User createSuperAdmin(UserCreateDto dto);
-    User createAdmin(UserCreateDto dto);
     User createUser(UserCreateDto dto);
     void update(Long userId, UserUpdatePasswordDto dto);
     void update(Long userId, UserUpdateUsernameDto dto);
@@ -19,7 +17,5 @@ public interface UserService {
     User getById(Long id);
     boolean existsByUsername(String username);
     boolean existsByEmail(String email);
-    User getSuperAdmin();
-    User updateSuperAdmin(User superAdminWithUpdates);
 }
 

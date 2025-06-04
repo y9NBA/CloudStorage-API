@@ -7,6 +7,7 @@ import org.y9nba.app.dao.entity.User;
 import org.y9nba.app.dao.entity.Warning;
 import org.y9nba.app.dao.repository.WarningRepository;
 import org.y9nba.app.exception.web.admin.UserIsAdminException;
+import org.y9nba.app.exception.web.admin.UserNotHaveActiveWarningsException;
 import org.y9nba.app.service.face.admin.WarningService;
 import org.y9nba.app.service.impl.user.UserServiceImpl;
 
@@ -51,7 +52,13 @@ public class WarningServiceImpl implements WarningService {
     public void revokeWarning(Long userId) {
         User user = userService.getById(userId);
 
-        Warning warning = warningRepository.findAllByUser_IdAndActiveTrue(userId).iterator().next();
+        Set<Warning> warnings = warningRepository.findAllByUser_IdAndActiveTrue(userId);
+
+        if (warnings.isEmpty()) {
+            throw new UserNotHaveActiveWarningsException(userId);
+        }
+
+        Warning warning = warnings.iterator().next();
         warning.setActive(false);
         warningRepository.save(warning);
 
@@ -64,9 +71,13 @@ public class WarningServiceImpl implements WarningService {
     public void revokeAllWarnings(Long userId) {
         User user = userService.getById(userId);
 
-        warningRepository
-                .findAllByUser_IdAndActiveTrue(userId)
-                .forEach(warning -> {
+        Set<Warning> warnings = warningRepository.findAllByUser_IdAndActiveTrue(userId);
+
+        if (warnings.isEmpty()) {
+            throw new UserNotHaveActiveWarningsException(userId);
+        }
+
+        warnings.forEach(warning -> {
                             warning.setActive(false);
                             warningRepository.save(warning);
                         }

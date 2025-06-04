@@ -58,7 +58,7 @@ public class AdminPublicFilesController {
         this.moderationService = moderationService;
     }
 
-    @PreAuthorize("hasAnyAuthority('VIEW_PUBLIC_FILES')")
+    @PreAuthorize("hasAuthority('VIEW_PUBLIC_FILES')")
     @Operation(
             summary = "Получить все публичные файлы",
             description = "Возвращает список всех публичных файлов или файлов конкретного автора, если указан authorId."
@@ -84,24 +84,21 @@ public class AdminPublicFilesController {
         }
     }
 
-    @PreAuthorize("hasAnyAuthority('VIEW_PUBLIC_FILES')")
+    @PreAuthorize("hasAuthority('VIEW_PUBLIC_FILES')")
     @Operation(
             summary = "Просмотр публичного файла",
             description = "Возвращает содержимое публичного файла по его ID."
     )
     @ApiResponse(
             responseCode = "200",
-            description = "Публичный файл",
-            content = @Content(
-                    mediaType = "application/octet-stream"
-            )
+            description = "Содержимое публичного файла"
     )
     @GetMapping("/view/public/file")
     public ResponseEntity<InputStreamResource> getPublicFile(@RequestParam(name = "id") Long fileId) {
         return publicFilesService.viewPublicFile(fileId);
     }
 
-    @PreAuthorize("hasAnyAuthority('VIEW_PUBLIC_FILES')")
+    @PreAuthorize("hasAuthority('VIEW_PUBLIC_FILES')")
     @Operation(
             summary = "Получить автора публичного файла",
             description = "Возвращает информацию об авторе публичного файла по его ID."
@@ -119,7 +116,7 @@ public class AdminPublicFilesController {
         return new UserInfoDto(publicFilesService.getAuthorOfPublicFileById(fileId));
     }
 
-    @PreAuthorize("hasAnyAuthority('REVOKE_PUBLIC_FILES')")
+    @PreAuthorize("hasAuthority('REVOKE_PUBLIC_FILES')")
     @Operation(
             summary = "Отозвать публичный файл",
             description = "Делает публичный файл приватным и уведомляет автора о данном действии. Также, если warning=true, автору выдается предупреждение."

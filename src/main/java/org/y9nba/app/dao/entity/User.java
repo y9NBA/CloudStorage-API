@@ -6,6 +6,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.y9nba.app.constant.Role;
+import org.y9nba.app.dto.admin.AdminCreateDto;
 import org.y9nba.app.dto.user.UserCreateDto;
 
 import java.time.LocalDateTime;
@@ -36,7 +37,7 @@ public class User implements UserDetails {
     private String email;
 
     @Column(unique = true, nullable = false)
-    private UUID bucketName;
+    private UUID bucketName = UUID.randomUUID();
 
     @Column(name = "storage_limit", nullable = false)
     private Long storageLimit = 1073741824L;    // 1gb in byte
@@ -79,7 +80,6 @@ public class User implements UserDetails {
         this.username = dto.getUsername();
         this.password = dto.getHashPassword();
         this.email = dto.getEmail();
-        this.bucketName = UUID.randomUUID();
     }
 
     @Override

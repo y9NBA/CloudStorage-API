@@ -38,7 +38,7 @@ public class UserSearchServiceImpl implements UserSearchService {
     @Override
     public User getAdminById(Long id) {
         return repository
-                .findAllByRole(Role.ROLE_USER)
+                .findAllByRole(Role.ROLE_ADMIN)
                 .stream()
                 .filter(u -> u.getId().equals(id))
                 .findFirst()

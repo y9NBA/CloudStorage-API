@@ -6,6 +6,6 @@ import org.y9nba.app.exception.web.AbstractException;
 public class UserNotEnoughMemoryException extends AbstractException {
 
     public UserNotEnoughMemoryException() {
-        super("Недостаточно памяти для загрузки файла", HttpStatus.CONFLICT);
+        super("Недостаточно памяти для загрузки файлов", HttpStatus.CONFLICT);
     }
 }

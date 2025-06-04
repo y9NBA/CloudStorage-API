@@ -7,14 +7,14 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.y9nba.app.dto.user.UserCreateDto;
 import org.y9nba.app.dao.entity.User;
-import org.y9nba.app.service.impl.user.UserServiceImpl;
+import org.y9nba.app.service.impl.admin.SuperAdminInitServiceImpl;
 import org.y9nba.app.util.PasswordUtil;
 
 @Component
 @Slf4j
 public class SuperAdminInitializer {
 
-    private final UserServiceImpl userService;
+    private final SuperAdminInitServiceImpl superAdminInitService;
     private final PasswordUtil passwordUtil;
 
     @Value("${initializer.super_admin.username}")
@@ -24,17 +24,17 @@ public class SuperAdminInitializer {
     @Value("${initializer.super_admin.email}")
     private String superAdminEmail;
 
-    public SuperAdminInitializer(UserServiceImpl userService, PasswordUtil passwordUtil) {
-        this.userService = userService;
+    public SuperAdminInitializer(SuperAdminInitServiceImpl superAdminInitService, PasswordUtil passwordUtil) {
+        this.superAdminInitService = superAdminInitService;
         this.passwordUtil = passwordUtil;
     }
 
     @EventListener(ApplicationReadyEvent.class)
     public void initializeSuperAdmin() {
-        User superAdmin = userService.getSuperAdmin();
+        User superAdmin = superAdminInitService.getSuperAdmin();
 
         if (superAdmin == null) {
-            superAdmin = userService.createSuperAdmin(
+            superAdmin = superAdminInitService.createSuperAdmin(
                     new UserCreateDto(
                             superAdminUsername,
                             superAdminEmail,
@@ -48,7 +48,7 @@ public class SuperAdminInitializer {
             superAdmin.setEmail(superAdminEmail);
             superAdmin.setPassword(passwordUtil.encode(superAdminPassword));
 
-            superAdmin = userService.updateSuperAdmin(superAdmin);
+            superAdmin = superAdminInitService.updateSuperAdmin(superAdmin);
 
             log.info("Updating super admin: {}", superAdmin);
         }
