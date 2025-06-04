@@ -51,7 +51,10 @@ public class PublicFilesServiceImpl implements PublicFilesService {
                         dto.getFolderURL()
                 );
 
-        return fileStorageService.getResourceForViewByInputStream(fileInputStreamWithAccessDto, file);
+        return fileStorageService.getResourceForViewByInputStream(
+                fileInputStreamWithAccessDto,
+                file
+        );
     }
 
     @Override

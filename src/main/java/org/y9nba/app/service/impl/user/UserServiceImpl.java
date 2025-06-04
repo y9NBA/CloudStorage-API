@@ -14,8 +14,6 @@ import org.y9nba.app.service.face.user.UserService;
 import org.y9nba.app.service.impl.email.AccountInfoServiceImpl;
 import org.y9nba.app.util.PasswordUtil;
 
-import java.util.Set;
-
 @Service
 public class UserServiceImpl implements UserService {
 
@@ -28,40 +26,6 @@ public class UserServiceImpl implements UserService {
         this.repository = repository;
         this.passwordUtil = passwordUtil;
         this.accountInfoService = accountInfoService;
-    }
-
-    @Override
-    public User createSuperAdmin(UserCreateDto dto) {
-        dto.setHashPassword(passwordUtil.encode(dto.getHashPassword()));
-
-        User model = new User(dto);
-
-        model.setRole(Role.ROLE_SUPER_ADMIN);
-        model.setEnabled(true);
-        model.setStorageLimit(0L);
-
-        return repository.save(model);
-    }
-
-    @Override
-    public User createAdmin(UserCreateDto dto) {
-        String password = dto.getHashPassword();
-
-        dto.setHashPassword(passwordUtil.encode(password));
-
-        User model = new User(dto);
-
-        model.setRole(Role.ROLE_ADMIN);
-        model.setEnabled(true);
-        model.setStorageLimit(0L);
-
-        accountInfoService.sendAdminAccountInfo(
-                model.getEmail(),
-                model.getUsername(),
-                password
-        );
-
-        return repository.save(model);
     }
 
     @Override
@@ -173,26 +137,5 @@ public class UserServiceImpl implements UserService {
     @Override
     public boolean existsByEmail(String email) {
         return repository.existsByEmail(email);
-    }
-
-    @Override
-    public User getSuperAdmin() {
-        Set<User> superAdmins = repository.findAllByRole(Role.ROLE_SUPER_ADMIN);
-
-        if (superAdmins.size() > 1) {
-            superAdmins
-                    .stream()
-                    .map(User::getId)
-                    .forEach(this::deleteById);
-        } else if (superAdmins.size() == 1) {
-            return superAdmins.stream().findFirst().orElse(null);
-        }
-
-        return null;
-    }
-
-    @Override
-    public User updateSuperAdmin(User superAdminWithUpdates) {
-        return repository.save(superAdminWithUpdates);
     }
 }

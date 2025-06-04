@@ -6,22 +6,16 @@ import org.y9nba.app.dao.entity.User;
 import java.time.LocalDateTime;
 
 @Getter
-public class UserInfoDto {
+public class AdminInfoDto {
     private final Long id;
     private final String username;
     private final String email;
-    private final String bucketName;
-    private final Long storageLimit;
-    private final Long userStorage;
     private final LocalDateTime createdAt;
 
-    public UserInfoDto(User model) {
+    public AdminInfoDto(User model) {
         this.id = model.getId();
         this.username = model.getUsername();
         this.email = model.getEmail();
-        this.bucketName = model.getBucketName();
-        this.storageLimit = model.getStorageLimit();
-        this.userStorage = model.getUsedStorage();
         this.createdAt = model.getCreatedAt();
     }
 }

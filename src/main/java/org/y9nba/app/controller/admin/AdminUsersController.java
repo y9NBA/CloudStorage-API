@@ -193,7 +193,7 @@ public class AdminUsersController {
             )
     )
     public Response banUserById(@PathVariable Long userId) {
-        banService.banUser (userId);
+        banService.banUser(userId);
         return new Response("Пользователь забанен");
     }
 
@@ -212,7 +212,7 @@ public class AdminUsersController {
             )
     )
     public Response unbanUserById(@PathVariable Long userId) {
-        banService.unbanUser (userId);
+        banService.unbanUser(userId);
         return new Response("Пользователь разбанен");
     }
 }

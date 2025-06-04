@@ -2,6 +2,7 @@ package org.y9nba.app.service.impl.user;
 
 import org.springframework.stereotype.Service;
 import org.y9nba.app.dao.entity.User;
+import org.y9nba.app.exception.web.auth.AccountLockedException;
 import org.y9nba.app.exception.web.user.info.ActiveAlreadyException;
 import org.y9nba.app.service.face.user.UserActivationService;
 import org.y9nba.app.service.impl.email.ConfirmServiceImpl;
@@ -23,6 +24,10 @@ public class UserActivationServiceImpl implements UserActivationService {
 
         if (model.isEnabled()) {
             throw new ActiveAlreadyException();
+        }
+
+        if (model.isBanned()) {
+            throw new AccountLockedException();
         }
 
         return confirmService.sendActivateAccountConfirmation(model);

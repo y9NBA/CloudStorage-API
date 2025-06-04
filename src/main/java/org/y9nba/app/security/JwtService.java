@@ -1,9 +1,6 @@
 package org.y9nba.app.security;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtBuilder;
-import io.jsonwebtoken.JwtParserBuilder;
-import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,6 +13,7 @@ import org.y9nba.app.exception.web.auth.UnAuthorizedException;
 import org.y9nba.app.dao.entity.User;
 import org.y9nba.app.dao.repository.OneTimeTokenRepository;
 import org.y9nba.app.dao.repository.SessionRepository;
+import org.y9nba.app.exception.web.token.TokenNotValidException;
 import org.y9nba.app.service.impl.token.session.SessionServiceImpl;
 
 import javax.crypto.SecretKey;
@@ -135,9 +133,13 @@ public class JwtService {
 
         parser.setSigningKey(getSigningKey());
 
-        return parser.build()
-                .parseClaimsJws(token)
-                .getBody();
+        try {
+            return parser.build()
+                    .parseClaimsJws(token)
+                    .getBody();
+        } catch (JwtException e) {
+            throw new TokenNotValidException();
+        }
     }
 
     public String generateAccessToken(User user, UUID sessionId, Long version) {
