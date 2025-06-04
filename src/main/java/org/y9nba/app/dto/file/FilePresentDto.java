@@ -19,6 +19,7 @@ public class FilePresentDto {
     private String bucketName;
     private String folderURL;
     private boolean isPublic;
+    private boolean isShared;
     private LocalDateTime createdAt;
 
     public FilePresentDto(File model) {
@@ -29,6 +30,7 @@ public class FilePresentDto {
         this.mimeType = model.getMimeType();
         this.isPublic = model.getIsPublic();
         this.createdAt = model.getCreatedAt();
+        this.isShared = model.getFileAccesses().size() > 1;
         setFolderURLAndBucket(model.getUrl());
     }
 
