@@ -254,7 +254,7 @@ public class StorageServiceImpl implements StorageService {
         try {
             return minioClient.statObject(StatObjectArgs.builder().bucket(bucketName).object(fileURL).build()) != null;
         } catch (Exception e) {
-            throw new FileStorageException();
+            return false;
         }
     }
 
