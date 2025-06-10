@@ -32,7 +32,7 @@ import java.util.Set;
 
 @Tag(
         name = "File Storage Controller",
-        description = "Взаимодействие с файлами"
+        description = "Взаимодействие с файловым хранилищем"
 )
 @RestController
 @RequestMapping("/storage")
