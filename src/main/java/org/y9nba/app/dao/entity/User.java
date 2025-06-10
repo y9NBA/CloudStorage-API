@@ -35,6 +35,9 @@ public class User implements UserDetails {
     @Column(unique = true, nullable = false)
     private String email;
 
+    @Column(name = "avatar_url", length = 100)
+    private String avatarUrl = null;
+
     @Column(unique = true, nullable = false)
     private UUID bucketName = UUID.randomUUID();
 
@@ -117,5 +120,9 @@ public class User implements UserDetails {
 
     public Long getNotUsedStorage() {
         return storageLimit - usedStorage;
+    }
+
+    public String getAvatarName() {
+        return this.avatarUrl.substring(this.avatarUrl.lastIndexOf('/') + 1);
     }
 }

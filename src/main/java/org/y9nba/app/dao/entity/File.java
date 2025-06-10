@@ -37,6 +37,9 @@ public class File {
     @Column(nullable = false)
     private Boolean isPublic = false;
 
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt = LocalDateTime.now();
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -63,6 +66,7 @@ public class File {
         this.user = dto.getUser();
         this.isPublic = dto.getIsPublic();
         this.createdAt = dto.getCreatedAt();
+        this.updatedAt = LocalDateTime.now();
     }
 
     public Boolean isPublic() {
