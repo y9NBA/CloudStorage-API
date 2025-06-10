@@ -81,6 +81,7 @@ public class SecurityConfig {
                                     "/h2-console/**",
                                     "/sharing/view/**",
                                     "/sharing/download/**",
+                                    "/user/search/avatar/**",
                                     "/confirm/**",
                                     "/recovery/**"
                             ).permitAll();

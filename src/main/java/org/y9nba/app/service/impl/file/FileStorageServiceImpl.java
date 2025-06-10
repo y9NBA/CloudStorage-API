@@ -17,11 +17,10 @@ import org.y9nba.app.dto.fileaccess.FileAccessUpdateDto;
 import org.y9nba.app.exception.local.NotPhysicalFileException;
 import org.y9nba.app.exception.local.PhysicalFileOnUrlAlreadyException;
 import org.y9nba.app.exception.local.PhysicalFilesAndEntriesNotSyncException;
-import org.y9nba.app.exception.web.file.FileNewUrlAlreadyException;
-import org.y9nba.app.exception.web.file.FilePhysicalNotFoundException;
-import org.y9nba.app.exception.web.file.FilePhysicalOnUrlException;
+import org.y9nba.app.exception.web.file.*;
 import org.y9nba.app.exception.web.file.access.FileAccessAlreadyException;
 import org.y9nba.app.exception.web.file.access.FileAccessDeniedException;
+import org.y9nba.app.exception.web.file.access.FileAccessIsAuthorAlreadyException;
 import org.y9nba.app.exception.web.file.search.NotFoundFileByIdException;
 import org.y9nba.app.exception.web.file.search.NotFoundFileByURLException;
 import org.y9nba.app.exception.web.user.UserNotEnoughMemoryException;
@@ -32,12 +31,16 @@ import org.y9nba.app.dao.repository.FileRepository;
 import org.y9nba.app.service.face.file.FileStorageService;
 import org.y9nba.app.service.impl.user.UserSearchServiceImpl;
 import org.y9nba.app.service.impl.user.UserServiceImpl;
+import org.y9nba.app.util.FileUtil;
 
 import java.io.*;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @Service
 public class FileStorageServiceImpl implements FileStorageService {
@@ -49,13 +52,16 @@ public class FileStorageServiceImpl implements FileStorageService {
     private final StorageServiceImpl storageService;
     private final UserSearchServiceImpl userSearchService;
 
-    public FileStorageServiceImpl(FileRepository repository, UserServiceImpl userService, AuditLogServiceImpl auditLogService, FileAccessServiceImpl fileAccessService, StorageServiceImpl storageService, UserSearchServiceImpl userSearchService) {
+    private final FileUtil fileUtil;
+
+    public FileStorageServiceImpl(FileRepository repository, UserServiceImpl userService, AuditLogServiceImpl auditLogService, FileAccessServiceImpl fileAccessService, StorageServiceImpl storageService, UserSearchServiceImpl userSearchService, FileUtil fileUtil) {
         this.repository = repository;
         this.userService = userService;
         this.auditLogService = auditLogService;
         this.fileAccessService = fileAccessService;
         this.storageService = storageService;
         this.userSearchService = userSearchService;
+        this.fileUtil = fileUtil;
     }
 
     @Transactional
@@ -86,6 +92,25 @@ public class FileStorageServiceImpl implements FileStorageService {
         updateUsedStorageOfUser(userId);
 
         return findById(fileId);
+    }
+
+    @Transactional
+    @Override
+    public Set<File> uploadFolder(Long userId, MultipartFile[] files, String folderName, String[] paths, String folderURL) {
+        Set<File> uploadedFiles = new HashSet<>();
+        String baseFolderURL = (folderURL == null ? "" : folderURL + "/") + folderName;
+
+        for (int i = 0; i < files.length; i++) {
+            String path = paths.length > i ? fileUtil.parsePath(paths[i]) : "";
+            MultipartFile file = files[i];
+
+            if (!file.isEmpty()) {
+                File model = uploadFile(userId, file, baseFolderURL + path);
+                uploadedFiles.add(model);
+            }
+        }
+
+        return uploadedFiles;
     }
 
     @Transactional
@@ -130,7 +155,8 @@ public class FileStorageServiceImpl implements FileStorageService {
     }
 
     private Long updateExisting(File file, FileUpdateDto fileUpdateDto, User authorOfFile, User authorOfUpdate) {
-        if ((fileUpdateDto.getFileSize() - file.getFileSize()) > authorOfFile.getNotUsedStorage() && fileUpdateDto.getFileSize() > file.getFileSize())
+        if ((fileUpdateDto.getFileSize() - file.getFileSize()) > authorOfFile.getNotUsedStorage()
+                && fileUpdateDto.getFileSize() > file.getFileSize())
             throw new UserNotEnoughMemoryException();
 
         File fileModel = update(fileUpdateDto);
@@ -156,6 +182,64 @@ public class FileStorageServiceImpl implements FileStorageService {
         auditLogService.logDownload(user, file);
 
         return new FileInputStreamWithAccessDto(downloadFileByUserAndFile(user, file), Access.ACCESS_AUTHOR);
+    }
+
+    @Override
+    public FileInputStreamWithAccessDto downloadFolder(Long userId, String folderURL) {
+        Set<File> files = findByUserIdAndFolderUrl(userId, folderURL);
+        Set<String> notExistURLs = new HashSet<>();
+        User user = userService.getById(userId);
+        InputStream inputStream;
+
+        if (files.isEmpty()) {
+            throw new FolderNotExistException(folderURL);
+        }
+
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+             ZipOutputStream zos = new ZipOutputStream(baos)) {
+
+            for (File file : files) {
+                try (InputStream fileStream = downloadFileByUserAndFile(user, file)) {
+                    String fileURL = file
+                            .getUrl()
+                            .replaceAll(folderURL + "/", "")
+                            .replaceAll(user.getBucketName() + "/", "");
+
+                    ZipEntry zipEntry = new ZipEntry(fileURL);
+
+                    zos.putNextEntry(zipEntry);
+
+                    byte[] buffer = new byte[1024];
+                    int len;
+
+                    while ((len = fileStream.read(buffer)) > 0) {
+                        zos.write(buffer, 0, len);
+                    }
+
+                    zos.closeEntry();
+
+                } catch (FilePhysicalNotFoundException e) {
+                    notExistURLs.add(e.getFileURL());
+                }
+            }
+
+            if (!notExistURLs.isEmpty()) {
+                throw new ZipNotCreatingException(notExistURLs);
+            }
+
+            zos.finish();
+
+            inputStream = new ByteArrayInputStream(baos.toByteArray());
+
+        } catch (IOException e) {
+            throw new ZipNotCreatingException();
+        }
+
+        files.forEach(
+                file -> auditLogService.logDownload(user, file)
+        );
+
+        return new FileInputStreamWithAccessDto(inputStream, Access.ACCESS_AUTHOR);
     }
 
     @Transactional
@@ -213,6 +297,28 @@ public class FileStorageServiceImpl implements FileStorageService {
 
     @Transactional
     @Override
+    public Set<File> moveFolderOnNewUrl(Long userId, String oldFolderURL, String newFolderURL) {
+        Set<File> files = findByUserIdAndFolderUrl(userId, oldFolderURL);
+        String folderName = oldFolderURL.substring(oldFolderURL.lastIndexOf("/") + 1);
+        String finalFolderURL = newFolderURL != null ? newFolderURL + "/" + folderName : folderName;
+
+        if (files.isEmpty()) {
+            throw new FolderNotExistException(oldFolderURL);
+        }
+
+        if (!findByUserIdAndFolderUrl(userId, newFolderURL).isEmpty()) {
+            throw new FolderNewUrlAlreadyException();
+        }
+
+        return files
+                .stream()
+                .map(
+                        file -> moveFileOnNewUrl(userId, file.getFileName(), oldFolderURL, finalFolderURL)
+                ).collect(Collectors.toSet());
+    }
+
+    @Transactional
+    @Override
     public File copyExistingFile(Long userId, String fileName, String folderURL) {
         String fileURL = createAbsFileURL(userId, fileName, folderURL);
         File file = findByUserIdAndUrl(userId, fileURL);
@@ -221,8 +327,8 @@ public class FileStorageServiceImpl implements FileStorageService {
         Long copyFileId;
 
         try {
-            storageService.copyFile(user.getBucketName(), file, fileCreateDto);
             copyFileId = createNew(fileCreateDto, user);
+            storageService.copyFile(user.getBucketName(), file, fileCreateDto);
         } catch (NotPhysicalFileException e) {
             deleteEntry(file);
             throw new FilePhysicalNotFoundException(e.getMessage());
@@ -255,6 +361,27 @@ public class FileStorageServiceImpl implements FileStorageService {
         auditLogService.logRename(user, file);
 
         return findById(fileUpdateDto.getId());
+    }
+
+    @Transactional
+    @Override
+    public Set<File> renameFolder(Long userId, String folderURL, String newFolderName) {
+        Set<File> files = findByUserIdAndFolderUrl(userId, folderURL);
+        String newFolderURL = folderURL.substring(0, folderURL.lastIndexOf("/") + 1) + newFolderName;
+
+        if (files.isEmpty()) {
+            throw new FolderNotExistException(folderURL);
+        }
+
+        if (!findByUserIdAndFolderUrl(userId, newFolderURL).isEmpty()) {
+            throw new FolderNewUrlAlreadyException();
+        }
+
+        return files
+                .stream()
+                .map(
+                        file -> moveFileOnNewUrl(userId, file.getFileName(), newFolderURL, folderURL)
+                ).collect(Collectors.toSet());
     }
 
     private File tryMoveOrRenameFile(File file, User user, FileUpdateDto fileUpdateDto) {
@@ -335,6 +462,10 @@ public class FileStorageServiceImpl implements FileStorageService {
         String url = createAbsFileURL(userId, fileName, folderURL);
         File file = findByUserIdAndUrl(userId, url);
 
+        if (userId.equals(collaboratorUserId)) {
+            throw new FileAccessIsAuthorAlreadyException();
+        }
+
         return giveAccessOnFileForUser(userService.getById(userId), file, userSearchService.getUserById(collaboratorUserId), access);
     }
 
@@ -361,7 +492,13 @@ public class FileStorageServiceImpl implements FileStorageService {
     public File revokeAccessOnFileForUser(Long userId, String fileName, String folderURL, Long collaboratorUserId) {
         String url = createAbsFileURL(userId, fileName, folderURL);
         File file = findByUserIdAndUrl(userId, url);
-        // TODO: если не id пользователя с ролью ROLE_USER, то выбрасывать исключение
+
+        if (userId.equals(collaboratorUserId)) {
+            throw new FileAccessIsAuthorAlreadyException();
+        }
+
+        userSearchService.getUserById(collaboratorUserId);
+
         fileAccessService.deleteByUserIdAndFileId(collaboratorUserId, file.getId());
 
         auditLogService.logRemoveAccess(userService.getById(userId), file);
@@ -428,11 +565,16 @@ public class FileStorageServiceImpl implements FileStorageService {
 
     @Override
     public Set<File> findByUserIdAndFolderUrl(Long userId, String folderURL) {
-        return repository
-                .getFilesByUser_IdAndUrlContaining(
-                        userId,
-                        getBucketNameByUserId(userId) + "/" + folderURL
-                );
+        Set<File> files = repository.getFilesByUser_IdAndUrlContaining(
+                userId,
+                getBucketNameByUserId(userId) + "/" + folderURL
+        );
+
+        if (files.isEmpty()) {
+            throw new FolderNotExistException(folderURL);
+        }
+
+        return files;
     }
 
     @Override
@@ -509,19 +651,27 @@ public class FileStorageServiceImpl implements FileStorageService {
 
     @Override
     public ResponseEntity<InputStreamResource> getResourceForViewByInputStream(FileInputStreamWithAccessDto dto, File file) {
-        return getResponseBuilderWithHeadersForInputStream(file, dto.getAccess(), true).body(new InputStreamResource(dto.getInputStream()));
+        return getResponseBuilderWithHeadersForInputStream(file.getFileName(), file.getMimeType(), dto.getAccess(), true)
+                .body(new InputStreamResource(dto.getInputStream()));
     }
 
     @Override
     public ResponseEntity<InputStreamResource> getResourceForDownloadByInputStream(FileInputStreamWithAccessDto dto, File file) {
-        return getResponseBuilderWithHeadersForInputStream(file, dto.getAccess(), false).body(new InputStreamResource(dto.getInputStream()));
+        return getResponseBuilderWithHeadersForInputStream(file.getFileName(), file.getMimeType(), dto.getAccess(), false)
+                .body(new InputStreamResource(dto.getInputStream()));
     }
 
-    private ResponseEntity.BodyBuilder getResponseBuilderWithHeadersForInputStream(File file, Access access, boolean cache) {
-        String encodedFileName = URLEncoder.encode(file.getFileName(), StandardCharsets.UTF_8).replaceAll("\\+", "%20");
+    @Override
+    public ResponseEntity<InputStreamResource> getResourceForDownloadFolderByInputStream(FileInputStreamWithAccessDto dto, String folderName) {
+        return getResponseBuilderWithHeadersForInputStream(folderName, MediaType.APPLICATION_OCTET_STREAM_VALUE, dto.getAccess(), false)
+                .body(new InputStreamResource(dto.getInputStream()));
+    }
+
+    private ResponseEntity.BodyBuilder getResponseBuilderWithHeadersForInputStream(String fileName, String mimeType, Access access, boolean cache) {
+        String encodedFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8).replaceAll("\\+", "%20");
 
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.parseMediaType(file.getMimeType()));
+        headers.setContentType(MediaType.parseMediaType(mimeType));
         headers.add("X-Access-Level", access.name());
 
         if (cache) {
@@ -539,7 +689,7 @@ public class FileStorageServiceImpl implements FileStorageService {
         User user = userService.getById(userId);
 
         try {
-            storageService.synchronizeFile(user.getBucketName(), findByUserId(userId), user);
+            storageService.synchronizeFiles(user.getBucketName(), findByUserId(userId), user);
         } catch (PhysicalFilesAndEntriesNotSyncException e) {
             e.getFileModelsWithoutPhysicalFile().forEach(this::deleteEntry);
             e.getFilesWithoutEntryInDB().forEach(fileCreateDto -> createNew(fileCreateDto, user));

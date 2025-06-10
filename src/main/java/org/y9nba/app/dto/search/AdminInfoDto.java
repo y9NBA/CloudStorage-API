@@ -10,12 +10,14 @@ public class AdminInfoDto {
     private final Long id;
     private final String username;
     private final String email;
+    private final String avatarUrl;
     private final LocalDateTime createdAt;
 
     public AdminInfoDto(User model) {
         this.id = model.getId();
         this.username = model.getUsername();
         this.email = model.getEmail();
+        this.avatarUrl = model.getAvatarUrl();
         this.createdAt = model.getCreatedAt();
     }
 }

@@ -7,6 +7,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.y9nba.app.dto.response.Response;
@@ -14,15 +16,15 @@ import org.y9nba.app.dto.search.UserSearchDto;
 import org.y9nba.app.dto.user.UserProfileDto;
 import org.y9nba.app.mapper.GeneralMapper;
 import org.y9nba.app.dao.entity.User;
+import org.y9nba.app.service.impl.user.UserAvatarServiceImpl;
 import org.y9nba.app.service.impl.user.UserSearchServiceImpl;
-import org.y9nba.app.service.impl.user.UserServiceImpl;
 
 import java.util.Set;
 import java.util.UUID;
 
 @Tag(
         name = "User  Search Controller",
-        description = "Поиск других пользователей"
+        description = "Поиск других пользователей и просмотр их профилей"
 )
 @RestController
 @RequestMapping("/user/search")
@@ -39,12 +41,12 @@ import java.util.UUID;
 })
 public class UserSearchController {
 
-    private final UserServiceImpl userService;
     private final UserSearchServiceImpl userSearchService;
+    private final UserAvatarServiceImpl userAvatarService;
 
-    public UserSearchController(UserServiceImpl userService, UserSearchServiceImpl userSearchService) {
-        this.userService = userService;
+    public UserSearchController(UserSearchServiceImpl userSearchService, UserAvatarServiceImpl userAvatarService) {
         this.userSearchService = userSearchService;
+        this.userAvatarService = userAvatarService;
     }
 
     @GetMapping
@@ -89,5 +91,15 @@ public class UserSearchController {
         } else {
             return new UserSearchDto(userSearchService.getUserById(id));
         }
+    }
+
+    @GetMapping("/avatar/{avatarName}")
+    @Operation(summary = "Получить аватар профиля пользователя")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Аватар профиля"
+    )
+    public ResponseEntity<InputStreamResource> getAvatar(@PathVariable String avatarName) {
+        return userAvatarService.getAvatar(avatarName);
     }
 }

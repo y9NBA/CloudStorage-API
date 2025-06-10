@@ -6,6 +6,6 @@ import org.y9nba.app.exception.web.AbstractException;
 public class FileNewUrlAlreadyException extends AbstractException {
 
     public FileNewUrlAlreadyException() {
-        super("Невозможно переместить файл по новому адресу, файл с таким же именем и адресом уже существует", HttpStatus.CONFLICT);
+        super("Невозможно переместить файл по новому адресу или переименовать его, файл с таким же именем и адресом уже существует", HttpStatus.CONFLICT);
     }
 }

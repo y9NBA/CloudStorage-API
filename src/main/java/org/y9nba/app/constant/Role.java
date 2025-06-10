@@ -11,6 +11,7 @@ public enum Role {
             "UPDATE_USERNAME",
             "UPDATE_PASSWORD",
             "UPDATE_EMAIL",
+            "UPDATE_AVATAR",
             "UPDATE_PROFILE",
             "DELETE_PROFILE"
     )),
@@ -21,6 +22,7 @@ public enum Role {
             "INFO_USERS",
             "UPDATE_USERNAME",
             "UPDATE_PASSWORD",
+            "UPDATE_AVATAR",
             "DELETE_PROFILE"
     )),
     ROLE_SUPER_ADMIN(Set.of(
@@ -30,7 +32,8 @@ public enum Role {
             "INFO_USERS",
             "INFO_ADMINS",
             "CREATE_ADMIN",
-            "DELETE_ADMIN"
+            "DELETE_ADMIN",
+            "UPDATE_AVATAR"
     ));
 
     private final Set<String> authorities;

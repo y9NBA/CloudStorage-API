@@ -7,15 +7,18 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.y9nba.app.dto.response.Response;
 import org.y9nba.app.dto.user.update.UserUpdateDto;
 import org.y9nba.app.dto.user.update.UserUpdateEmailDto;
 import org.y9nba.app.dto.user.update.UserUpdatePasswordDto;
 import org.y9nba.app.dto.user.update.UserUpdateUsernameDto;
 import org.y9nba.app.dao.entity.User;
+import org.y9nba.app.service.impl.user.UserAvatarServiceImpl;
 import org.y9nba.app.service.impl.user.UserDeleteServiceImpl;
 import org.y9nba.app.service.impl.user.UserEmailServiceImpl;
 import org.y9nba.app.service.impl.user.UserServiceImpl;
@@ -41,11 +44,13 @@ public class UserUpdateController {
 
     private final UserServiceImpl userService;
     private final UserEmailServiceImpl userEmailService;
+    private final UserAvatarServiceImpl userAvatarService;
     private final UserDeleteServiceImpl userDeleteService;
 
-    public UserUpdateController(UserServiceImpl userService, UserEmailServiceImpl userEmailService, UserDeleteServiceImpl userDeleteService) {
+    public UserUpdateController(UserServiceImpl userService, UserEmailServiceImpl userEmailService, UserAvatarServiceImpl userAvatarService, UserDeleteServiceImpl userDeleteService) {
         this.userService = userService;
         this.userEmailService = userEmailService;
+        this.userAvatarService = userAvatarService;
         this.userDeleteService = userDeleteService;
     }
 
@@ -211,6 +216,38 @@ public class UserUpdateController {
         );
 
         return new Response("Данные успешно обновлены. " + resUpdEmail);
+    }
+
+    @PreAuthorize("hasAuthority('UPDATE_AVATAR')")
+    @PostMapping(path = "/avatar", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    @Operation(summary = "Изменить аватар профиля")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Аватар профиля изменен",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = Response.class)
+            )
+    )
+    public Response uploadAvatar(@RequestPart("file") MultipartFile file, @AuthenticationPrincipal User user) {
+        userAvatarService.uploadAvatar(user, file);
+        return new Response("Аватар профиля изменен");
+    }
+
+    @PreAuthorize("hasAuthority('UPDATE_AVATAR')")
+    @DeleteMapping("/avatar")
+    @Operation(summary = "Удалить аватар профиля")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Аватар профиля удален",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = Response.class)
+            )
+    )
+    public Response deleteAvatar(@AuthenticationPrincipal User user) {
+        userAvatarService.deleteAvatar(user);
+        return new Response("Аватар профиля удален");
     }
 
     @PreAuthorize("hasAuthority('DELETE_PROFILE')")

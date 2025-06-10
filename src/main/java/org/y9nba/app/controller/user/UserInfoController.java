@@ -3,6 +3,8 @@ package org.y9nba.app.controller.user;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.y9nba.app.dao.entity.Session;
@@ -20,6 +22,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import org.y9nba.app.service.impl.user.UserAvatarServiceImpl;
 
 import java.util.Set;
 import java.util.UUID;
@@ -44,9 +47,11 @@ import java.util.UUID;
 public class UserInfoController {
 
     private final SessionService sessionService;
+    private final UserAvatarServiceImpl userAvatarService;
 
-    public UserInfoController(SessionService sessionService) {
+    public UserInfoController(SessionService sessionService, UserAvatarServiceImpl userAvatarService) {
         this.sessionService = sessionService;
+        this.userAvatarService = userAvatarService;
     }
 
     @Operation(summary = "Получить информацию о профиле")
@@ -135,5 +140,15 @@ public class UserInfoController {
         sessionService.revokeAllSessionsExceptCurrent(user.getId(), currentSession.getId());
 
         return new Response("Все сеансы завершены");
+    }
+
+    @GetMapping("/avatar")
+    @Operation(summary = "Получить аватар профиля")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Аватар профиля"
+    )
+    public ResponseEntity<InputStreamResource> getAvatar(@AuthenticationPrincipal User user) {
+        return userAvatarService.getAvatarByUser(user);
     }
 }

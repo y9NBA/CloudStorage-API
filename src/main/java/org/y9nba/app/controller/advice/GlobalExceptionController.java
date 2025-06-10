@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.y9nba.app.dto.response.ErrorResponse;
 import org.y9nba.app.exception.web.AbstractException;
 
@@ -24,6 +25,17 @@ public class GlobalExceptionController {
     @ExceptionHandler(AbstractException.class)
     public ResponseEntity<ErrorResponse> catchAbstractException(AbstractException e) {
         return new ResponseEntity<>(new ErrorResponse(e), e.getStatusCode());
+    }
+
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    public ResponseEntity<ErrorResponse> catchMissingServletRequestPartException(MissingServletRequestPartException e) {
+        return new ResponseEntity<>(
+                new ErrorResponse(
+                        "Не передан обязательный параметр запроса: " + e.getRequestPartName(),
+                        HttpStatus.BAD_REQUEST.value()
+                ),
+                HttpStatus.BAD_REQUEST
+        );
     }
 
     @ExceptionHandler(NoResourceFoundException.class)

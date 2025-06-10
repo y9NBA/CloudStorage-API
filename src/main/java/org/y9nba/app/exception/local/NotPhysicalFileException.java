@@ -7,7 +7,7 @@ import java.io.IOException;
 @Getter
 public class NotPhysicalFileException extends IOException {
 
-    public NotPhysicalFileException(String fileName) {
-        super(fileName);
+    public NotPhysicalFileException(String fileURL) {
+        super(fileURL);
     }
 }
