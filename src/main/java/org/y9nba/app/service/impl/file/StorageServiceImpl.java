@@ -2,7 +2,6 @@ package org.y9nba.app.service.impl.file;
 
 import io.minio.*;
 import io.minio.messages.Item;
-import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.y9nba.app.dto.file.FileCreateDto;
@@ -17,7 +16,6 @@ import org.y9nba.app.exception.web.file.FileStorageException;
 import org.y9nba.app.service.face.file.StorageService;
 
 import java.io.InputStream;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -25,17 +23,18 @@ import java.util.stream.Collectors;
 public class StorageServiceImpl implements StorageService {
 
     private final MinioClient minioClient;
+    private final MinioServiceImpl minioService;
 
-    public StorageServiceImpl(MinioClient minioClient) {
+    public StorageServiceImpl(MinioClient minioClient, MinioServiceImpl minioService) {
         this.minioClient = minioClient;
+        this.minioService = minioService;
     }
 
     @Override
     public void uploadFile(MultipartFile file, String bucketName, String folderUrl) {
-        createBucket(bucketName);
+        minioService.createBucket(bucketName);
 
         String fileName = file.getOriginalFilename();
-        InputStream inputStream;
         String objectName;
 
         if (folderUrl == null) {
@@ -44,9 +43,7 @@ public class StorageServiceImpl implements StorageService {
             objectName = folderUrl + "/" + fileName;
         }
 
-        try {
-            inputStream = file.getInputStream();
-
+        try (InputStream inputStream = file.getInputStream()) {
             PutObjectArgs objectArgs = PutObjectArgs.builder()
                     .bucket(bucketName)
                     .object(objectName)
@@ -62,7 +59,7 @@ public class StorageServiceImpl implements StorageService {
 
     @Override
     public InputStream downloadFile(String bucketName, File file) throws NotPhysicalFileException {
-        createBucket(bucketName);
+        minioService.createBucket(bucketName);
 
         String fileURL = getCorrectUrl(file.getUrl());
 
@@ -82,19 +79,14 @@ public class StorageServiceImpl implements StorageService {
     }
 
     @Override
-    public void downloadFolder(String username, List<File> files) {    // TODO: доделать скачку кучи файлов в виде архива
-
-    }
-
-    @Override
     public void deleteFile(String bucketName, File file) {
-        createBucket(bucketName);
+        minioService.createBucket(bucketName);
         deleteFileByUrl(bucketName, getCorrectUrl(file.getUrl()));
     }
 
     @Override
     public void moveFile(String bucketName, File file, FileUpdateDto fileUpdDto) throws NotPhysicalFileException, PhysicalFileOnUrlAlreadyException {
-        createBucket(bucketName);
+        minioService.createBucket(bucketName);
 
         String oldFileURL = getCorrectUrl(file.getUrl());
         String newFileURL = getCorrectUrl(fileUpdDto.getUrl());
@@ -119,7 +111,7 @@ public class StorageServiceImpl implements StorageService {
 
     @Override
     public void copyFile(String bucketName, File file, FileCreateDto fileCrtDto) throws NotPhysicalFileException, PhysicalFileOnUrlAlreadyException {
-        createBucket(bucketName);
+        minioService.createBucket(bucketName);
 
         String fileURL = getCorrectUrl(file.getUrl());
         String copyFileURL = getCorrectUrl(fileCrtDto.getUrl());
@@ -153,11 +145,11 @@ public class StorageServiceImpl implements StorageService {
     }
 
     private boolean isFileExist(String bucketName, String fileName) {
-        return isFileExistByUrl(bucketName, fileName);
+        return minioService.isFileExistByObjectName(bucketName, fileName);
     }
 
     private boolean isFileExist(String bucketName, File file) {
-        return isFileExistByUrl(bucketName, getCorrectUrl(file.getUrl()));
+        return minioService.isFileExistByObjectName(bucketName, getCorrectUrl(file.getUrl()));
     }
 
     private void checkURLs(String bucketName, String beginFileURL, String endFileURL, File file) throws NotPhysicalFileException, PhysicalFileOnUrlAlreadyException {
@@ -179,12 +171,16 @@ public class StorageServiceImpl implements StorageService {
 
 
     @Override
-    public void synchronizeFile(String bucketName, Set<File> files, User user) throws PhysicalFilesAndEntriesNotSyncException {
-        createBucket(bucketName);
+    public void synchronizeFiles(String bucketName, Set<File> files, User user) throws PhysicalFilesAndEntriesNotSyncException {
+        minioService.createBucket(bucketName);
 
         Set<File> fileModelsWithoutPhysicalFile = new java.util.HashSet<>();
         Set<FileCreateDto> filesWithoutEntryInDB = new java.util.HashSet<>();
-        Set<String> objectNames = files.stream().map(File::getUrl).map(this::getCorrectUrl).collect(Collectors.toSet());
+        Set<String> objectNames = files
+                .stream()
+                .map(File::getUrl)
+                .map(this::getCorrectUrl)
+                .collect(Collectors.toSet());
 
         files.forEach(fileModel -> {
             if (!isFileExist(bucketName, fileModel)) {
@@ -215,7 +211,7 @@ public class StorageServiceImpl implements StorageService {
 
     @Override
     public void deleteBucket(String bucketName) {
-        createBucket(bucketName);
+        minioService.createBucket(bucketName);
 
         Iterable<Result<Item>> results = minioClient.listObjects(ListObjectsArgs.builder()
                 .bucket(bucketName)
@@ -239,7 +235,7 @@ public class StorageServiceImpl implements StorageService {
 
     @Override
     public void deleteFiles(String bucketName, Set<File> files) {
-        createBucket(bucketName);
+        minioService.createBucket(bucketName);
 
         files
                 .stream()
@@ -248,29 +244,6 @@ public class StorageServiceImpl implements StorageService {
                 .forEach(
                         fileURL -> deleteFileByUrl(bucketName, fileURL)
                 );
-    }
-
-    private boolean isFileExistByUrl(String bucketName, String fileURL) {
-        try {
-            return minioClient.statObject(StatObjectArgs.builder().bucket(bucketName).object(fileURL).build()) != null;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    private void createBucket(String bucketName) {
-        try {
-            if (!bucketExists(bucketName)) {
-                minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
-            }
-        } catch (Exception e) {
-            throw new FileStorageException();
-        }
-    }
-
-    @SneakyThrows
-    private boolean bucketExists(String bucketName) {
-        return minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
     }
 
     private String getCorrectUrl(String url) {

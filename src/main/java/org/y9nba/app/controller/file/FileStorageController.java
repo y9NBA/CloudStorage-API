@@ -7,6 +7,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import org.simpleframework.xml.core.Validate;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -16,12 +19,15 @@ import org.springframework.web.multipart.MultipartFile;
 import org.y9nba.app.dto.file.FileDto;
 import org.y9nba.app.dto.file.FileInputStreamWithAccessDto;
 import org.y9nba.app.dto.file.FilePresentDto;
+import org.y9nba.app.dto.file.FolderDataDto;
 import org.y9nba.app.dto.response.Response;
+import org.y9nba.app.exception.web.file.FileInRequestIsEmptyException;
 import org.y9nba.app.mapper.GeneralMapper;
 import org.y9nba.app.dao.entity.File;
 import org.y9nba.app.dao.entity.User;
 import org.y9nba.app.service.impl.file.FileStorageServiceImpl;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Tag(
@@ -74,10 +80,10 @@ public class FileStorageController {
     }
 
     @GetMapping(path = "/my-files/file")
-    @Operation(summary = "Получить файл")
+    @Operation(summary = "Получить информацию о файл")
     @ApiResponse(
             responseCode = "200",
-            description = "Файл с полной информацией",
+            description = "Полная информация о файле",
             content = @Content(
                     mediaType = "application/json",
                     schema = @Schema(implementation = FileDto.class)
@@ -87,21 +93,68 @@ public class FileStorageController {
         return new FileDto(fileStorageService.findFile(user.getId(), fileName, folderUrl));
     }
 
-    @PostMapping(path = "/upload", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    @Operation(summary = "Загрузить файл")
+    @GetMapping(path = "/my-files/folder")
+    @Operation(summary = "Получить информацию о папке")
     @ApiResponse(
             responseCode = "200",
-            description = "Краткая информация о загруженном файле",
+            description = "Полная информация о папке",
             content = @Content(
                     mediaType = "application/json",
-                    schema = @Schema(implementation = FilePresentDto.class)
+                    schema = @Schema(implementation = FileDto.class)
             )
     )
-    public FilePresentDto uploadFile(@RequestPart(value = "file") MultipartFile file, @RequestParam(required = false) String folderUrl, @AuthenticationPrincipal User user) {
+    public FolderDataDto getFolder(@RequestParam String folderUrl, @AuthenticationPrincipal User user) {
+        Set<File> files = fileStorageService.findByUserIdAndFolderUrl(user.getId(), folderUrl);
+        return new FolderDataDto(
+                folderUrl,
+                files.size(),
+                files
+                        .stream()
+                        .mapToLong(File::getFileSize)
+                        .sum(),
+                files
+                        .stream()
+                        .map(File::getUpdatedAt)
+                        .max(LocalDateTime::compareTo)
+                        .orElse(LocalDateTime.now())
+        );
+    }
+
+    @PostMapping(path = "/upload/file", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    @Operation(summary = "Загрузить файл")
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Краткая информация о загруженном файле",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = FilePresentDto.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Невалидный запрос",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(value = "{\"message\": \"Файл не может быть пустым\"}")
+                    )
+            )
+    })
+    public FilePresentDto uploadFile(
+            @RequestPart(value = "file") @NotNull MultipartFile file,
+            @RequestParam(required = false) @Size(max = 255) String folderUrl,
+            @AuthenticationPrincipal User user) {
+
+        if (file.isEmpty()) {
+            throw new FileInRequestIsEmptyException();
+        }
+
         return new FilePresentDto(fileStorageService.uploadFile(user.getId(), file, folderUrl));
     }
 
-    @PostMapping(path = "/upload/folder")
+
+    @Validate
+    @PostMapping(path = "/upload/folder", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     @Operation(summary = "Загрузить папку целиком")
     @ApiResponse(
             responseCode = "200",
@@ -111,8 +164,20 @@ public class FileStorageController {
                     schema = @Schema(implementation = FilePresentDto.class)
             )
     )
-    public Set<FilePresentDto> uploadFolder(@RequestParam String folderPath, @RequestParam(required = false) String folderUrl, @AuthenticationPrincipal User user) {
-        return null;    // TODO: доделать
+    public Set<FilePresentDto> uploadFolder(
+            @RequestPart(value = "files") @NotNull MultipartFile[] files,
+            @RequestParam String folderName,
+            @RequestParam(required = false, value = "paths") String[] paths,
+            @RequestParam(required = false) String folderUrl,
+            @AuthenticationPrincipal User user) {
+
+        if (paths == null) {
+            paths = new String[]{};
+        }
+
+        return GeneralMapper.toFilePresentDto(
+                fileStorageService.uploadFolder(user.getId(), files, folderName, paths, folderUrl)
+        );
     }
 
     @GetMapping(path = "/download/file")
@@ -127,14 +192,16 @@ public class FileStorageController {
         return fileStorageService.getResourceForDownloadByInputStream(dto, file);
     }
 
-    @PostMapping(path = "/download/folder")
-    @Operation(summary = "Скачать папку целиком архивом")
+    @GetMapping(path = "/download/folder")
+    @Operation(summary = "Скачать папку архивом")
     @ApiResponse(
             responseCode = "200",
             description = "Папка в виде архива скачана"
     )
-    public Object downloadFolder(@RequestParam(required = false) String folderUrl, @AuthenticationPrincipal User user) {
-        return null;    // TODO: доделать
+    public ResponseEntity<InputStreamResource> downloadFolder(@RequestParam String folderUrl, @AuthenticationPrincipal User user) {
+        FileInputStreamWithAccessDto dto = fileStorageService.downloadFolder(user.getId(), folderUrl);
+        String folderName = folderUrl.substring(folderUrl.lastIndexOf("/") + 1) + ".zip";
+        return fileStorageService.getResourceForDownloadFolderByInputStream(dto, folderName);
     }
 
     @GetMapping(path = "/view/file")
@@ -193,6 +260,22 @@ public class FileStorageController {
         return new FilePresentDto(fileStorageService.moveFileOnNewUrl(user.getId(), fileName, newFolderUrl, oldFolderUrl));
     }
 
+    @PostMapping(path = "/move/folder")
+    @Operation(summary = "Переместить папку")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Список файлов с краткой информацией",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = FilePresentDto.class)
+            )
+    )
+    public Set<FilePresentDto> moveFolder(@RequestParam String newFolderUrl, @RequestParam String oldFolderUrl, @AuthenticationPrincipal User user) {
+        return GeneralMapper.toFilePresentDto(
+                fileStorageService.moveFolderOnNewUrl(user.getId(), oldFolderUrl, newFolderUrl)
+        );
+    }
+
     @PostMapping(path = "/copy/file")
     @Operation(summary = "Создать копию файла")
     @ApiResponse(
@@ -219,5 +302,21 @@ public class FileStorageController {
     )
     public FilePresentDto renameFile(@RequestParam String fileName, @RequestParam String newName, @RequestParam(required = false) String folderUrl, @AuthenticationPrincipal User user) {
         return new FilePresentDto(fileStorageService.renameFile(user.getId(), fileName, newName, folderUrl));
+    }
+
+    @PostMapping(path = "/rename/folder")
+    @Operation(summary = "Переименовать папку")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Список файлов с краткой информацией",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = FilePresentDto.class)
+            )
+    )
+    public Set<FilePresentDto> renameFolder(@RequestParam String folderUrl, @RequestParam String newFolderName, @AuthenticationPrincipal User user) {
+        return GeneralMapper.toFilePresentDto(
+                fileStorageService.renameFolder(user.getId(), folderUrl, newFolderName)
+        );
     }
 }

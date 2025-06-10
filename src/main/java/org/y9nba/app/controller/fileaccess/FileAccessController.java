@@ -14,6 +14,7 @@ import org.y9nba.app.dto.response.Response;
 import org.y9nba.app.dao.entity.File;
 import org.y9nba.app.dao.entity.User;
 import org.y9nba.app.service.impl.file.FileStorageServiceImpl;
+import org.y9nba.app.service.impl.user.UserSearchServiceImpl;
 import org.y9nba.app.service.impl.user.UserServiceImpl;
 
 @Tag(
@@ -37,10 +38,12 @@ public class FileAccessController {
 
     private final FileStorageServiceImpl fileStorageService;
     private final UserServiceImpl userService;
+    private final UserSearchServiceImpl userSearchService;
 
-    public FileAccessController(FileStorageServiceImpl fileStorageService, UserServiceImpl userService) {
+    public FileAccessController(FileStorageServiceImpl fileStorageService, UserServiceImpl userService, UserSearchServiceImpl userSearchService) {
         this.fileStorageService = fileStorageService;
         this.userService = userService;
+        this.userSearchService = userSearchService;
     }
 
     @PostMapping("/give")
@@ -54,7 +57,6 @@ public class FileAccessController {
             )
     )
     public Response giveAccess(@RequestParam String fileName, @RequestParam(required = false) String folderUrl, @RequestBody FileAccessGiveRequestDto fileAccessGiveRequestDto, @AuthenticationPrincipal User user) {
-        User collaboratorUser = userService.getById(fileAccessGiveRequestDto.getCollaboratorId());
         File file = fileStorageService.giveAccessOnFileForUser(
                 user.getId(),
                 fileName,
@@ -62,6 +64,8 @@ public class FileAccessController {
                 fileAccessGiveRequestDto.getCollaboratorId(),
                 fileAccessGiveRequestDto.extractAccessLevel()
         );
+
+        User collaboratorUser = userSearchService.getUserById(fileAccessGiveRequestDto.getCollaboratorId());
 
         return new Response("Пользователю " + collaboratorUser.getUsername() + " дан доступ " + fileAccessGiveRequestDto.extractAccessLevel().toString() + " к файлу " + file.getUrl());
     }
@@ -77,13 +81,14 @@ public class FileAccessController {
             )
     )
     public Response revokeAccess(@RequestParam String fileName, @RequestParam(required = false) String folderUrl, @RequestParam Long collaboratorUserId, @AuthenticationPrincipal User user) {
-        User collaboratorUser = userService.getById(collaboratorUserId);
         File file = fileStorageService.revokeAccessOnFileForUser(
                 user.getId(),
                 fileName,
                 folderUrl,
                 collaboratorUserId
         );
+
+        User collaboratorUser = userSearchService.getUserById(collaboratorUserId);
 
         return new Response("Пользователю " + collaboratorUser.getUsername() + " отключен доступ к файлу " + file.getUrl());
     }

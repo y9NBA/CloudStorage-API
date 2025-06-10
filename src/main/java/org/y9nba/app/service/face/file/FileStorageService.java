@@ -13,12 +13,16 @@ import java.util.Set;
 
 public interface FileStorageService {
     File uploadFile(Long userId, MultipartFile file, String folderURL);
+    Set<File> uploadFolder(Long userId, MultipartFile[] files, String folderName, String[] paths, String folderURL);
     File uploadFileByAccess(Long userId, MultipartFile file, String bucketName, String fileName, String folderURL);
     FileInputStreamWithAccessDto downloadFile(Long userId, String fileName, String folderURL);
+    FileInputStreamWithAccessDto downloadFolder(Long userId, String folderURL);
     FileInputStreamWithAccessDto downloadFileByAccess(Long userId, String bucketName, String fileName, String folderURL);
     File moveFileOnNewUrl(Long userId, String fileName, String newFolderURL, String oldFolderURL);
+    Set<File> moveFolderOnNewUrl(Long userId, String oldFolderURL, String newFolderURL);
     File copyExistingFile(Long userId, String fileName, String folderURL);
     File renameFile(Long userId, String fileName, String newFileName, String folderURL);
+    Set<File> renameFolder(Long userId, String folderURL, String newFolderName);
     File save(FileCreateDto dto);
     File update(FileUpdateDto dto);
     String deleteFile(Long userId, String fileName, String folderURL);
@@ -37,5 +41,6 @@ public interface FileStorageService {
     boolean existsByURL(String url);
     ResponseEntity<InputStreamResource> getResourceForViewByInputStream(FileInputStreamWithAccessDto dto, File file);
     ResponseEntity<InputStreamResource> getResourceForDownloadByInputStream(FileInputStreamWithAccessDto dto, File file);
+    ResponseEntity<InputStreamResource> getResourceForDownloadFolderByInputStream(FileInputStreamWithAccessDto dto, String folderName);
     void refreshFiles(Long userId);
 }
