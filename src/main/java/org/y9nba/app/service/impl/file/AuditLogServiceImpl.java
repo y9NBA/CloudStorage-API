@@ -1,18 +1,13 @@
 package org.y9nba.app.service.impl.file;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
 import org.y9nba.app.constant.Action;
 import org.y9nba.app.dto.auditlog.AuditLogCreateDto;
-import org.y9nba.app.dto.auditlog.AuditLogDto;
 import org.y9nba.app.dao.entity.AuditLog;
 import org.y9nba.app.dao.entity.File;
 import org.y9nba.app.dao.entity.User;
 import org.y9nba.app.dao.repository.AuditLogRepository;
 import org.y9nba.app.service.face.file.AuditLogService;
-
-import java.util.Set;
 
 @Service
 public class AuditLogServiceImpl implements AuditLogService {
@@ -82,30 +77,6 @@ public class AuditLogServiceImpl implements AuditLogService {
     @Override
     public void delete(AuditLog entity) {
         repository.delete(entity);
-    }
-
-    @Override
-    public void deleteById(Long id) {
-        repository.deleteById(id);
-    }
-
-    @Override
-    public AuditLog findById(Long id) {
-        return repository
-                .findById(id)
-                .orElseThrow(
-                        () -> new HttpClientErrorException(HttpStatus.BAD_REQUEST)
-                );
-    }
-
-    @Override
-    public boolean existsById(Long id) {
-        return false;
-    }
-
-    @Override
-    public Set<AuditLogDto> findByUser(Long userId) {
-        return null;
     }
 
     private void saveLog(User user, File file, Action action) {

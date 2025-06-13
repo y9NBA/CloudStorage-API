@@ -58,6 +58,32 @@ spring:
     prefix: classpath:/templates/
     suffix: .html
 
+  cache:
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=30m
+    cache-names:
+        - UserSearchService::getUserById
+        - UserSearchService::getAdminById
+        - UserSearchService::getAllUsers
+        - UserSearchService::getAllActiveUsers
+        - UserSearchService::getAllBannedUsers
+        - UserSearchService::getAllAdmins
+        - UserService::getUserByUsername
+        - UserService::getUserByEmail
+        - UserService::getUserById
+        - FileStorageService::findFileByFullUrl
+        - FileStorageService::findFile
+        - FileStorageService::findByUrl
+        - FileStorageService::findByUserIdAndFolderUrl
+        - FileStorageService::findOwnerByUserId
+        - FileStorageService::findOwnerByUserIdAndFolderUrl
+        - FileStorageService::findOwnerByBucketNameAndFileNameAndFolderUrl
+        - FileAccessService::hasAccess
+        - FileAccessService::findByUserAndFile
+        - FileAccessService::findByUser
+        - FileAccessService::hasAccessOnRead
+        - FileAccessService::hasAccessOnEdit
+
 server:
   servlet:
     context-path: /api/v1/

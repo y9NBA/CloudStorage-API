@@ -2,12 +2,9 @@ package org.y9nba.app.service.face.file;
 
 
 import org.y9nba.app.dto.auditlog.AuditLogCreateDto;
-import org.y9nba.app.dto.auditlog.AuditLogDto;
 import org.y9nba.app.dao.entity.AuditLog;
 import org.y9nba.app.dao.entity.File;
 import org.y9nba.app.dao.entity.User;
-
-import java.util.Set;
 
 public interface AuditLogService {
     AuditLog save(AuditLogCreateDto entity);
@@ -22,8 +19,4 @@ public interface AuditLogService {
     void logMakePublic(User user, File file);
     void logMakePrivate(User user, File file);
     void delete(AuditLog entity);
-    void deleteById(Long id);
-    AuditLog findById(Long id);
-    boolean existsById(Long id);
-    Set<AuditLogDto> findByUser(Long userId);
 }

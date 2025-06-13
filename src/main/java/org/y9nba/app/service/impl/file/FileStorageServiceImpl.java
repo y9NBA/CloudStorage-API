@@ -2,6 +2,8 @@ package org.y9nba.app.service.impl.file;
 
 import jakarta.transaction.Transactional;
 import org.hibernate.Hibernate;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -64,6 +66,16 @@ public class FileStorageServiceImpl implements FileStorageService {
         this.fileUtil = fileUtil;
     }
 
+    @CacheEvict(value = {
+            "FileStorageService::findFileByFullUrl",
+            "FileStorageService::findFile",
+            "FileStorageService::findByUrl",
+            "FileStorageService::findByUserIdAndFolderUrl",
+            "FileStorageService::findOwnerByUserId",
+            "FileStorageService::findOwnerByUserIdAndFolderUrl",
+            "FileStorageService::findOwnerByBucketNameAndFileNameAndFolderUrl"
+
+    }, allEntries = true)
     @Transactional
     @Override
     public File uploadFile(Long userId, MultipartFile file, String folderURL) {
@@ -113,6 +125,16 @@ public class FileStorageServiceImpl implements FileStorageService {
         return uploadedFiles;
     }
 
+    @CacheEvict(value = {
+            "FileStorageService::findFileByFullUrl",
+            "FileStorageService::findFile",
+            "FileStorageService::findByUrl",
+            "FileStorageService::findByUserIdAndFolderUrl",
+            "FileStorageService::findOwnerByUserId",
+            "FileStorageService::findOwnerByUserIdAndFolderUrl",
+            "FileStorageService::findOwnerByBucketNameAndFileNameAndFolderUrl"
+
+    }, allEntries = true)
     @Transactional
     @Override
     public File uploadFileByAccess(Long userId, MultipartFile file, String bucketName, String fileName, String folderURL) {
@@ -274,6 +296,16 @@ public class FileStorageServiceImpl implements FileStorageService {
         return new FileInputStreamWithAccessDto(downloadFileByUserAndFile(author, file), access);
     }
 
+    @CacheEvict(value = {
+            "FileStorageService::findFileByFullUrl",
+            "FileStorageService::findFile",
+            "FileStorageService::findByUrl",
+            "FileStorageService::findByUserIdAndFolderUrl",
+            "FileStorageService::findOwnerByUserId",
+            "FileStorageService::findOwnerByUserIdAndFolderUrl",
+            "FileStorageService::findOwnerByBucketNameAndFileNameAndFolderUrl"
+
+    }, allEntries = true)
     @Transactional
     @Override
     public File moveFileOnNewUrl(Long userId, String fileName, String newFolderURL, String oldFolderURL) {
@@ -302,10 +334,6 @@ public class FileStorageServiceImpl implements FileStorageService {
         String folderName = oldFolderURL.substring(oldFolderURL.lastIndexOf("/") + 1);
         String finalFolderURL = newFolderURL != null ? newFolderURL + "/" + folderName : folderName;
 
-        if (files.isEmpty()) {
-            throw new FolderNotExistException(oldFolderURL);
-        }
-
         if (!findByUserIdAndFolderUrl(userId, newFolderURL).isEmpty()) {
             throw new FolderNewUrlAlreadyException();
         }
@@ -317,6 +345,16 @@ public class FileStorageServiceImpl implements FileStorageService {
                 ).collect(Collectors.toSet());
     }
 
+    @CacheEvict(value = {
+            "FileStorageService::findFileByFullUrl",
+            "FileStorageService::findFile",
+            "FileStorageService::findByUrl",
+            "FileStorageService::findByUserIdAndFolderUrl",
+            "FileStorageService::findOwnerByUserId",
+            "FileStorageService::findOwnerByUserIdAndFolderUrl",
+            "FileStorageService::findOwnerByBucketNameAndFileNameAndFolderUrl"
+
+    }, allEntries = true)
     @Transactional
     @Override
     public File copyExistingFile(Long userId, String fileName, String folderURL) {
@@ -342,6 +380,16 @@ public class FileStorageServiceImpl implements FileStorageService {
         return findById(copyFileId);
     }
 
+    @CacheEvict(value = {
+            "FileStorageService::findFileByFullUrl",
+            "FileStorageService::findFile",
+            "FileStorageService::findByUrl",
+            "FileStorageService::findByUserIdAndFolderUrl",
+            "FileStorageService::findOwnerByUserId",
+            "FileStorageService::findOwnerByUserIdAndFolderUrl",
+            "FileStorageService::findOwnerByBucketNameAndFileNameAndFolderUrl"
+
+    }, allEntries = true)
     @Transactional
     @Override
     public File renameFile(Long userId, String fileName, String newFileName, String folderURL) {
@@ -368,10 +416,6 @@ public class FileStorageServiceImpl implements FileStorageService {
     public Set<File> renameFolder(Long userId, String folderURL, String newFolderName) {
         Set<File> files = findByUserIdAndFolderUrl(userId, folderURL);
         String newFolderURL = folderURL.substring(0, folderURL.lastIndexOf("/") + 1) + newFolderName;
-
-        if (files.isEmpty()) {
-            throw new FolderNotExistException(folderURL);
-        }
 
         if (!findByUserIdAndFolderUrl(userId, newFolderURL).isEmpty()) {
             throw new FolderNewUrlAlreadyException();
@@ -408,11 +452,31 @@ public class FileStorageServiceImpl implements FileStorageService {
         }
     }
 
+    @CacheEvict(value = {
+            "FileStorageService::findFileByFullUrl",
+            "FileStorageService::findFile",
+            "FileStorageService::findByUrl",
+            "FileStorageService::findByUserIdAndFolderUrl",
+            "FileStorageService::findOwnerByUserId",
+            "FileStorageService::findOwnerByUserIdAndFolderUrl",
+            "FileStorageService::findOwnerByBucketNameAndFileNameAndFolderUrl"
+
+    }, allEntries = true)
     @Override
     public File save(FileCreateDto dto) {
         return repository.save(new File(dto));
     }
 
+    @CacheEvict(value = {
+            "FileStorageService::findFileByFullUrl",
+            "FileStorageService::findFile",
+            "FileStorageService::findByUrl",
+            "FileStorageService::findByUserIdAndFolderUrl",
+            "FileStorageService::findOwnerByUserId",
+            "FileStorageService::findOwnerByUserIdAndFolderUrl",
+            "FileStorageService::findOwnerByBucketNameAndFileNameAndFolderUrl"
+
+    }, allEntries = true)
     @Override
     public File update(FileUpdateDto dto) {
         return repository.save(new File(dto));
@@ -462,14 +526,24 @@ public class FileStorageServiceImpl implements FileStorageService {
         String url = createAbsFileURL(userId, fileName, folderURL);
         File file = findByUserIdAndUrl(userId, url);
 
-        if (userId.equals(collaboratorUserId)) {
-            throw new FileAccessIsAuthorAlreadyException();
-        }
-
         return giveAccessOnFileForUser(userService.getById(userId), file, userSearchService.getUserById(collaboratorUserId), access);
     }
 
-    private File giveAccessOnFileForUser(User author, File file, User collaboratorUser, Access access) {
+    @CacheEvict(value = {
+            "FileStorageService::findFileByFullUrl",
+            "FileStorageService::findFile",
+            "FileStorageService::findByUrl",
+            "FileStorageService::findByUserIdAndFolderUrl",
+            "FileStorageService::findOwnerByUserId",
+            "FileStorageService::findOwnerByUserIdAndFolderUrl",
+            "FileStorageService::findOwnerByBucketNameAndFileNameAndFolderUrl"
+
+    }, allEntries = true)
+    public File giveAccessOnFileForUser(User author, File file, User collaboratorUser, Access access) {
+        if (author.getId().equals(collaboratorUser.getId())) {
+            throw new FileAccessIsAuthorAlreadyException();
+        }
+
         if (fileAccessService.existsByUserAndFile(collaboratorUser.getId(), file.getId())) {
             FileAccess faModel = fileAccessService.findByUserAndFile(collaboratorUser.getId(), file.getId());
 
@@ -488,6 +562,16 @@ public class FileStorageServiceImpl implements FileStorageService {
         return findByUrl(file.getUrl());
     }
 
+    @CacheEvict(value = {
+            "FileStorageService::findFileByFullUrl",
+            "FileStorageService::findFile",
+            "FileStorageService::findByUrl",
+            "FileStorageService::findByUserIdAndFolderUrl",
+            "FileStorageService::findOwnerByUserId",
+            "FileStorageService::findOwnerByUserIdAndFolderUrl",
+            "FileStorageService::findOwnerByBucketNameAndFileNameAndFolderUrl"
+
+    }, allEntries = true)
     @Override
     public File revokeAccessOnFileForUser(Long userId, String fileName, String folderURL, Long collaboratorUserId) {
         String url = createAbsFileURL(userId, fileName, folderURL);
@@ -506,6 +590,16 @@ public class FileStorageServiceImpl implements FileStorageService {
         return findByUrl(url);
     }
 
+    @CacheEvict(value = {
+            "FileStorageService::findFileByFullUrl",
+            "FileStorageService::findFile",
+            "FileStorageService::findByUrl",
+            "FileStorageService::findByUserIdAndFolderUrl",
+            "FileStorageService::findOwnerByUserId",
+            "FileStorageService::findOwnerByUserIdAndFolderUrl",
+            "FileStorageService::findOwnerByBucketNameAndFileNameAndFolderUrl"
+
+    }, allEntries = true)
     @Override
     public File revokeAllAccessOnFile(Long userId, String fileName, String folderURL) {
         String url = createAbsFileURL(userId, fileName, folderURL);
@@ -548,7 +642,17 @@ public class FileStorageServiceImpl implements FileStorageService {
         return file;
     }
 
-    private void deleteEntry(File file) {
+    @CacheEvict(value = {
+            "FileStorageService::findFileByFullUrl",
+            "FileStorageService::findFile",
+            "FileStorageService::findByUrl",
+            "FileStorageService::findByUserIdAndFolderUrl",
+            "FileStorageService::findOwnerByUserId",
+            "FileStorageService::findOwnerByUserIdAndFolderUrl",
+            "FileStorageService::findOwnerByBucketNameAndFileNameAndFolderUrl"
+
+    }, allEntries = true)
+    public void deleteEntry(File file) {
         repository.delete(file);
         updateUsedStorageOfUser(file.getUser().getId());
     }
@@ -563,6 +667,7 @@ public class FileStorageServiceImpl implements FileStorageService {
         return repository.getFilesByUser_Id(userId);
     }
 
+    @Cacheable(value = "FileStorageService::findByUserIdAndFolderUrl", key = "#userId + '-' + #folderURL")
     @Override
     public Set<File> findByUserIdAndFolderUrl(Long userId, String folderURL) {
         Set<File> files = repository.getFilesByUser_IdAndUrlContaining(
@@ -577,8 +682,9 @@ public class FileStorageServiceImpl implements FileStorageService {
         return files;
     }
 
+    @Cacheable(value = "FileStorageService::findOwnerByBucketNameAndFileNameAndFolderUrl", key = "#userId" + "-" + "#bucketName" + "-" + "#fileName" + "-" + "#folderURL")
     @Override
-    public File findOwnerByFileId(Long userId, String bucketName, String fileName, String folderURL) {
+    public File findOwnerByBucketNameAndFileNameAndFolderUrl(Long userId, String bucketName, String fileName, String folderURL) {
         File file = findByUrl(createAbsFileURL(bucketName, fileName, folderURL));
 
         if (fileAccessService.hasAccessOnRead(userId, file.getId())) {
@@ -588,6 +694,7 @@ public class FileStorageServiceImpl implements FileStorageService {
         }
     }
 
+    @Cacheable(value = "FileStorageService::findOwnerByUserId", key = "#userId")
     @Override
     public Set<File> findOwnerByUserId(Long userId) {
         Set<FileAccess> fileAccesses = fileAccessService.findByUser(userId);
@@ -598,6 +705,7 @@ public class FileStorageServiceImpl implements FileStorageService {
                 .collect(Collectors.toSet());
     }
 
+    @Cacheable(value = "FileStorageService::findOwnerByUserIdAndFolderUrl", key = "#userId" + "-" + "#folderURL")
     @Override
     public Set<File> findOwnerByUserIdAndFolderUrl(Long userId, String folderURL) {
         Set<FileAccess> fileAccesses = fileAccessService.findByUser(userId);
@@ -630,6 +738,7 @@ public class FileStorageServiceImpl implements FileStorageService {
                 );
     }
 
+    @Cacheable(value = "FileStorageService::findByUrl", key = "#url")
     public File findByUrl(String url) {
         return repository
                 .getFileByUrl(url)
@@ -638,12 +747,14 @@ public class FileStorageServiceImpl implements FileStorageService {
                 );
     }
 
+    @Cacheable(value = "FileStorageService::findFile", key = "#userId + '-' + #fileName" + "-" + "#folderURL")
     @Transactional
     public File findFile(Long userId, String fileName, String folderURL) {
         String url = createAbsFileURL(userId, fileName, folderURL);
         return findByUserIdAndUrl(userId, url);
     }
 
+    @Cacheable(value = "FileStorageService::findFileByFullUrl", key = "#bucketName" + "-" + "#fileName" + "-" + "#folderURL")
     public File findFile(String bucketName, String fileName, String folderURL) {
         String url = createAbsFileURL(bucketName, fileName, folderURL);
         return findByUrl(url);
@@ -691,11 +802,29 @@ public class FileStorageServiceImpl implements FileStorageService {
         try {
             storageService.synchronizeFiles(user.getBucketName(), findByUserId(userId), user);
         } catch (PhysicalFilesAndEntriesNotSyncException e) {
-            e.getFileModelsWithoutPhysicalFile().forEach(this::deleteEntry);
-            e.getFilesWithoutEntryInDB().forEach(fileCreateDto -> createNew(fileCreateDto, user));
-
-            updateUsedStorageOfUser(userId);
+            processingRefreshFiles(
+                    userId,
+                    e.getFileModelsWithoutPhysicalFile(),
+                    e.getFilesWithoutEntryInDB()
+            );
         }
+    }
+
+    @CacheEvict(value = {
+            "FileStorageService::findFileByFullUrl",
+            "FileStorageService::findFile",
+            "FileStorageService::findByUrl",
+            "FileStorageService::findByUserIdAndFolderUrl",
+            "FileStorageService::findOwnerByUserId",
+            "FileStorageService::findOwnerByUserIdAndFolderUrl",
+            "FileStorageService::findOwnerByBucketNameAndFileNameAndFolderUrl"
+
+    }, allEntries = true)
+    public void processingRefreshFiles(Long userId, Set<File> filesWithoutPhysicalFile, Set<FileCreateDto> filesWithoutEntryInDB) {
+        filesWithoutPhysicalFile.forEach(this::deleteEntry);
+        filesWithoutEntryInDB.forEach(fileCreateDto -> createNew(fileCreateDto, userService.getById(userId)));
+
+        updateUsedStorageOfUser(userId);
     }
 
     private String getBucketNameByUserId(Long userId) {

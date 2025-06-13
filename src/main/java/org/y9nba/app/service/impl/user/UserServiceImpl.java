@@ -1,5 +1,7 @@
 package org.y9nba.app.service.impl.user;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.y9nba.app.constant.Role;
 import org.y9nba.app.dto.user.*;
@@ -28,6 +30,19 @@ public class UserServiceImpl implements UserService {
         this.accountInfoService = accountInfoService;
     }
 
+    @CacheEvict(value = {
+            "UserSearchService::getUserById",
+            "UserSearchService::getAdminById",
+            "UserSearchService::getAllUsers",
+            "UserSearchService::getAllActiveUsers",
+            "UserSearchService::getAllBannedUsers",
+            "UserSearchService::getAllAdmins",
+            "UserService::getUserByUsername",
+            "UserService::getUserByEmail",
+            "UserService::getUserById"
+    },
+            allEntries = true
+    )
     @Override
     public User createUser(UserCreateDto dto) {
         String password = dto.getHashPassword();
@@ -48,7 +63,7 @@ public class UserServiceImpl implements UserService {
             );
         }
 
-        return repository.save(model);
+        return save(model);
     }
 
     @Override
@@ -65,7 +80,7 @@ public class UserServiceImpl implements UserService {
 
         model.setPassword(passwordUtil.encode(dto.getNewPassword()));
 
-        repository.save(model);
+        save(model);
     }
 
     @Override
@@ -82,26 +97,53 @@ public class UserServiceImpl implements UserService {
 
         model.setUsername(dto.getUsername());
 
-        repository.save(model);
+        save(model);
     }
 
     @Override
     public void update(Long userId, Long newUsedStorage) {
         User model = getById(userId);
         model.setUsedStorage(newUsedStorage);
-        repository.save(model);
+        save(model);
     }
 
+    @CacheEvict(value = {
+            "UserSearchService::getUserById",
+            "UserSearchService::getAdminById",
+            "UserSearchService::getAllUsers",
+            "UserSearchService::getAllActiveUsers",
+            "UserSearchService::getAllBannedUsers",
+            "UserSearchService::getAllAdmins",
+            "UserService::getUserByUsername",
+            "UserService::getUserByEmail",
+            "UserService::getUserById"
+    },
+            allEntries = true
+    )
     @Override
     public User save(User user) {
         return repository.save(user);
     }
 
+    @CacheEvict(value = {
+            "UserSearchService::getUserById",
+            "UserSearchService::getAdminById",
+            "UserSearchService::getAllUsers",
+            "UserSearchService::getAllActiveUsers",
+            "UserSearchService::getAllBannedUsers",
+            "UserSearchService::getAllAdmins",
+            "UserService::getUserByUsername",
+            "UserService::getUserByEmail",
+            "UserService::getUserById"
+    },
+            allEntries = true
+    )
     @Override
     public void deleteById(Long id) {
         repository.deleteById(id);
     }
 
+    @Cacheable(value = "UserService::getByUsername", key = "#username")
     @Override
     public User getByUsername(String username) {
         return repository
@@ -111,6 +153,7 @@ public class UserServiceImpl implements UserService {
                 );
     }
 
+    @CacheEvict(value = "UserService::getByEmail", key = "#email")
     @Override
     public User getByEmail(String email) {
         return repository
@@ -120,6 +163,7 @@ public class UserServiceImpl implements UserService {
                 );
     }
 
+    @Cacheable(value = "UserService::getById", key = "#id")
     @Override
     public User getById(Long id) {
         return repository

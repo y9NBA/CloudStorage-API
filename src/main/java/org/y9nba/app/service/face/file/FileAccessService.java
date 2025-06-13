@@ -17,10 +17,7 @@ public interface FileAccessService {
     void deleteAllAccessesForFile(Long fileId);
     void deleteAllAccessesReaderForFile(Long fileId);
     void delete(FileAccess entity);
-    void deleteById(Long id);
     void deleteByUserIdAndFileId(Long userId, Long fileId);
-    FileAccess findById(Long id);
     boolean existsByUserAndFile(Long userId, Long fileId);
-    boolean existsById(Long id);
     Set<FileAccess> findByUser(Long userId);
 }

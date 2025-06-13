@@ -1,5 +1,6 @@
 package org.y9nba.app.service.impl.user;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.y9nba.app.constant.Role;
 import org.y9nba.app.dao.entity.User;
@@ -23,6 +24,7 @@ public class UserSearchServiceImpl implements UserSearchService {
         this.repository = repository;
     }
 
+    @Cacheable(value = "UserSearchService::getUserById", key = "#id")
     @Override
     public User getUserById(Long id) {
         return repository
@@ -35,6 +37,7 @@ public class UserSearchServiceImpl implements UserSearchService {
                 );
     }
 
+    @Cacheable(value = "UserSearchService::getAdminById", key = "#id")
     @Override
     public User getAdminById(Long id) {
         return repository
@@ -47,11 +50,13 @@ public class UserSearchServiceImpl implements UserSearchService {
                 );
     }
 
+    @Cacheable(value = "UserSearchService::getAllUsers", key = "{#username, #email, #bucketName, #userId}")
     @Override
     public Set<User> getAllUsers(String username, String email, UUID bucketName, Long userId) {
         return getAllWithFilters(Role.ROLE_USER, username, email, bucketName, userId, false);
     }
 
+    @Cacheable(value = "UserSearchService::getAllActiveUsers", key = "{#username, #email, #bucketName, #userId}")
     @Override
     public Set<User> getAllActiveUsers(String username, String email, UUID bucketName, Long id) {
         return getAllWithFilters(Role.ROLE_USER, username, email, bucketName, id, false)
@@ -60,11 +65,13 @@ public class UserSearchServiceImpl implements UserSearchService {
                 .collect(Collectors.toSet());
     }
 
+    @Cacheable(value = "UserSearchService::getAllBannedUsers", key = "{#username, #email, #bucketName, #userId}")
     @Override
     public Set<User> getAllBannedUsers(String username, String email, UUID bucketName, Long id) {
         return getAllWithFilters(Role.ROLE_USER, username, email, bucketName, id, true);
     }
 
+    @Cacheable(value = "UserSearchService::getAllAdmins", key = "{#username, #email, #bucketName, #userId}")
     @Override
     public Set<User> getAllAdmins(String username, String email, UUID bucketName, Long userId) {
         return getAllWithFilters(Role.ROLE_ADMIN, username, email, bucketName, userId, false);

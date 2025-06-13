@@ -35,7 +35,7 @@ public interface FileStorageService {
     File makeFilePrivate(Long userId, String fileName, String folderURL);
     Set<File> findByUserId(Long userId);
     Set<File> findByUserIdAndFolderUrl(Long userId, String folderURL);
-    File findOwnerByFileId(Long userId, String bucketName, String fileName, String folderURL);
+    File findOwnerByBucketNameAndFileNameAndFolderUrl(Long userId, String bucketName, String fileName, String folderURL);
     Set<File> findOwnerByUserId(Long userId);
     Set<File> findOwnerByUserIdAndFolderUrl(Long userId, String folderURL);
     boolean existsByURL(String url);

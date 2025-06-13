@@ -127,16 +127,6 @@ public class OneTimeTokenServiceImpl implements OneTimeTokenService {
     }
 
     @Override
-    public void revokeOneTimeToken(String token) {
-        repository.findById(
-                jwtService.getOneTimeTokenIdByToken(token)
-        ).ifPresent(t -> {
-            t.setUsed(true);
-            repository.save(t);
-        });
-    }
-
-    @Override
     public void revokeAllOneTimeTokenWithType(Long userId, OneTimeTokenType type) {
         Set<OneTimeToken> tokenModels = repository
                 .findAllByUser_IdAndType(userId, type);
