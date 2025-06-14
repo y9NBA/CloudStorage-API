@@ -31,17 +31,6 @@ public class UserServiceImpl implements UserService {
         this.userValidationService = userValidationService;
     }
 
-    @CacheEvict(value = {
-            "UserSearchService::getUserById",
-            "UserSearchService::getAllUsers",
-            "UserSearchService::getAllActiveUsers",
-            "UserSearchService::getAllBannedUsers",
-            "UserService::getUserByUsername",
-            "UserService::getUserByEmail",
-            "UserService::getUserById"
-    },
-            allEntries = true
-    )
     @Override
     public User createUser(UserCreateDto dto) {
         String password = dto.getHashPassword();
@@ -103,9 +92,9 @@ public class UserServiceImpl implements UserService {
             "UserSearchService::getAllActiveUsers",
             "UserSearchService::getAllBannedUsers",
             "UserSearchService::getAllAdmins",
-            "UserService::getUserByUsername",
-            "UserService::getUserByEmail",
-            "UserService::getUserById"
+            "UserService::getByUsername",
+            "UserService::getByEmail",
+            "UserService::getById"
     },
             allEntries = true
     )
@@ -116,12 +105,14 @@ public class UserServiceImpl implements UserService {
 
     @CacheEvict(value = {
             "UserSearchService::getUserById",
+            "UserSearchService::getAdminById",
             "UserSearchService::getAllUsers",
             "UserSearchService::getAllActiveUsers",
             "UserSearchService::getAllBannedUsers",
-            "UserService::getUserByUsername",
-            "UserService::getUserByEmail",
-            "UserService::getUserById"
+            "UserSearchService::getAllAdmins",
+            "UserService::getByUsername",
+            "UserService::getByEmail",
+            "UserService::getById"
     },
             allEntries = true
     )
