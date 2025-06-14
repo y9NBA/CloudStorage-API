@@ -46,6 +46,7 @@ services:
       - ./infrastructure/db/create-db.sql:/docker-entrypoint-initdb.d/create-db.sql
       - db-data:/var/lib/postgresql/data
       - /etc/localtime:/etc/localtime:ro
+    restart: always
     deploy:
       resources:
         limits:
