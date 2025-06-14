@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import org.y9nba.app.constant.Role;
 import org.y9nba.app.dto.user.*;
 import org.y9nba.app.dto.user.update.*;
-import org.y9nba.app.exception.web.user.info.*;
 import org.y9nba.app.exception.web.user.search.NotFoundUserByEmailException;
 import org.y9nba.app.exception.web.user.search.NotFoundUserByIdException;
 import org.y9nba.app.exception.web.user.search.NotFoundUserByUsernameException;
@@ -23,20 +22,20 @@ public class UserServiceImpl implements UserService {
     private final PasswordUtil passwordUtil;
 
     private final AccountInfoServiceImpl accountInfoService;
+    private final UserValidationServiceImpl userValidationService;
 
-    public UserServiceImpl(UserRepository repository, PasswordUtil passwordUtil, AccountInfoServiceImpl accountInfoService) {
+    public UserServiceImpl(UserRepository repository, PasswordUtil passwordUtil, AccountInfoServiceImpl accountInfoService, UserValidationServiceImpl userValidationService) {
         this.repository = repository;
         this.passwordUtil = passwordUtil;
         this.accountInfoService = accountInfoService;
+        this.userValidationService = userValidationService;
     }
 
     @CacheEvict(value = {
             "UserSearchService::getUserById",
-            "UserSearchService::getAdminById",
             "UserSearchService::getAllUsers",
             "UserSearchService::getAllActiveUsers",
             "UserSearchService::getAllBannedUsers",
-            "UserSearchService::getAllAdmins",
             "UserService::getUserByUsername",
             "UserService::getUserByEmail",
             "UserService::getUserById"
@@ -46,6 +45,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public User createUser(UserCreateDto dto) {
         String password = dto.getHashPassword();
+
+        userValidationService.checkCreateUser(dto.getUsername(), dto.getEmail(), password);
 
         dto.setHashPassword(passwordUtil.encode(password));
 
@@ -70,13 +71,7 @@ public class UserServiceImpl implements UserService {
     public void update(Long userId, UserUpdatePasswordDto dto) {
         User model = getById(userId);
 
-        if (!passwordUtil.matches(dto.getOldPassword(), model.getPassword())) {
-            throw new PasswordIncorrectException();
-        }
-
-        if (passwordUtil.matches(dto.getNewPassword(), model.getPassword())) {
-            throw new PasswordDuplicateException();
-        }
+        userValidationService.checkUpdatePassword(dto.getOldPassword(), dto.getNewPassword(), model.getPassword());
 
         model.setPassword(passwordUtil.encode(dto.getNewPassword()));
 
@@ -87,13 +82,7 @@ public class UserServiceImpl implements UserService {
     public void update(Long userId, UserUpdateUsernameDto dto) {
         User model = getById(userId);
 
-        if (dto.getUsername().equals(model.getUsername())) {
-            throw new UsernameDuplicateException();
-        }
-
-        if (existsByUsername(dto.getUsername())) {
-            throw new UsernameAlreadyException();
-        }
+        userValidationService.checkUpdateUsername(dto.getUsername(), model.getUsername());
 
         model.setUsername(dto.getUsername());
 
@@ -127,11 +116,9 @@ public class UserServiceImpl implements UserService {
 
     @CacheEvict(value = {
             "UserSearchService::getUserById",
-            "UserSearchService::getAdminById",
             "UserSearchService::getAllUsers",
             "UserSearchService::getAllActiveUsers",
             "UserSearchService::getAllBannedUsers",
-            "UserSearchService::getAllAdmins",
             "UserService::getUserByUsername",
             "UserService::getUserByEmail",
             "UserService::getUserById"

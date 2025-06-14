@@ -7,10 +7,10 @@ import org.springframework.stereotype.Component;
 public class PasswordUtil {
     private final PasswordEncoder passwordEncoder;
 
-    private final String ALLOWED_CHARS_UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    private final String ALLOWED_CHARS_LOWER = "abcdefghijklmnopqrstuvwxyz0123456789";
-    private final String ALLOWED_CHARS_NUMBER = "0123456789";
-    private final String ALLOWED_CHARS_SPECIAL = "!@#$%^&*()_+-=[]{}|;':\",./<>?";
+    private final static String ALLOWED_CHARS_UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    private final static String ALLOWED_CHARS_LOWER = "abcdefghijklmnopqrstuvwxyz";
+    private final static String ALLOWED_CHARS_NUMBER = "0123456789";
+    private final static String ALLOWED_CHARS_SPECIAL = "!@#$%^&*()_+-=[]{}|;':\",./<>?";
 
     public PasswordUtil(PasswordEncoder passwordEncoder) {
         this.passwordEncoder = passwordEncoder;

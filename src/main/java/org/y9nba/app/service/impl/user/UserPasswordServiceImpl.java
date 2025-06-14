@@ -4,7 +4,6 @@ import org.springframework.stereotype.Service;
 import org.y9nba.app.dao.entity.User;
 import org.y9nba.app.dto.user.update.UserResetPasswordDto;
 import org.y9nba.app.exception.web.auth.AccountLockedException;
-import org.y9nba.app.exception.web.user.info.PasswordDuplicateException;
 import org.y9nba.app.security.JwtService;
 import org.y9nba.app.service.face.user.UserPasswordService;
 import org.y9nba.app.service.impl.email.ConfirmServiceImpl;
@@ -17,12 +16,14 @@ public class UserPasswordServiceImpl implements UserPasswordService {
     private final ConfirmServiceImpl confirmService;
     private final PasswordUtil passwordUtil;
     private final JwtService jwtService;
+    private final UserValidationServiceImpl userValidationService;
 
-    public UserPasswordServiceImpl(UserServiceImpl userService, ConfirmServiceImpl confirmService, PasswordUtil passwordUtil, JwtService jwtService) {
+    public UserPasswordServiceImpl(UserServiceImpl userService, ConfirmServiceImpl confirmService, PasswordUtil passwordUtil, JwtService jwtService, UserValidationServiceImpl userValidationService) {
         this.userService = userService;
         this.confirmService = confirmService;
         this.passwordUtil = passwordUtil;
         this.jwtService = jwtService;
+        this.userValidationService = userValidationService;
     }
 
     @Override
@@ -45,12 +46,10 @@ public class UserPasswordServiceImpl implements UserPasswordService {
         String res;
 
         if (dto != null) {
-            if (passwordUtil.matches(dto.getNewPassword(), model.getPassword())) {
-                throw new PasswordDuplicateException();
-            } else {
-                encodedPassword = passwordUtil.encode(dto.getNewPassword());
-                res = confirmService.sendResetPasswordInformation(model);
-            }
+            userValidationService.checkResetPassword(dto.getNewPassword(), model.getPassword());
+
+            encodedPassword = passwordUtil.encode(dto.getNewPassword());
+            res = confirmService.sendResetPasswordInformation(model);
         } else {
             String password = passwordUtil.generateRandomPassword(10L);
             encodedPassword = passwordUtil.encode(password);

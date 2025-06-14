@@ -11,26 +11,25 @@ import org.y9nba.app.dto.file.FilePresentDto;
 import org.y9nba.app.exception.web.file.search.NotFoundPublicFileByIdException;
 import org.y9nba.app.service.face.admin.PublicFilesService;
 import org.y9nba.app.service.impl.file.FileStorageServiceImpl;
-import org.y9nba.app.service.impl.user.UserServiceImpl;
-
+import org.y9nba.app.service.impl.user.UserSearchServiceImpl;
 import java.util.Set;
 
 @Service
 public class PublicFilesServiceImpl implements PublicFilesService {
 
-    private final UserServiceImpl userService;
     private final FileRepository fileRepository;
     private final FileStorageServiceImpl fileStorageService;
+    private final UserSearchServiceImpl userSearchService;
 
-    public PublicFilesServiceImpl(UserServiceImpl userService, FileRepository fileRepository, FileStorageServiceImpl fileStorageService) {
-        this.userService = userService;
+    public PublicFilesServiceImpl(FileRepository fileRepository, FileStorageServiceImpl fileStorageService, UserSearchServiceImpl userSearchService) {
         this.fileRepository = fileRepository;
         this.fileStorageService = fileStorageService;
+        this.userSearchService = userSearchService;
     }
 
     @Override
     public Set<File> getPublicFilesByUserId(Long userId) {
-        userService.getById(userId);
+        userSearchService.getUserById(userId);
         return fileRepository.getFilesByUser_IdAndIsPublicTrue(userId);
     }
 

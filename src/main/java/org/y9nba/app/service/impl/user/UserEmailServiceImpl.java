@@ -3,13 +3,9 @@ package org.y9nba.app.service.impl.user;
 import org.springframework.stereotype.Service;
 import org.y9nba.app.dao.entity.User;
 import org.y9nba.app.dto.user.update.UserUpdateEmailDto;
-import org.y9nba.app.exception.web.auth.NotValidEmailException;
-import org.y9nba.app.exception.web.user.info.EmailAlreadyException;
-import org.y9nba.app.exception.web.user.info.EmailDuplicateException;
 import org.y9nba.app.security.JwtService;
 import org.y9nba.app.service.face.user.UserEmailService;
 import org.y9nba.app.service.impl.email.ConfirmServiceImpl;
-import org.y9nba.app.util.StringUtil;
 
 @Service
 public class UserEmailServiceImpl implements UserEmailService {
@@ -17,21 +13,20 @@ public class UserEmailServiceImpl implements UserEmailService {
     private final UserServiceImpl userService;
     private final ConfirmServiceImpl confirmService;
     private final JwtService jwtService;
+    private final UserValidationServiceImpl userValidationService;
 
-    private final StringUtil stringUtil;
-
-    public UserEmailServiceImpl(UserServiceImpl userService, ConfirmServiceImpl confirmService, JwtService jwtService, StringUtil stringUtil) {
+    public UserEmailServiceImpl(UserServiceImpl userService, ConfirmServiceImpl confirmService, JwtService jwtService, UserValidationServiceImpl userValidationService) {
         this.userService = userService;
         this.confirmService = confirmService;
         this.jwtService = jwtService;
-        this.stringUtil = stringUtil;
+        this.userValidationService = userValidationService;
     }
 
     @Override
     public String tryUpdateEmail(Long userId, UserUpdateEmailDto dto) {
         User model = userService.getById(userId);
 
-        checkEmail(model.getEmail(), dto.getEmail());
+        userValidationService.checkUpdateEmail(model.getEmail(), dto.getEmail());
 
         return confirmService.sendUpdateEmailConfirmation(model, dto.getEmail());
     }
@@ -62,25 +57,10 @@ public class UserEmailServiceImpl implements UserEmailService {
     private void updateUserEmail(Long userId, String email) {
         User model = userService.getById(userId);
 
-        checkEmail(model.getEmail(), email);
+        userValidationService.checkUpdateEmail(model.getEmail(), email);
 
         model.setEmail(email);
 
         userService.save(model);
-    }
-
-    private void checkEmail(String email, String newEmail) {
-
-        if (!stringUtil.isValidEmail(newEmail)) {
-            throw new NotValidEmailException();
-        }
-
-        if (newEmail.equals(email)) {
-            throw new EmailDuplicateException();
-        }
-
-        if (userService.existsByEmail(newEmail)) {
-            throw new EmailAlreadyException();
-        }
     }
 }
