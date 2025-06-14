@@ -107,4 +107,4 @@ initializer:
   super_admin:
     username: superadmin
     email: superadmin@cloudstorage.ru
-    password: superadmin
+    password: Superadmin/12345678
