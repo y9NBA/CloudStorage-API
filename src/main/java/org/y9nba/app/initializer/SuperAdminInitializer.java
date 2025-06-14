@@ -9,7 +9,6 @@ import org.y9nba.app.dto.user.UserCreateDto;
 import org.y9nba.app.dao.entity.User;
 import org.y9nba.app.exception.local.IncorrectSuperAdminInitException;
 import org.y9nba.app.service.impl.admin.SuperAdminInitServiceImpl;
-import org.y9nba.app.util.PasswordUtil;
 
 @Component
 @Slf4j

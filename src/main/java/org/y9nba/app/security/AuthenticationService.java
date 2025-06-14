@@ -13,7 +13,6 @@ import org.y9nba.app.dto.auth.TokenResponseDto;
 import org.y9nba.app.dto.auth.LoginRequestDto;
 import org.y9nba.app.dto.auth.RegistrationRequestDto;
 import org.y9nba.app.dto.user.UserCreateDto;
-import org.y9nba.app.exception.web.user.info.email.NotValidEmailException;
 import org.y9nba.app.exception.web.auth.OAuth2GoogleNotUserException;
 import org.y9nba.app.exception.web.auth.UnAuthorizedException;
 import org.y9nba.app.dao.entity.User;
