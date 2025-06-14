@@ -1,4 +1,4 @@
-package org.y9nba.app.exception.web.auth;
+package org.y9nba.app.exception.web.user.info.email;
 
 import org.springframework.http.HttpStatus;
 import org.y9nba.app.exception.web.AbstractException;
@@ -6,6 +6,6 @@ import org.y9nba.app.exception.web.AbstractException;
 public class NotValidEmailException extends AbstractException {
 
     public NotValidEmailException() {
-        super("Не очень похоже на корректный email", HttpStatus.BAD_REQUEST);
+        super("Некорректный адрес электронной почты", HttpStatus.BAD_REQUEST);
     }
 }
