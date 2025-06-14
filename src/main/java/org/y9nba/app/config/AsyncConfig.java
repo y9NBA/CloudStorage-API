@@ -32,15 +32,4 @@ public class AsyncConfig {
         executor.initialize();
         return executor;
     }
-
-    @Bean(name = "fileStorageTaskExecutor")
-    public Executor fileStorageTaskExecutor() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(10);
-        executor.setMaxPoolSize(20);
-        executor.setQueueCapacity(30);
-        executor.setThreadNamePrefix("FileStorageThread-");
-        executor.initialize();
-        return executor;
-    }
 }

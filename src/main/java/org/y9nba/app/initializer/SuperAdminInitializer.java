@@ -7,15 +7,14 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.y9nba.app.dto.user.UserCreateDto;
 import org.y9nba.app.dao.entity.User;
+import org.y9nba.app.exception.local.IncorrectSuperAdminInitException;
 import org.y9nba.app.service.impl.admin.SuperAdminInitServiceImpl;
-import org.y9nba.app.util.PasswordUtil;
 
 @Component
 @Slf4j
 public class SuperAdminInitializer {
 
     private final SuperAdminInitServiceImpl superAdminInitService;
-    private final PasswordUtil passwordUtil;
 
     @Value("${initializer.super_admin.username}")
     private String superAdminUsername;
@@ -24,13 +23,12 @@ public class SuperAdminInitializer {
     @Value("${initializer.super_admin.email}")
     private String superAdminEmail;
 
-    public SuperAdminInitializer(SuperAdminInitServiceImpl superAdminInitService, PasswordUtil passwordUtil) {
+    public SuperAdminInitializer(SuperAdminInitServiceImpl superAdminInitService) {
         this.superAdminInitService = superAdminInitService;
-        this.passwordUtil = passwordUtil;
     }
 
     @EventListener(ApplicationReadyEvent.class)
-    public void initializeSuperAdmin() {
+    public void initializeSuperAdmin() throws IncorrectSuperAdminInitException {
         User superAdmin = superAdminInitService.getSuperAdmin();
 
         if (superAdmin == null) {
@@ -38,17 +36,18 @@ public class SuperAdminInitializer {
                     new UserCreateDto(
                             superAdminUsername,
                             superAdminEmail,
-                            passwordUtil.encode(superAdminPassword)
+                            superAdminPassword
                     )
             );
 
             log.info("Initializing super admin: {}", superAdmin);
         } else {
-            superAdmin.setUsername(superAdminUsername);
-            superAdmin.setEmail(superAdminEmail);
-            superAdmin.setPassword(passwordUtil.encode(superAdminPassword));
-
-            superAdmin = superAdminInitService.updateSuperAdmin(superAdmin);
+            superAdmin = superAdminInitService.updateSuperAdmin(
+                    superAdmin,
+                    superAdminUsername,
+                    superAdminEmail,
+                    superAdminPassword
+            );
 
             log.info("Updating super admin: {}", superAdmin);
         }

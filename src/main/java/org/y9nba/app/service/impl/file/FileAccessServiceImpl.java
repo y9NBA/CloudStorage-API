@@ -1,10 +1,10 @@
 package org.y9nba.app.service.impl.file;
 
 import org.hibernate.Hibernate;
-import org.springframework.http.HttpStatus;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.HttpClientErrorException;
 import org.y9nba.app.constant.Access;
 import org.y9nba.app.dto.fileaccess.FileAccessCreateDto;
 import org.y9nba.app.dto.fileaccess.FileAccessUpdateDto;
@@ -35,24 +35,26 @@ public class FileAccessServiceImpl implements FileAccessService {
         return repository.save(new FileAccess(dto));
     }
 
+    @Cacheable(value = "FileAccessService::hasAccess", key = "#userId + '-' + #fileId + '-' + #accessLevel")
     @Override
     public boolean hasAccess(Long userId, Long fileId, Access accessLevel) {
         FileAccess faModel = findByUserAndFile(userId, fileId);
         return faModel.getAccessLevel().equals(accessLevel);
     }
 
+    @Cacheable(value = "FileAccessService::hasAccessOnRead", key = "#userId + '-' + #fileId")
     @Override
     public boolean hasAccessOnRead(Long userId, Long fileId) {
-        FileAccess faModel = findByUserAndFile(userId, fileId);
-        return faModel.getAccessLevel().equals(Access.ACCESS_READER) || faModel.getAccessLevel().equals(Access.ACCESS_EDITOR);
+        return hasAccess(userId, fileId, Access.ACCESS_READER) || hasAccess(userId, fileId, Access.ACCESS_EDITOR);
     }
 
+    @Cacheable(value = "FileAccessService::hasAccessOnEdit", key = "#userId + '-' + #fileId")
     @Override
     public boolean hasAccessOnEdit(Long userId, Long fileId) {
-        FileAccess faModel = findByUserAndFile(userId, fileId);
-        return faModel.getAccessLevel().equals(Access.ACCESS_EDITOR);
+        return hasAccess(userId, fileId, Access.ACCESS_EDITOR);
     }
 
+    @Cacheable(value = "FileAccessService::findByUserAndFile", key = "#userId + '-' + #fileId")
     @Override
     public FileAccess findByUserAndFile(Long userId, Long fileId) {
         return repository
@@ -62,11 +64,25 @@ public class FileAccessServiceImpl implements FileAccessService {
                 );
     }
 
+    @CacheEvict(value = {
+            "FileAccessService::hasAccess",
+            "FileAccessService::findByUserAndFile",
+            "FileAccessService::findByUser",
+            "FileAccessService::hasAccessOnRead",
+            "FileAccessService::hasAccessOnEdit"
+    })
     @Override
     public void deleteAllAccessesForFile(Long fileId) {
         deleteAll(repository.getFileAccessesByFileId(fileId));
     }
 
+    @CacheEvict(value = {
+            "FileAccessService::hasAccess",
+            "FileAccessService::findByUserAndFile",
+            "FileAccessService::findByUser",
+            "FileAccessService::hasAccessOnRead",
+            "FileAccessService::hasAccessOnEdit"
+    })
     @Override
     public void deleteAllAccessesReaderForFile(Long fileId) {
         deleteAll(
@@ -83,14 +99,16 @@ public class FileAccessServiceImpl implements FileAccessService {
         repository.deleteAll(fileAccesses);
     }
 
+    @CacheEvict(value = {
+            "FileAccessService::hasAccess",
+            "FileAccessService::findByUserAndFile",
+            "FileAccessService::findByUser",
+            "FileAccessService::hasAccessOnRead",
+            "FileAccessService::hasAccessOnEdit"
+    })
     @Override
     public void delete(FileAccess entity) {
         repository.delete(entity);
-    }
-
-    @Override
-    public void deleteById(Long id) {
-        repository.deleteById(id);
     }
 
     @Override
@@ -99,24 +117,11 @@ public class FileAccessServiceImpl implements FileAccessService {
     }
 
     @Override
-    public FileAccess findById(Long id) {
-        return repository
-                .findById(id)
-                .orElseThrow(
-                        () -> new HttpClientErrorException(HttpStatus.BAD_REQUEST)
-                );
-    }
-
-    @Override
     public boolean existsByUserAndFile(Long userId, Long fileId) {
         return repository.existsByUserIdAndFileId(userId, fileId);
     }
 
-    @Override
-    public boolean existsById(Long id) {
-        return false;
-    }
-
+    @Cacheable(value = "FileAccessService::findByUser", key = "#userId")
     @Transactional
     @Override
     public Set<FileAccess> findByUser(Long userId) {

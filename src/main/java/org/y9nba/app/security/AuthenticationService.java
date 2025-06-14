@@ -13,7 +13,6 @@ import org.y9nba.app.dto.auth.TokenResponseDto;
 import org.y9nba.app.dto.auth.LoginRequestDto;
 import org.y9nba.app.dto.auth.RegistrationRequestDto;
 import org.y9nba.app.dto.user.UserCreateDto;
-import org.y9nba.app.exception.web.auth.NotValidEmailException;
 import org.y9nba.app.exception.web.auth.OAuth2GoogleNotUserException;
 import org.y9nba.app.exception.web.auth.UnAuthorizedException;
 import org.y9nba.app.dao.entity.User;
@@ -52,10 +51,6 @@ public class AuthenticationService {
     }
 
     public String register(RegistrationRequestDto registrationRequestDto) {
-
-        if (!stringUtil.isValidEmail(registrationRequestDto.getEmail())) {
-            throw new NotValidEmailException();
-        }
 
         UserCreateDto userCreateDto = new UserCreateDto(
                 registrationRequestDto.getUsername(),

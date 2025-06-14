@@ -11,7 +11,6 @@ public interface OneTimeTokenService {
     String createUpdateEmailToken(User user, String newEmail);
     String createDeleteAccountToken(User user);
     void checkOneTimeToken(String token, OneTimeTokenType type);
-    void revokeOneTimeToken(String token);
     void revokeAllOneTimeTokenWithType(Long userId, OneTimeTokenType type);
     String extractEmailFromToken(String token);
     String extractHashPasswordFromToken(String token);

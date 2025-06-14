@@ -15,10 +15,7 @@ import org.y9nba.app.dto.auth.LoginRequestDto;
 import org.y9nba.app.dto.auth.RegistrationRequestDto;
 import org.y9nba.app.dto.response.ErrorResponse;
 import org.y9nba.app.dto.response.Response;
-import org.y9nba.app.exception.web.user.info.EmailAlreadyException;
-import org.y9nba.app.exception.web.user.info.UsernameAlreadyException;
 import org.y9nba.app.security.AuthenticationService;
-import org.y9nba.app.service.impl.user.UserServiceImpl;
 
 @Tag(
         name = "Authentication Controller",
@@ -29,11 +26,9 @@ import org.y9nba.app.service.impl.user.UserServiceImpl;
 public class AuthController {
 
     private final AuthenticationService authenticationService;
-    private final UserServiceImpl userService;
 
-    public AuthController(AuthenticationService authenticationService, UserServiceImpl userService) {
+    public AuthController(AuthenticationService authenticationService) {
         this.authenticationService = authenticationService;
-        this.userService = userService;
     }
 
     @Operation(
@@ -81,15 +76,6 @@ public class AuthController {
     })
     @PostMapping("/registration")
     public Response register(@RequestBody RegistrationRequestDto registrationDto) {
-
-        if (userService.existsByUsername(registrationDto.getUsername())) {
-            throw new UsernameAlreadyException();
-        }
-
-        if (userService.existsByEmail(registrationDto.getEmail())) {
-            throw new EmailAlreadyException();
-        }
-
         return new Response(authenticationService.register(registrationDto));
     }
 

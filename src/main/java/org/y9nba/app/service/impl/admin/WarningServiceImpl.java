@@ -2,36 +2,32 @@ package org.y9nba.app.service.impl.admin;
 
 import org.springframework.stereotype.Service;
 import org.y9nba.app.constant.Reason;
-import org.y9nba.app.constant.Role;
 import org.y9nba.app.dao.entity.User;
 import org.y9nba.app.dao.entity.Warning;
 import org.y9nba.app.dao.repository.WarningRepository;
-import org.y9nba.app.exception.web.admin.UserIsAdminException;
 import org.y9nba.app.exception.web.admin.UserNotHaveActiveWarningsException;
 import org.y9nba.app.service.face.admin.WarningService;
-import org.y9nba.app.service.impl.user.UserServiceImpl;
+import org.y9nba.app.service.impl.user.UserSearchServiceImpl;
 
 import java.util.Set;
 
 @Service
 public class WarningServiceImpl implements WarningService {
 
-    private final UserServiceImpl userService;
     private final BanServiceImpl banService;
     private final WarningRepository warningRepository;
+    private final UserSearchServiceImpl userSearchService;
 
-    public WarningServiceImpl(UserServiceImpl userService, BanServiceImpl banService, WarningRepository warningRepository) {
-        this.userService = userService;
+    public WarningServiceImpl(BanServiceImpl banService, WarningRepository warningRepository, UserSearchServiceImpl userSearchService) {
         this.banService = banService;
         this.warningRepository = warningRepository;
+        this.userSearchService = userSearchService;
     }
 
     @Override
     public Warning createNewWarning(Long userId, Long adminId, Reason reason) {
-        User user = userService.getById(userId);
-        User admin = userService.getById(adminId);
-
-        checkUser(user);
+        User user = userSearchService.getUserById(userId);
+        User admin = userSearchService.getAdminById(adminId);
 
         Warning warning = new Warning();
 
@@ -50,7 +46,7 @@ public class WarningServiceImpl implements WarningService {
 
     @Override
     public void revokeWarning(Long userId) {
-        User user = userService.getById(userId);
+        User user = userSearchService.getUserById(userId);
 
         Set<Warning> warnings = warningRepository.findAllByUser_IdAndActiveTrue(userId);
 
@@ -69,7 +65,7 @@ public class WarningServiceImpl implements WarningService {
 
     @Override
     public void revokeAllWarnings(Long userId) {
-        User user = userService.getById(userId);
+        User user = userSearchService.getUserById(userId);
 
         Set<Warning> warnings = warningRepository.findAllByUser_IdAndActiveTrue(userId);
 
@@ -90,19 +86,13 @@ public class WarningServiceImpl implements WarningService {
 
     @Override
     public Set<Warning> getAllWarningsByUserId(Long userId) {
-        userService.getById(userId);
+        userSearchService.getUserById(userId);
         return warningRepository.findAllByUser_Id(userId);
     }
 
     @Override
     public Set<Warning> getAllActiveWarningsByUserId(Long userId) {
-        userService.getById(userId);
+        userSearchService.getUserById(userId);
         return warningRepository.findAllByUser_IdAndActiveTrue(userId);
-    }
-
-    private void checkUser(User user) {
-        if (user.getRole().equals(Role.ROLE_ADMIN)) {
-            throw new UserIsAdminException();
-        }
     }
 }

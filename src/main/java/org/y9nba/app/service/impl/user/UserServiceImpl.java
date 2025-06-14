@@ -1,10 +1,11 @@
 package org.y9nba.app.service.impl.user;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.y9nba.app.constant.Role;
 import org.y9nba.app.dto.user.*;
 import org.y9nba.app.dto.user.update.*;
-import org.y9nba.app.exception.web.user.info.*;
 import org.y9nba.app.exception.web.user.search.NotFoundUserByEmailException;
 import org.y9nba.app.exception.web.user.search.NotFoundUserByIdException;
 import org.y9nba.app.exception.web.user.search.NotFoundUserByUsernameException;
@@ -21,16 +22,31 @@ public class UserServiceImpl implements UserService {
     private final PasswordUtil passwordUtil;
 
     private final AccountInfoServiceImpl accountInfoService;
+    private final UserValidationServiceImpl userValidationService;
 
-    public UserServiceImpl(UserRepository repository, PasswordUtil passwordUtil, AccountInfoServiceImpl accountInfoService) {
+    public UserServiceImpl(UserRepository repository, PasswordUtil passwordUtil, AccountInfoServiceImpl accountInfoService, UserValidationServiceImpl userValidationService) {
         this.repository = repository;
         this.passwordUtil = passwordUtil;
         this.accountInfoService = accountInfoService;
+        this.userValidationService = userValidationService;
     }
 
+    @CacheEvict(value = {
+            "UserSearchService::getUserById",
+            "UserSearchService::getAllUsers",
+            "UserSearchService::getAllActiveUsers",
+            "UserSearchService::getAllBannedUsers",
+            "UserService::getUserByUsername",
+            "UserService::getUserByEmail",
+            "UserService::getUserById"
+    },
+            allEntries = true
+    )
     @Override
     public User createUser(UserCreateDto dto) {
         String password = dto.getHashPassword();
+
+        userValidationService.checkCreateUser(dto.getUsername(), dto.getEmail(), password);
 
         dto.setHashPassword(passwordUtil.encode(password));
 
@@ -48,60 +64,73 @@ public class UserServiceImpl implements UserService {
             );
         }
 
-        return repository.save(model);
+        return save(model);
     }
 
     @Override
     public void update(Long userId, UserUpdatePasswordDto dto) {
         User model = getById(userId);
 
-        if (!passwordUtil.matches(dto.getOldPassword(), model.getPassword())) {
-            throw new PasswordIncorrectException();
-        }
-
-        if (passwordUtil.matches(dto.getNewPassword(), model.getPassword())) {
-            throw new PasswordDuplicateException();
-        }
+        userValidationService.checkUpdatePassword(dto.getOldPassword(), dto.getNewPassword(), model.getPassword());
 
         model.setPassword(passwordUtil.encode(dto.getNewPassword()));
 
-        repository.save(model);
+        save(model);
     }
 
     @Override
     public void update(Long userId, UserUpdateUsernameDto dto) {
         User model = getById(userId);
 
-        if (dto.getUsername().equals(model.getUsername())) {
-            throw new UsernameDuplicateException();
-        }
-
-        if (existsByUsername(dto.getUsername())) {
-            throw new UsernameAlreadyException();
-        }
+        userValidationService.checkUpdateUsername(dto.getUsername(), model.getUsername());
 
         model.setUsername(dto.getUsername());
 
-        repository.save(model);
+        save(model);
     }
 
     @Override
     public void update(Long userId, Long newUsedStorage) {
         User model = getById(userId);
         model.setUsedStorage(newUsedStorage);
-        repository.save(model);
+        save(model);
     }
 
+    @CacheEvict(value = {
+            "UserSearchService::getUserById",
+            "UserSearchService::getAdminById",
+            "UserSearchService::getAllUsers",
+            "UserSearchService::getAllActiveUsers",
+            "UserSearchService::getAllBannedUsers",
+            "UserSearchService::getAllAdmins",
+            "UserService::getUserByUsername",
+            "UserService::getUserByEmail",
+            "UserService::getUserById"
+    },
+            allEntries = true
+    )
     @Override
     public User save(User user) {
         return repository.save(user);
     }
 
+    @CacheEvict(value = {
+            "UserSearchService::getUserById",
+            "UserSearchService::getAllUsers",
+            "UserSearchService::getAllActiveUsers",
+            "UserSearchService::getAllBannedUsers",
+            "UserService::getUserByUsername",
+            "UserService::getUserByEmail",
+            "UserService::getUserById"
+    },
+            allEntries = true
+    )
     @Override
     public void deleteById(Long id) {
         repository.deleteById(id);
     }
 
+    @Cacheable(value = "UserService::getByUsername", key = "#username")
     @Override
     public User getByUsername(String username) {
         return repository
@@ -111,6 +140,7 @@ public class UserServiceImpl implements UserService {
                 );
     }
 
+    @CacheEvict(value = "UserService::getByEmail", key = "#email")
     @Override
     public User getByEmail(String email) {
         return repository
@@ -120,6 +150,7 @@ public class UserServiceImpl implements UserService {
                 );
     }
 
+    @Cacheable(value = "UserService::getById", key = "#id")
     @Override
     public User getById(Long id) {
         return repository

@@ -130,6 +130,6 @@ public class FileSharedController {
             )
     )
     public FileDto getOwnerFile(@RequestParam String bucketName, @RequestParam String fileName, @RequestParam(required = false) String folderUrl, @AuthenticationPrincipal User user) {
-        return new FileDto(fileStorageService.findOwnerByFileId(user.getId(), bucketName, fileName, folderUrl));
+        return new FileDto(fileStorageService.findOwnerByBucketNameAndFileNameAndFolderUrl(user.getId(), bucketName, fileName, folderUrl));
     }
 }

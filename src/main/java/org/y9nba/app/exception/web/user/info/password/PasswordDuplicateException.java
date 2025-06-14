@@ -1,4 +1,4 @@
-package org.y9nba.app.exception.web.user.info;
+package org.y9nba.app.exception.web.user.info.password;
 
 import org.springframework.http.HttpStatus;
 import org.y9nba.app.exception.web.AbstractException;
