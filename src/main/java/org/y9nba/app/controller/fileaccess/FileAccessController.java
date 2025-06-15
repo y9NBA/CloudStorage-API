@@ -15,7 +15,6 @@ import org.y9nba.app.dao.entity.File;
 import org.y9nba.app.dao.entity.User;
 import org.y9nba.app.service.impl.file.FileStorageServiceImpl;
 import org.y9nba.app.service.impl.user.UserSearchServiceImpl;
-import org.y9nba.app.service.impl.user.UserServiceImpl;
 
 @Tag(
         name = "File Access Controller",
@@ -37,12 +36,10 @@ import org.y9nba.app.service.impl.user.UserServiceImpl;
 public class FileAccessController {
 
     private final FileStorageServiceImpl fileStorageService;
-    private final UserServiceImpl userService;
     private final UserSearchServiceImpl userSearchService;
 
-    public FileAccessController(FileStorageServiceImpl fileStorageService, UserServiceImpl userService, UserSearchServiceImpl userSearchService) {
+    public FileAccessController(FileStorageServiceImpl fileStorageService, UserSearchServiceImpl userSearchService) {
         this.fileStorageService = fileStorageService;
-        this.userService = userService;
         this.userSearchService = userSearchService;
     }
 
