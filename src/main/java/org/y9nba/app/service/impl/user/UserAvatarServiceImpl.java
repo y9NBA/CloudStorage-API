@@ -37,10 +37,10 @@ public class UserAvatarServiceImpl implements UserAvatarService {
 
     private final MinioServiceImpl minioService;
 
-    private final String baseUrl = "/user/search/avatar/";
-    private final String bucketName = "static";
-    private final int targetWidth = 1024;
-    private final int targetHeight = 1024;
+    private final static String baseUrl = "/user/search/avatar/";
+    private final static String bucketName = "static";
+    private final static int targetWidth = 1024;
+    private final static int targetHeight = 1024;
 
     public UserAvatarServiceImpl(UserRepository userRepository, MinioClient minioClient, MinioServiceImpl minioService) {
         this.minioClient = minioClient;
