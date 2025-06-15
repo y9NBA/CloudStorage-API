@@ -27,8 +27,8 @@ import org.y9nba.app.dao.entity.File;
 import org.y9nba.app.dao.entity.User;
 import org.y9nba.app.service.impl.file.FileStorageServiceImpl;
 
-import java.time.LocalDateTime;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Tag(
         name = "File Storage Controller",
@@ -93,31 +93,45 @@ public class FileStorageController {
         return new FileDto(fileStorageService.findFile(user.getId(), fileName, folderUrl));
     }
 
-    @GetMapping(path = "/my-files/folder")
+    @GetMapping(path = "/my-folders")
+    @Operation(summary = "Получить список всех папок")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Список папок и подкаталогов, в которых есть файлы",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = String.class)
+            )
+    )
+    public Set<String> getListFolders(@AuthenticationPrincipal User user) {
+        Set<FilePresentDto> filePresentDtos = GeneralMapper.toFilePresentDto(
+                fileStorageService.findByUserId(user.getId())
+        );
+
+        return filePresentDtos.stream().map(FilePresentDto::getFolderURL).collect(Collectors.toSet());
+    }
+
+    @GetMapping(path = "/my-folders/folder")
     @Operation(summary = "Получить информацию о папке")
     @ApiResponse(
             responseCode = "200",
             description = "Полная информация о папке",
             content = @Content(
                     mediaType = "application/json",
-                    schema = @Schema(implementation = FileDto.class)
+                    schema = @Schema(implementation = FolderDataDto.class)
             )
     )
-    public FolderDataDto getFolder(@RequestParam String folderUrl, @AuthenticationPrincipal User user) {
-        Set<File> files = fileStorageService.findByUserIdAndFolderUrl(user.getId(), folderUrl);
-        return new FolderDataDto(
-                folderUrl,
-                files.size(),
-                files
-                        .stream()
-                        .mapToLong(File::getFileSize)
-                        .sum(),
-                files
-                        .stream()
-                        .map(File::getUpdatedAt)
-                        .max(LocalDateTime::compareTo)
-                        .orElse(LocalDateTime.now())
-        );
+    public FolderDataDto getFolder(@RequestParam(required = false) String folderUrl, @AuthenticationPrincipal User user) {
+        Set<File> files;
+
+        if (folderUrl != null) {
+            files = fileStorageService.findByUserIdAndFolderUrl(user.getId(), folderUrl);
+        } else {
+            folderUrl = "";
+            files = fileStorageService.findByUserId(user.getId());
+        }
+
+        return new FolderDataDto(folderUrl, files);
     }
 
     @PostMapping(path = "/upload/file", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
