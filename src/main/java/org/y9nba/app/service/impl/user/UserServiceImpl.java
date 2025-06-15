@@ -150,14 +150,4 @@ public class UserServiceImpl implements UserService {
                         () -> new NotFoundUserByIdException(id)
                 );
     }
-
-    @Override
-    public boolean existsByUsername(String username) {
-        return repository.existsByUsername(username);
-    }
-
-    @Override
-    public boolean existsByEmail(String email) {
-        return repository.existsByEmail(email);
-    }
 }
