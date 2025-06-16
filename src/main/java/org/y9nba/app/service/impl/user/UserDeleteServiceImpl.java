@@ -13,11 +13,13 @@ public class UserDeleteServiceImpl implements UserDeleteService {
     private final UserServiceImpl userService;
     private final ConfirmServiceImpl confirmService;
     private final FileStorageServiceImpl fileStorageService;
+    private final UserAvatarServiceImpl userAvatarService;
 
-    public UserDeleteServiceImpl(UserServiceImpl userService, ConfirmServiceImpl confirmService, FileStorageServiceImpl fileStorageService) {
+    public UserDeleteServiceImpl(UserServiceImpl userService, ConfirmServiceImpl confirmService, FileStorageServiceImpl fileStorageService, UserAvatarServiceImpl userAvatarService) {
         this.userService = userService;
         this.confirmService = confirmService;
         this.fileStorageService = fileStorageService;
+        this.userAvatarService = userAvatarService;
     }
 
     @Override
@@ -34,6 +36,10 @@ public class UserDeleteServiceImpl implements UserDeleteService {
 
         if (user.getRole().equals(Role.ROLE_USER)) {
             fileStorageService.deleteAllFilesByDeletedUserId(userId);
+        }
+
+        if (user.getAvatarUrl() != null) {
+            userAvatarService.deleteAvatar(user);
         }
 
         userService.deleteById(user.getId());
