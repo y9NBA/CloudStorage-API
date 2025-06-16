@@ -7,11 +7,7 @@ import java.io.IOException;
 
 @Getter
 public class PhysicalFileOnUrlAlreadyException extends IOException {
-    private FileCreateDto fileCreateDto;
-
-    public PhysicalFileOnUrlAlreadyException(String message) {
-        super(message);
-    }
+    private final FileCreateDto fileCreateDto;
 
     public PhysicalFileOnUrlAlreadyException(String message, FileCreateDto fileCreateDto) {
         super(message);

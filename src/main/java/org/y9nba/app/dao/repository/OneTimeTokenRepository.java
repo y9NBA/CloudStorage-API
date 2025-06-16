@@ -13,6 +13,5 @@ import java.util.UUID;
 public interface OneTimeTokenRepository extends JpaRepository<OneTimeToken, UUID> {
 
     Optional<OneTimeToken> findByIdAndUser_IdAndType(UUID id, Long userId, OneTimeTokenType type);
-    Set<OneTimeToken> findAllByUser_Id(Long userId);
     Set<OneTimeToken> findAllByUser_IdAndType(Long userId, OneTimeTokenType type);
 }

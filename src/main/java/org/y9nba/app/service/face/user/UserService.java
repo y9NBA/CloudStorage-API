@@ -15,7 +15,5 @@ public interface UserService {
     User getByUsername(String username);
     User getByEmail(String email);
     User getById(Long id);
-    boolean existsByUsername(String username);
-    boolean existsByEmail(String email);
 }
 

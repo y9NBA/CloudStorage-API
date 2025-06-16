@@ -34,6 +34,6 @@ public class UserCleanServiceImpl implements UserCleanService {
         Set<OneTimeToken> oneTimeTokens = user.getOneTimeTokens();
         return oneTimeTokens.stream()
                 .filter(token -> token.getType() == OneTimeTokenType.ACTIVATION)
-                .anyMatch(token -> !token.isUsed() && !token.isExpired());
+                .anyMatch(token -> !token.isUsed() && token.isExpired());
     }
 }
