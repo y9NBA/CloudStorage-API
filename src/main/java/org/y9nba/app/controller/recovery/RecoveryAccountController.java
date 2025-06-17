@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -40,7 +41,7 @@ public class RecoveryAccountController {
                     schema = @Schema(implementation = Response.class)
             )
     )
-    public Response activateUser (@RequestBody UserEmailRequestDto dto) {
+    public Response activateUser (@RequestBody @Validated UserEmailRequestDto dto) {
         return new Response(userActivationService.resendActivationByEmail(dto.getEmail()));
     }
 
@@ -54,7 +55,7 @@ public class RecoveryAccountController {
                     schema = @Schema(implementation = Response.class)
             )
     )
-    public Response resetPassword(@RequestBody UserEmailRequestDto dto) {
+    public Response resetPassword(@RequestBody @Validated UserEmailRequestDto dto) {
         return new Response(userPasswordService.resetPasswordByEmail(dto.getEmail()));
     }
 }

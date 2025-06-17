@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.simpleframework.xml.core.Validate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.y9nba.app.dto.fileaccess.FileAccessGiveRequestDto;
@@ -33,6 +34,7 @@ import org.y9nba.app.service.impl.user.UserSearchServiceImpl;
                 )
         )
 })
+@Validate
 public class FileAccessController {
 
     private final FileStorageServiceImpl fileStorageService;

@@ -7,9 +7,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.simpleframework.xml.core.Validate;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.y9nba.app.dto.response.Response;
@@ -88,7 +90,7 @@ public class UserUpdateController {
     })
 
     @PutMapping("/password")
-    public Response updatePassword(@AuthenticationPrincipal User user, @RequestBody UserUpdatePasswordDto dto) {
+    public Response updatePassword(@AuthenticationPrincipal User user, @RequestBody @Validated UserUpdatePasswordDto dto) {
         userService.update(user.getId(), dto);
         return new Response("Пароль успешно обновлен");
     }
@@ -124,7 +126,7 @@ public class UserUpdateController {
                     ))
     })
     @PutMapping("/email")
-    public Response updateEmail(@AuthenticationPrincipal User user, @RequestBody UserUpdateEmailDto dto) {
+    public Response updateEmail(@AuthenticationPrincipal User user, @RequestBody @Validated UserUpdateEmailDto dto) {
         String res = userEmailService.tryUpdateEmail(user.getId(), dto);
         return new Response(res);
     }
@@ -160,7 +162,7 @@ public class UserUpdateController {
                     ))
     })
     @PutMapping("/username")
-    public Response updateUsername(@AuthenticationPrincipal User user, @RequestBody UserUpdateUsernameDto dto) {
+    public Response updateUsername(@AuthenticationPrincipal User user, @RequestBody @Validated UserUpdateUsernameDto dto) {
         userService.update(user.getId(), dto);
         return new Response("Username успешно обновлен на: " + dto.getUsername());
     }
@@ -194,7 +196,7 @@ public class UserUpdateController {
                     ))
     })
     @PutMapping("/all")
-    public Response updateUser(@AuthenticationPrincipal User user, @RequestBody UserUpdateDto dto) {
+    public Response updateUser(@AuthenticationPrincipal User user, @RequestBody @Validated UserUpdateDto dto) {
         userService.update(
                 user.getId(),
                 new UserUpdatePasswordDto(

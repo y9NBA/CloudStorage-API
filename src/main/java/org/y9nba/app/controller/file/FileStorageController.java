@@ -21,7 +21,6 @@ import org.y9nba.app.dto.file.FileInputStreamWithAccessDto;
 import org.y9nba.app.dto.file.FilePresentDto;
 import org.y9nba.app.dto.file.FolderDataDto;
 import org.y9nba.app.dto.response.Response;
-import org.y9nba.app.exception.web.file.FileInRequestIsEmptyException;
 import org.y9nba.app.mapper.GeneralMapper;
 import org.y9nba.app.dao.entity.File;
 import org.y9nba.app.dao.entity.User;
@@ -158,10 +157,6 @@ public class FileStorageController {
             @RequestPart(value = "file") @NotNull MultipartFile file,
             @RequestParam(required = false) @Size(max = 255) String folderUrl,
             @AuthenticationPrincipal User user) {
-
-        if (file.isEmpty()) {
-            throw new FileInRequestIsEmptyException();
-        }
 
         return new FilePresentDto(fileStorageService.uploadFile(user.getId(), file, folderUrl));
     }

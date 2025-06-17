@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.y9nba.app.dto.auth.TokenResponseDto;
 import org.y9nba.app.dto.auth.LoginRequestDto;
@@ -75,7 +76,7 @@ public class AuthController {
                     ))
     })
     @PostMapping("/registration")
-    public Response register(@RequestBody RegistrationRequestDto registrationDto) {
+    public Response register(@RequestBody @Validated RegistrationRequestDto registrationDto) {
         return new Response(authenticationService.register(registrationDto));
     }
 
@@ -116,7 +117,7 @@ public class AuthController {
             )
     })
     @PostMapping("/login")
-    public TokenResponseDto authenticate(@RequestBody LoginRequestDto loginRequestDto, HttpServletRequest request) {
+    public TokenResponseDto authenticate(@RequestBody @Validated LoginRequestDto loginRequestDto, HttpServletRequest request) {
         return authenticationService.authenticate(loginRequestDto, request);
     }
 

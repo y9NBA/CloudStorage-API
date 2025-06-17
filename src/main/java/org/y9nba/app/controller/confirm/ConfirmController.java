@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.y9nba.app.dto.response.Response;
 import org.y9nba.app.dto.user.update.UserResetPasswordDto;
@@ -116,7 +117,7 @@ public class ConfirmController {
                     schema = @Schema(implementation = Response.class)
             )
     )
-    public Response resetPassword(@RequestParam(name = "key") String resetPasswordToken, @RequestBody UserResetPasswordDto dto) {
+    public Response resetPassword(@RequestParam(name = "key") String resetPasswordToken, @RequestBody @Validated UserResetPasswordDto dto) {
         Long userId = oneTimeTokenService.getUserIdByOneTimeToken(resetPasswordToken);
         return new Response(userPasswordService.resetPassword(userId, dto, resetPasswordToken));
     }
