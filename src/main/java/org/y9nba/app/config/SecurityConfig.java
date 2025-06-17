@@ -96,7 +96,7 @@ public class SecurityConfig {
                                     "/storage/**",
                                     "/access/**",
                                     "/user/search/**"
-                            ).hasAnyAuthority("MANIPULATE_STORAGE");
+                            ).hasAuthority("MANIPULATE_STORAGE");
 
                             auth.anyRequest().authenticated();
                         }

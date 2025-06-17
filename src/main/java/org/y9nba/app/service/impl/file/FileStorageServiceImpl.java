@@ -677,7 +677,7 @@ public class FileStorageServiceImpl implements FileStorageService {
         return repository.getFilesByUser_Id(userId);
     }
 
-    @Cacheable(value = "FileStorageService::findByUserIdAndFolderUrl", key = "#userId + '-' + #folderURL")
+    @Cacheable(value = "FileStorageService::findByUserIdAndFolderUrl", key = "{#userId, #url}")
     @Override
     public Set<File> findByUserIdAndFolderUrl(Long userId, String folderURL) {
         Set<File> files = repository.getFilesByUser_IdAndUrlContaining(
@@ -692,7 +692,7 @@ public class FileStorageServiceImpl implements FileStorageService {
         return files;
     }
 
-    @Cacheable(value = "FileStorageService::findOwnerByBucketNameAndFileNameAndFolderUrl", key = "#userId" + "-" + "#bucketName" + "-" + "#fileName" + "-" + "#folderURL")
+    @Cacheable(value = "FileStorageService::findOwnerByBucketNameAndFileNameAndFolderUrl", key = "{#userId, #bucketName, #fileName, #folderURL}")
     @Override
     public File findOwnerByBucketNameAndFileNameAndFolderUrl(Long userId, String bucketName, String fileName, String folderURL) {
         File file = findByUrl(createAbsFileURL(bucketName, fileName, folderURL));
@@ -715,7 +715,7 @@ public class FileStorageServiceImpl implements FileStorageService {
                 .collect(Collectors.toSet());
     }
 
-    @Cacheable(value = "FileStorageService::findOwnerByUserIdAndFolderUrl", key = "#userId" + "-" + "#folderURL")
+    @Cacheable(value = "FileStorageService::findOwnerByUserIdAndFolderUrl", key = "{#userId, #folderURL}")
     @Override
     public Set<File> findOwnerByUserIdAndFolderUrl(Long userId, String folderURL) {
         Set<FileAccess> fileAccesses = fileAccessService.findByUser(userId);
@@ -757,14 +757,14 @@ public class FileStorageServiceImpl implements FileStorageService {
                 );
     }
 
-    @Cacheable(value = "FileStorageService::findFile", key = "#userId + '-' + #fileName" + "-" + "#folderURL")
+    @Cacheable(value = "FileStorageService::findFile", key = "{#userId, #fileName, #folderURL}")
     @Transactional
     public File findFile(Long userId, String fileName, String folderURL) {
         String url = createAbsFileURL(userId, fileName, folderURL);
         return findByUserIdAndUrl(userId, url);
     }
 
-    @Cacheable(value = "FileStorageService::findFileByFullUrl", key = "#bucketName" + "-" + "#fileName" + "-" + "#folderURL")
+    @Cacheable(value = "FileStorageService::findFileByFullUrl", key = "{#bucketName, #fileName, #folderURL}")
     public File findFile(String bucketName, String fileName, String folderURL) {
         String url = createAbsFileURL(bucketName, fileName, folderURL);
         return findByUrl(url);

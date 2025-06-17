@@ -56,7 +56,7 @@ public class UserSearchServiceImpl implements UserSearchService {
         return getAllWithFilters(Role.ROLE_USER, username, email, bucketName, userId, false);
     }
 
-    @Cacheable(value = "UserSearchService::getAllActiveUsers", key = "{#username, #email, #bucketName, #userId}")
+    @Cacheable(value = "UserSearchService::getAllActiveUsers", key = "{#username, #email, #bucketName, #id}")
     @Override
     public Set<User> getAllActiveUsers(String username, String email, UUID bucketName, Long id) {
         return getAllWithFilters(Role.ROLE_USER, username, email, bucketName, id, false)
@@ -65,7 +65,7 @@ public class UserSearchServiceImpl implements UserSearchService {
                 .collect(Collectors.toSet());
     }
 
-    @Cacheable(value = "UserSearchService::getAllBannedUsers", key = "{#username, #email, #bucketName, #userId}")
+    @Cacheable(value = "UserSearchService::getAllBannedUsers", key = "{#username, #email, #bucketName, #id}")
     @Override
     public Set<User> getAllBannedUsers(String username, String email, UUID bucketName, Long id) {
         return getAllWithFilters(Role.ROLE_USER, username, email, bucketName, id, true);
