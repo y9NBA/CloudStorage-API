@@ -7,6 +7,11 @@ spring:
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
+    hikari:
+      max-lifetime: 300000
+      idle-timeout: 600000
+      validation-timeout: 5000
+      connection-test-query: SELECT 1
 
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml

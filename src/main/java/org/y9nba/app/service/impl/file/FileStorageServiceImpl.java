@@ -20,9 +20,7 @@ import org.y9nba.app.exception.local.NotPhysicalFileException;
 import org.y9nba.app.exception.local.PhysicalFileOnUrlAlreadyException;
 import org.y9nba.app.exception.local.PhysicalFilesAndEntriesNotSyncException;
 import org.y9nba.app.exception.web.file.*;
-import org.y9nba.app.exception.web.file.access.FileAccessAlreadyException;
-import org.y9nba.app.exception.web.file.access.FileAccessDeniedException;
-import org.y9nba.app.exception.web.file.access.FileAccessIsAuthorAlreadyException;
+import org.y9nba.app.exception.web.file.access.*;
 import org.y9nba.app.exception.web.file.search.NotFoundFileByIdException;
 import org.y9nba.app.exception.web.file.search.NotFoundFileByURLException;
 import org.y9nba.app.exception.web.user.UserNotEnoughMemoryException;
@@ -82,6 +80,10 @@ public class FileStorageServiceImpl implements FileStorageService {
         User user = userService.getById(userId);
         String url = createAbsFileURL(userId, file.getOriginalFilename(), folderURL);
         Long fileId;
+
+        if (file.isEmpty()) {
+            throw new FileInRequestIsEmptyException();
+        }
 
         if (repository.existsByUrl(url)) {
             fileId =
@@ -617,6 +619,10 @@ public class FileStorageServiceImpl implements FileStorageService {
         String url = createAbsFileURL(userId, fileName, folderURL);
         FileUpdateDto fileUpdateDto = new FileUpdateDto(findByUserIdAndUrl(userId, url));
 
+        if (fileUpdateDto.getIsPublic()) {
+            throw new FileAccessPublicAlreadyException(url);
+        }
+
         fileUpdateDto.makePublic();
 
         File file = update(fileUpdateDto);
@@ -630,6 +636,10 @@ public class FileStorageServiceImpl implements FileStorageService {
     public File makeFilePrivate(Long userId, String fileName, String folderURL) {
         String url = createAbsFileURL(userId, fileName, folderURL);
         FileUpdateDto fileUpdateDto = new FileUpdateDto(findByUserIdAndUrl(userId, url));
+
+        if (!fileUpdateDto.getIsPublic()) {
+            throw new FileAccessPrivateAlreadyException(url);
+        }
 
         fileUpdateDto.makePrivate();
 

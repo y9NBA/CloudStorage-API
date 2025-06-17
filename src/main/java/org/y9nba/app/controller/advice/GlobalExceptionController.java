@@ -1,7 +1,9 @@
 package org.y9nba.app.controller.advice;
 
+import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import io.swagger.v3.oas.annotations.Hidden;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -10,13 +12,18 @@ import org.springframework.security.authentication.InternalAuthenticationService
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.y9nba.app.dto.response.ErrorResponse;
+import org.y9nba.app.dto.response.ErrorResponseExt;
 import org.y9nba.app.exception.web.AbstractException;
+
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Hidden
 @ControllerAdvice
@@ -25,6 +32,34 @@ public class GlobalExceptionController {
     @ExceptionHandler(AbstractException.class)
     public ResponseEntity<ErrorResponse> catchAbstractException(AbstractException e) {
         return new ResponseEntity<>(new ErrorResponse(e), e.getStatusCode());
+    }
+
+    @ExceptionHandler(UnrecognizedPropertyException.class)
+    public ResponseEntity<ErrorResponse> handleUnrecognizedPropertyException(UnrecognizedPropertyException ex) {
+        return new ResponseEntity<>(
+                new ErrorResponse(
+                        "Неизвестное поле: " + ex.getPropertyName(),
+                        HttpStatus.BAD_REQUEST.value()
+                ),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponseExt> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        Set<String> errors = ex.getBindingResult()
+                .getAllErrors()
+                .stream()
+                .map(DefaultMessageSourceResolvable::getDefaultMessage)
+                .collect(Collectors.toSet());
+        return new ResponseEntity<>(
+                new ErrorResponseExt(
+                        "Неверные данные запроса",
+                        errors,
+                        HttpStatus.BAD_REQUEST.value()
+                ),
+                HttpStatus.BAD_REQUEST
+        );
     }
 
     @ExceptionHandler(MissingServletRequestPartException.class)
