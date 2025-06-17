@@ -51,30 +51,10 @@ services:
       resources:
         limits:
           cpus: '0.25'
-          memory: '512M'
+          memory: '1G'
         reservations:
           cpus: '0.2'
           memory: '512M'
-
-  pgadmin:
-    container_name: pgadmin4_container
-    image: dpage/pgadmin4:7
-    restart: always
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
-    ports:
-      - "5050:80"
-    volumes:
-      - pgadmin-data:/var/lib/pgadmin
-    deploy:
-      resources:
-        limits:
-          cpus: '0.10'
-          memory: '512M'
-        reservations:
-          cpus: '0.10'
-          memory: '256M'
 
   minio:
     container_name: minio_server
