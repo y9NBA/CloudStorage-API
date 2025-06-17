@@ -82,7 +82,5 @@ services:
 volumes:
   db-data:
     driver: local
-  pgadmin-data:
-    driver: local
   minio-data:
     driver: local
