@@ -47,6 +47,7 @@ services:
       - db-data:/var/lib/postgresql/data
       - /etc/localtime:/etc/localtime:ro
     restart: always
+    shm_size: 128M
     deploy:
       resources:
         limits:

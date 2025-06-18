@@ -10,7 +10,6 @@ import org.y9nba.app.dto.onetimetoken.OneTimeTokenCreateDto;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 @Entity
 @Table(name = "one_time_tokens")
