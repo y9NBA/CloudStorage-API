@@ -11,6 +11,7 @@ spring:
       max-lifetime: 300000
       idle-timeout: 600000
       validation-timeout: 5000
+      connection-timeout: 5000
       connection-test-query: SELECT 1
 
   liquibase:
@@ -65,7 +66,8 @@ spring:
 
   cache:
     caffeine:
-      spec: maximumSize=1000,expireAfterWrite=30m
+      maximumSize: 25
+      expire: 1
 
 server:
   servlet:

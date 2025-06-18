@@ -71,8 +71,8 @@ public class FileStorageServiceImpl implements FileStorageService {
             "FileStorageService::findByUserIdAndFolderUrl",
             "FileStorageService::findOwnerByUserId",
             "FileStorageService::findOwnerByUserIdAndFolderUrl",
-            "FileStorageService::findOwnerByBucketNameAndFileNameAndFolderUrl"
-
+            "FileStorageService::findOwnerByBucketNameAndFileNameAndFolderUrl",
+            "FileStorageService::findByUserId"
     }, allEntries = true)
     @Transactional
     @Override
@@ -134,8 +134,8 @@ public class FileStorageServiceImpl implements FileStorageService {
             "FileStorageService::findByUserIdAndFolderUrl",
             "FileStorageService::findOwnerByUserId",
             "FileStorageService::findOwnerByUserIdAndFolderUrl",
-            "FileStorageService::findOwnerByBucketNameAndFileNameAndFolderUrl"
-
+            "FileStorageService::findOwnerByBucketNameAndFileNameAndFolderUrl",
+            "FileStorageService::findByUserId"
     }, allEntries = true)
     @Transactional
     @Override
@@ -305,8 +305,8 @@ public class FileStorageServiceImpl implements FileStorageService {
             "FileStorageService::findByUserIdAndFolderUrl",
             "FileStorageService::findOwnerByUserId",
             "FileStorageService::findOwnerByUserIdAndFolderUrl",
-            "FileStorageService::findOwnerByBucketNameAndFileNameAndFolderUrl"
-
+            "FileStorageService::findOwnerByBucketNameAndFileNameAndFolderUrl",
+            "FileStorageService::findByUserId"
     }, allEntries = true)
     @Transactional
     @Override
@@ -354,8 +354,8 @@ public class FileStorageServiceImpl implements FileStorageService {
             "FileStorageService::findByUserIdAndFolderUrl",
             "FileStorageService::findOwnerByUserId",
             "FileStorageService::findOwnerByUserIdAndFolderUrl",
-            "FileStorageService::findOwnerByBucketNameAndFileNameAndFolderUrl"
-
+            "FileStorageService::findOwnerByBucketNameAndFileNameAndFolderUrl",
+            "FileStorageService::findByUserId"
     }, allEntries = true)
     @Transactional
     @Override
@@ -389,8 +389,8 @@ public class FileStorageServiceImpl implements FileStorageService {
             "FileStorageService::findByUserIdAndFolderUrl",
             "FileStorageService::findOwnerByUserId",
             "FileStorageService::findOwnerByUserIdAndFolderUrl",
-            "FileStorageService::findOwnerByBucketNameAndFileNameAndFolderUrl"
-
+            "FileStorageService::findOwnerByBucketNameAndFileNameAndFolderUrl",
+            "FileStorageService::findByUserId"
     }, allEntries = true)
     @Transactional
     @Override
@@ -461,8 +461,8 @@ public class FileStorageServiceImpl implements FileStorageService {
             "FileStorageService::findByUserIdAndFolderUrl",
             "FileStorageService::findOwnerByUserId",
             "FileStorageService::findOwnerByUserIdAndFolderUrl",
-            "FileStorageService::findOwnerByBucketNameAndFileNameAndFolderUrl"
-
+            "FileStorageService::findOwnerByBucketNameAndFileNameAndFolderUrl",
+            "FileStorageService::findByUserId"
     }, allEntries = true)
     @Override
     public File save(FileCreateDto dto) {
@@ -476,8 +476,8 @@ public class FileStorageServiceImpl implements FileStorageService {
             "FileStorageService::findByUserIdAndFolderUrl",
             "FileStorageService::findOwnerByUserId",
             "FileStorageService::findOwnerByUserIdAndFolderUrl",
-            "FileStorageService::findOwnerByBucketNameAndFileNameAndFolderUrl"
-
+            "FileStorageService::findOwnerByBucketNameAndFileNameAndFolderUrl",
+            "FileStorageService::findByUserId"
     }, allEntries = true)
     @Override
     public File update(FileUpdateDto dto) {
@@ -538,8 +538,8 @@ public class FileStorageServiceImpl implements FileStorageService {
             "FileStorageService::findByUserIdAndFolderUrl",
             "FileStorageService::findOwnerByUserId",
             "FileStorageService::findOwnerByUserIdAndFolderUrl",
-            "FileStorageService::findOwnerByBucketNameAndFileNameAndFolderUrl"
-
+            "FileStorageService::findOwnerByBucketNameAndFileNameAndFolderUrl",
+            "FileStorageService::findByUserId"
     }, allEntries = true)
     public File giveAccessOnFileForUser(User author, File file, User collaboratorUser, Access access) {
         if (author.getId().equals(collaboratorUser.getId())) {
@@ -571,8 +571,8 @@ public class FileStorageServiceImpl implements FileStorageService {
             "FileStorageService::findByUserIdAndFolderUrl",
             "FileStorageService::findOwnerByUserId",
             "FileStorageService::findOwnerByUserIdAndFolderUrl",
-            "FileStorageService::findOwnerByBucketNameAndFileNameAndFolderUrl"
-
+            "FileStorageService::findOwnerByBucketNameAndFileNameAndFolderUrl",
+            "FileStorageService::findByUserId"
     }, allEntries = true)
     @Override
     public File revokeAccessOnFileForUser(Long userId, String fileName, String folderURL, Long collaboratorUserId) {
@@ -599,8 +599,8 @@ public class FileStorageServiceImpl implements FileStorageService {
             "FileStorageService::findByUserIdAndFolderUrl",
             "FileStorageService::findOwnerByUserId",
             "FileStorageService::findOwnerByUserIdAndFolderUrl",
-            "FileStorageService::findOwnerByBucketNameAndFileNameAndFolderUrl"
-
+            "FileStorageService::findOwnerByBucketNameAndFileNameAndFolderUrl",
+            "FileStorageService::findByUserId"
     }, allEntries = true)
     @Override
     public File revokeAllAccessOnFile(Long userId, String fileName, String folderURL) {
@@ -659,8 +659,8 @@ public class FileStorageServiceImpl implements FileStorageService {
             "FileStorageService::findByUserIdAndFolderUrl",
             "FileStorageService::findOwnerByUserId",
             "FileStorageService::findOwnerByUserIdAndFolderUrl",
-            "FileStorageService::findOwnerByBucketNameAndFileNameAndFolderUrl"
-
+            "FileStorageService::findOwnerByBucketNameAndFileNameAndFolderUrl",
+            "FileStorageService::findByUserId"
     }, allEntries = true)
     public void deleteEntry(File file) {
         repository.delete(file);
@@ -672,12 +672,13 @@ public class FileStorageServiceImpl implements FileStorageService {
         return repository.existsByUrl(url);
     }
 
+    @Cacheable(value = "FileStorageService::findByUserId", key = "#userId")
     @Override
     public Set<File> findByUserId(Long userId) {
         return repository.getFilesByUser_Id(userId);
     }
 
-    @Cacheable(value = "FileStorageService::findByUserIdAndFolderUrl", key = "{#userId, #url}")
+    @Cacheable(value = "FileStorageService::findByUserIdAndFolderUrl", key = "{#userId, #folderURL}")
     @Override
     public Set<File> findByUserIdAndFolderUrl(Long userId, String folderURL) {
         Set<File> files = repository.getFilesByUser_IdAndUrlContaining(
@@ -827,8 +828,8 @@ public class FileStorageServiceImpl implements FileStorageService {
             "FileStorageService::findByUserIdAndFolderUrl",
             "FileStorageService::findOwnerByUserId",
             "FileStorageService::findOwnerByUserIdAndFolderUrl",
-            "FileStorageService::findOwnerByBucketNameAndFileNameAndFolderUrl"
-
+            "FileStorageService::findOwnerByBucketNameAndFileNameAndFolderUrl",
+            "FileStorageService::findByUserId"
     }, allEntries = true)
     public void processingRefreshFiles(Long userId, Set<File> filesWithoutPhysicalFile, Set<FileCreateDto> filesWithoutEntryInDB) {
         filesWithoutPhysicalFile.forEach(this::deleteEntry);
