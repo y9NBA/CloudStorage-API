@@ -35,7 +35,7 @@ services:
           memory: '1G'
 
   service-db:
-    image: postgres:14.7-alpine
+    image: postgres:17-alpine
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
