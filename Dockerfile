@@ -1,4 +1,4 @@
-FROM gradle:8.4-jdk17-alpine as builder
+FROM gradle:8.4-jdk17-alpine AS builder
 WORKDIR /app
 
 # Устанавливаем часовой пояс
