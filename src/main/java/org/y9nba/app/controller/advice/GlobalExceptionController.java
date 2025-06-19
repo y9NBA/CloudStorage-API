@@ -38,7 +38,7 @@ public class GlobalExceptionController {
     public ResponseEntity<ErrorResponse> catchIllegalArgumentException(IllegalArgumentException e) {
         return new ResponseEntity<>(
                 new ErrorResponse(
-                        e.getMessage(),
+                        "Что то не так с запросом: " + e.getMessage(),
                         HttpStatus.BAD_REQUEST.value()
                 ),
                 HttpStatus.BAD_REQUEST
@@ -88,7 +88,7 @@ public class GlobalExceptionController {
     public ResponseEntity<ErrorResponse> catchNoResourceFoundException(NoResourceFoundException e) {
         return new ResponseEntity<>(
                 new ErrorResponse(
-                        e.getMessage(),
+                        "Такой эндпоинт не найден: " + e.getResourcePath(),
                         e.getStatusCode().value()
                 ),
                 e.getStatusCode()
