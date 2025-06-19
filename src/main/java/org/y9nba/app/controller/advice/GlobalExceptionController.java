@@ -34,6 +34,17 @@ public class GlobalExceptionController {
         return new ResponseEntity<>(new ErrorResponse(e), e.getStatusCode());
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> catchIllegalArgumentException(IllegalArgumentException e) {
+        return new ResponseEntity<>(
+                new ErrorResponse(
+                        e.getMessage(),
+                        HttpStatus.BAD_REQUEST.value()
+                ),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
     @ExceptionHandler(UnrecognizedPropertyException.class)
     public ResponseEntity<ErrorResponse> handleUnrecognizedPropertyException(UnrecognizedPropertyException ex) {
         return new ResponseEntity<>(
