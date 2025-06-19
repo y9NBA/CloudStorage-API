@@ -10,7 +10,7 @@ public class PasswordUtil {
     private final static String ALLOWED_CHARS_UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     private final static String ALLOWED_CHARS_LOWER = "abcdefghijklmnopqrstuvwxyz";
     private final static String ALLOWED_CHARS_NUMBER = "0123456789";
-    private final static String ALLOWED_CHARS_SPECIAL = "!@#$%^&*()_+-=[]{}|;':\",./<>?";
+    private final static String ALLOWED_CHARS_SPECIAL = "-_[]./@$!%*?&";
 
     public PasswordUtil(PasswordEncoder passwordEncoder) {
         this.passwordEncoder = passwordEncoder;
@@ -32,24 +32,44 @@ public class PasswordUtil {
         return generateRandomPasswordWithRequirements(length, true, true, true);
     }
 
+    public static String getSpecialCharacters() {
+        return ALLOWED_CHARS_SPECIAL;
+    }
+
     private String generateRandomPasswordWithRequirements(Long length, boolean upperCase, boolean number, boolean special) {
         String allowedChars = ALLOWED_CHARS_LOWER;
-
-        if (upperCase)
-            allowedChars += ALLOWED_CHARS_UPPER;
-
-        if (number)
-            allowedChars += ALLOWED_CHARS_NUMBER;
-
-        if (special)
-            allowedChars += ALLOWED_CHARS_SPECIAL;
-
         StringBuilder password = new StringBuilder();
+        int charsInOn = 0;
 
-        for (int i = 0; i < length; i++) {
-            password.append(allowedChars.charAt((int) (Math.random() * allowedChars.length())));
+        password.append(getRandomChar(ALLOWED_CHARS_LOWER));
+
+        if (upperCase) {
+            password.append(getRandomChar(ALLOWED_CHARS_UPPER));
+            allowedChars += ALLOWED_CHARS_UPPER;
+            charsInOn++;
+        }
+
+        if (number) {
+            password.append(getRandomChar(ALLOWED_CHARS_NUMBER));
+            allowedChars += ALLOWED_CHARS_NUMBER;
+            charsInOn++;
+        }
+
+        if (special) {
+            password.append(getRandomChar(ALLOWED_CHARS_SPECIAL));
+            allowedChars += ALLOWED_CHARS_SPECIAL;
+            charsInOn++;
+        }
+
+
+        for (int i = 0; i < length - charsInOn; i++) {
+            password.append(getRandomChar(allowedChars));
         }
 
         return password.toString();
+    }
+
+    private char getRandomChar(String chars) {
+        return chars.charAt((int) (Math.random() * chars.length()));
     }
 }

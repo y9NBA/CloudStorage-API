@@ -8,7 +8,7 @@ import org.y9nba.app.exception.web.user.OneTimeTokenNotValidException;
 import org.y9nba.app.dao.entity.OneTimeToken;
 import org.y9nba.app.dao.entity.User;
 import org.y9nba.app.dao.repository.OneTimeTokenRepository;
-import org.y9nba.app.security.JwtService;
+import org.y9nba.app.security.jwt.JwtService;
 import org.y9nba.app.service.face.token.onetime.OneTimeTokenService;
 
 import java.util.Set;

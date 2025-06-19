@@ -8,9 +8,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.y9nba.app.dto.auth.OAuth2ResponseDTO;
 import org.y9nba.app.dto.auth.TokenResponseDto;
 import org.y9nba.app.dto.auth.LoginRequestDto;
 import org.y9nba.app.dto.auth.RegistrationRequestDto;
@@ -27,6 +30,9 @@ import org.y9nba.app.security.AuthenticationService;
 public class AuthController {
 
     private final AuthenticationService authenticationService;
+
+    private final static String baseOAuthUrl = "/oauth2/authorization/";
+    private final static String baseSuccessUrl = "/login/oauth2/code/";
 
     public AuthController(AuthenticationService authenticationService) {
         this.authenticationService = authenticationService;
@@ -170,9 +176,12 @@ public class AuthController {
                     )
             )
     })
-    @PostMapping("/login/oauth2/google")
-    public TokenResponseDto authenticateWithGoogle(HttpServletRequest request) {
-        return authenticationService.authenticateWithGoogle(SecurityContextHolder.getContext().getAuthentication(), request);
+    @GetMapping("/login/oauth2/google")
+    public OAuth2ResponseDTO authenticateWithGoogle() {
+        return new OAuth2ResponseDTO(
+                baseOAuthUrl + "google",
+                baseSuccessUrl + "google"
+        );
     }
 
     @Operation(

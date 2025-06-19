@@ -16,9 +16,12 @@ import org.y9nba.app.dto.user.UserCreateDto;
 import org.y9nba.app.exception.web.auth.OAuth2GoogleNotUserException;
 import org.y9nba.app.exception.web.auth.UnAuthorizedException;
 import org.y9nba.app.dao.entity.User;
+import org.y9nba.app.exception.web.user.search.NotFoundUserByEmailException;
+import org.y9nba.app.security.jwt.JwtService;
 import org.y9nba.app.service.impl.email.ConfirmServiceImpl;
 import org.y9nba.app.service.impl.token.session.SessionServiceImpl;
 import org.y9nba.app.service.impl.user.UserServiceImpl;
+import org.y9nba.app.util.PasswordUtil;
 import org.y9nba.app.util.StringUtil;
 
 import java.util.Map;
@@ -36,18 +39,20 @@ public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
 
     private final StringUtil stringUtil;
+    private final PasswordUtil passwordUtil;
 
     public AuthenticationService(UserServiceImpl userService,
                                  ConfirmServiceImpl confirmService,
                                  JwtService jwtService,
                                  SessionServiceImpl sessionService,
-                                 AuthenticationManager authenticationManager, StringUtil stringUtil) {
+                                 AuthenticationManager authenticationManager, StringUtil stringUtil, PasswordUtil passwordUtil) {
         this.userService = userService;
         this.confirmService = confirmService;
         this.jwtService = jwtService;
         this.sessionService = sessionService;
         this.authenticationManager = authenticationManager;
         this.stringUtil = stringUtil;
+        this.passwordUtil = passwordUtil;
     }
 
     public String register(RegistrationRequestDto registrationRequestDto) {
@@ -80,13 +85,7 @@ public class AuthenticationService {
                 )
         );
 
-        Session session = sessionService.getSessionByUserIdAndRequest(user.getId(), request);
-
-        if (session != null) {
-            sessionService.revokeSession(session);
-        }
-
-        session = sessionService.createSession(user, request);
+        Session session = sessionService.createSession(user, request);
 
         String accessToken = jwtService.generateAccessToken(user, session.getId(), session.getVersion());
         String refreshToken = jwtService.generateRefreshToken(user, session.getId(), session.getVersion());
@@ -121,12 +120,14 @@ public class AuthenticationService {
 
             if (oAuth2User != null) {
                 Map<String, Object> attributes = oAuth2User.getAttributes();
-                User user = userService.getByEmail(attributes.get("email").toString());
+                User user;
 
-                if (user == null) {
-                    String username = attributes.get("name").toString();
+                try {
+                    user = userService.getByEmail(attributes.get("email").toString());
+                } catch (NotFoundUserByEmailException e) {
+                    String username = attributes.get("given_name").toString();
                     String email = attributes.get("email").toString();
-                    String password = UUID.randomUUID().toString();
+                    String password = passwordUtil.generatePasswordWithSpecial(10L);
 
                     UserCreateDto userCreateDto = new UserCreateDto(
                             username,

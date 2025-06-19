@@ -8,7 +8,7 @@ import java.util.regex.Pattern;
 public class StringUtil {
 
     private final static Pattern EMAIL_REGEX = Pattern.compile("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
-    private final static Pattern PASSWORD_REGEX = Pattern.compile("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[-_/@$!%*?&])[A-Za-z\\d-_/@$!%*?&]{8,}$");
+    private final static Pattern PASSWORD_REGEX = Pattern.compile("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[-_\\[\\]./@$!%*?&])[A-Za-z\\d-_\\[\\]./@$!%*?&]{8,}$");
     private final static Pattern USERNAME_REGEX = Pattern.compile("^[\\p{L}0-9_.%-]{3,30}$");
 
     public boolean isValidEmail(String email) {

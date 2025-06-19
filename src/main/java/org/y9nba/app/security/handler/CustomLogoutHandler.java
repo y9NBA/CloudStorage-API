@@ -1,5 +1,6 @@
-package org.y9nba.app.security;
+package org.y9nba.app.security.handler;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.core.Authentication;
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Component;
 import org.y9nba.app.dto.response.Response;
 import org.y9nba.app.exception.web.auth.UnAuthorizedException;
 import org.y9nba.app.dao.entity.Session;
+import org.y9nba.app.security.jwt.JwtService;
 import org.y9nba.app.service.impl.token.session.SessionServiceImpl;
 
 import java.io.IOException;
@@ -47,7 +49,12 @@ public class CustomLogoutHandler implements LogoutHandler {
                 sessionService.revokeSession(session);
 
                 try {
-                    response.getWriter().printf(new Response("Вы успешно вышли из системы").asJSON());
+                    response.getWriter().write(
+                            new ObjectMapper().writeValueAsString(
+                                    new Response("Вы успешно вышли из системы")
+                            )
+                    );
+                    response.getWriter().flush();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }

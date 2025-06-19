@@ -8,7 +8,7 @@ spring:
     password: postgres
     driver-class-name: org.postgresql.Driver
     hikari:
-      max-lifetime: 300000
+      max-lifetime: 1800000
       idle-timeout: 600000
       validation-timeout: 5000
       connection-timeout: 5000
@@ -44,6 +44,14 @@ spring:
           google:
             client-id: ${GOOGLE_CLIENT_ID}
             client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope:
+              - profile
+              - email
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+            user-info-uri: https://openidconnect.googleapis.com/v1/userinfo
+            user-name-attribute: sub
 
   mail:
     host: smtp.gmail.com
