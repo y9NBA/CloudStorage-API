@@ -4,7 +4,7 @@ import org.springframework.stereotype.Service;
 import org.y9nba.app.dao.entity.User;
 import org.y9nba.app.dto.user.update.UserResetPasswordDto;
 import org.y9nba.app.exception.web.auth.AccountLockedException;
-import org.y9nba.app.security.JwtService;
+import org.y9nba.app.security.jwt.JwtService;
 import org.y9nba.app.service.face.user.UserPasswordService;
 import org.y9nba.app.service.impl.email.ConfirmServiceImpl;
 import org.y9nba.app.util.PasswordUtil;

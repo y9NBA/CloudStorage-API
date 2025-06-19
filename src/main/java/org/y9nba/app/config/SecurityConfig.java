@@ -8,7 +8,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -25,9 +24,10 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.y9nba.app.dto.response.ErrorResponse;
-import org.y9nba.app.security.CustomAccessDeniedHandler;
-import org.y9nba.app.security.CustomLogoutHandler;
-import org.y9nba.app.security.JwtFilter;
+import org.y9nba.app.security.handler.CustomAccessDeniedHandler;
+import org.y9nba.app.security.handler.CustomLogoutHandler;
+import org.y9nba.app.security.handler.OAuth2LoginSuccessHandler;
+import org.y9nba.app.security.jwt.JwtFilter;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -54,7 +54,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity, OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler) throws Exception {
         httpSecurity
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(httpSecurityCorsConfigurer -> httpSecurityCorsConfigurer
@@ -101,7 +101,9 @@ public class SecurityConfig {
                             auth.anyRequest().authenticated();
                         }
                 )
-                .oauth2Login(Customizer.withDefaults())
+                .oauth2Login(oauth2Login -> oauth2Login
+                        .successHandler(oAuth2LoginSuccessHandler)
+                )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .logout(log -> {
                     log.logoutUrl("/auth/logout");

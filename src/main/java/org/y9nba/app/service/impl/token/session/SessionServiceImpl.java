@@ -28,8 +28,14 @@ public class SessionServiceImpl implements SessionService {
 
     @Override
     public Session createSession(User user, HttpServletRequest request) {
-        Session session = new Session();
+        Session session = getSessionByUserIdAndRequest(user.getId(), request);
         DeviceInfoDto deviceInfoDto = userAgentUtil.parseUserAgent(request.getHeader("User-Agent"));
+
+        if (session != null) {
+            revokeSession(session);
+        }
+
+        session = new Session();
 
         session.setLoginTime(LocalDateTime.now());
         session.setLastActive(LocalDateTime.now());
@@ -46,7 +52,6 @@ public class SessionServiceImpl implements SessionService {
     @Override
     public void revokeSession(UUID sessionId) {
         repository.findById(sessionId).ifPresent(this::loggedOutSession);
-
     }
 
     @Override

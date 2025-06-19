@@ -1,4 +1,4 @@
-package org.y9nba.app.security;
+package org.y9nba.app.security.jwt;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
