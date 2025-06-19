@@ -35,7 +35,7 @@ services:
           memory: '1G'
 
   service-db:
-    image: postgres:17-alpine
+    image: postgres:17
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -51,7 +51,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
+          cpus: '0.4'
           memory: '1G'
         reservations:
           cpus: '0.2'
@@ -73,7 +73,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
+          cpus: '0.4'
           memory: '1G'
         reservations:
           cpus: '0.20'
