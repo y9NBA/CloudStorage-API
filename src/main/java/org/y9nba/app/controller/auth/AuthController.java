@@ -8,9 +8,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.y9nba.app.dto.auth.OAuth2ResponseDTO;
@@ -19,7 +16,7 @@ import org.y9nba.app.dto.auth.LoginRequestDto;
 import org.y9nba.app.dto.auth.RegistrationRequestDto;
 import org.y9nba.app.dto.response.ErrorResponse;
 import org.y9nba.app.dto.response.Response;
-import org.y9nba.app.security.AuthenticationService;
+import org.y9nba.app.security.auth.AuthenticationService;
 
 @Tag(
         name = "Authentication Controller",
@@ -161,10 +158,10 @@ public class AuthController {
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "Успешная аутентификация через Google",
+                    description = "Ссылки на страницы авторизации и успешного завершения авторизации через Google",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = TokenResponseDto.class))
+                            schema = @Schema(implementation = OAuth2ResponseDTO.class))
             ),
             @ApiResponse(
                     responseCode = "401",

@@ -83,7 +83,8 @@ public class SecurityConfig {
                                     "/sharing/download/**",
                                     "/user/search/avatar/**",
                                     "/confirm/**",
-                                    "/recovery/**"
+                                    "/recovery/**",
+                                    "/oauth2/**"
                             ).permitAll();
 
                             auth.requestMatchers(
@@ -101,9 +102,9 @@ public class SecurityConfig {
                             auth.anyRequest().authenticated();
                         }
                 )
-                .oauth2Login(oauth2Login -> oauth2Login
-                        .successHandler(oAuth2LoginSuccessHandler)
-                )
+                .oauth2Login(oauth2Login -> {
+                    oauth2Login.successHandler(oAuth2LoginSuccessHandler);
+                })
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .logout(log -> {
                     log.logoutUrl("/auth/logout");

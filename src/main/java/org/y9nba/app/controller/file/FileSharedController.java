@@ -41,7 +41,7 @@ import java.util.Set;
                 )
         )
 })
-public class FileSharedController {
+public class FileSharedController {    // TODO: переделать обращение к файлам (обращаться по UUID)
     private final FileStorageServiceImpl fileStorageService;
 
     public FileSharedController(FileStorageServiceImpl fileStorageService) {

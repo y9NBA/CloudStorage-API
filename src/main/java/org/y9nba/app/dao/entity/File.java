@@ -15,7 +15,7 @@ import java.util.Set;
 @NoArgsConstructor
 public class File {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)    // TODO: изменить на UUID и поменять во всех эндпоинтах, где идёт обращение к файлу по url, на id
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)

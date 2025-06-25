@@ -7,7 +7,10 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.y9nba.app.constant.ProviderType;
+import org.y9nba.app.dao.entity.Provider;
 import org.y9nba.app.dao.entity.Session;
+import org.y9nba.app.dto.provider.ProviderDto;
 import org.y9nba.app.dto.response.Response;
 import org.y9nba.app.dto.session.AllSessionsDto;
 import org.y9nba.app.dto.session.SessionDto;
@@ -16,6 +19,7 @@ import org.y9nba.app.dao.entity.User;
 import org.y9nba.app.dto.user.UserRoleDto;
 import org.y9nba.app.exception.web.session.NotUseRevokeSessionOnCurrentSession;
 import org.y9nba.app.mapper.GeneralMapper;
+import org.y9nba.app.service.face.provider.ProviderSearchService;
 import org.y9nba.app.service.face.token.session.SessionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -48,10 +52,12 @@ public class UserInfoController {
 
     private final SessionService sessionService;
     private final UserAvatarServiceImpl userAvatarService;
+    private final ProviderSearchService providerSearchService;
 
-    public UserInfoController(SessionService sessionService, UserAvatarServiceImpl userAvatarService) {
+    public UserInfoController(SessionService sessionService, UserAvatarServiceImpl userAvatarService, ProviderSearchService providerSearchService) {
         this.sessionService = sessionService;
         this.userAvatarService = userAvatarService;
+        this.providerSearchService = providerSearchService;
     }
 
     @Operation(summary = "Получить информацию о профиле")
@@ -150,5 +156,34 @@ public class UserInfoController {
     )
     public ResponseEntity<InputStreamResource> getAvatar(@AuthenticationPrincipal User user) {
         return userAvatarService.getAvatarByUser(user);
+    }
+
+    @GetMapping("/providers")
+    @Operation(summary = "Получить список провайдеров")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Список провайдеров",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ProviderDto.class)
+            )
+    )
+    public Set<ProviderDto> getProviders(@AuthenticationPrincipal User user) {
+        Set<Provider> providers = providerSearchService.getProvidersByUserId(user.getId());
+        return GeneralMapper.toProviderDto(providers);
+    }
+
+    @GetMapping("/providers/{providerType}")
+    @Operation(summary = "Получить информацию о провайдере")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Информация про одного провайдера по типу",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ProviderDto.class)
+            )
+    )
+    public ProviderDto getProvider(@PathVariable ProviderType providerType, @AuthenticationPrincipal User user) {
+        return new ProviderDto(providerSearchService.getProvider(user.getId(), providerType));
     }
 }

@@ -16,7 +16,7 @@ public class FilePresentDto {
     private String fileName;
     private Long fileSize;
     private String mimeType;
-    private String bucketName;
+    private String bucketName;    // TODO: убрать (userId будет как bucketName)
     private String folderURL;
     private boolean isPublic;
     private boolean isShared;

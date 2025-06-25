@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 @ToString(of = {"id", "username", "email"})
 public class User implements UserDetails {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)    // TODO: перевести на UUID и использовать как bucketName для файлов в S3 MiniO
     private Long id;
 
     @Column(unique = true, nullable = false)
@@ -39,7 +39,7 @@ public class User implements UserDetails {
     private String avatarUrl = null;
 
     @Column(unique = true, nullable = false)
-    private UUID bucketName = UUID.randomUUID();
+    private UUID bucketName = UUID.randomUUID();    // TODO: удалить
 
     @Column(name = "storage_limit", nullable = false)
     private Long storageLimit = 1073741824L;    // 1gb in byte
@@ -57,26 +57,31 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     private Role role;
 
+    // TODO: сделать отдельную таблицу для подключения к пользователю аккаунтов с других сервисов
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<File> files;
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<AuditLog> auditLogs;
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<FileAccess> fileAccesses;
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<Session> sessions;
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<OneTimeToken> oneTimeTokens;
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<Warning> warnings;
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private Set<Provider> providers;
 
     public User(UserCreateDto dto) {
         this.username = dto.getUsername();

@@ -35,7 +35,7 @@ import org.y9nba.app.service.impl.user.UserSearchServiceImpl;
         )
 })
 @Validate
-public class FileAccessController {
+public class FileAccessController {    // TODO: переделать обращение к файлам (обращаться по UUID)
 
     private final FileStorageServiceImpl fileStorageService;
     private final UserSearchServiceImpl userSearchService;

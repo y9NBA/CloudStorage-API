@@ -12,4 +12,6 @@ public class FileUtil {
 
         return path.trim().replaceAll("^/*|/+$", "/");
     }
+
+    // TODO: сделать метод для валидации folderUrl
 }

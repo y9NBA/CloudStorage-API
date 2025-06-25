@@ -5,6 +5,7 @@ import org.y9nba.app.dto.auditlog.AuditLogDto;
 import org.y9nba.app.dto.file.FileDto;
 import org.y9nba.app.dto.file.FilePresentDto;
 import org.y9nba.app.dto.fileaccess.FileAccessDto;
+import org.y9nba.app.dto.provider.ProviderDto;
 import org.y9nba.app.dto.search.AdminInfoDto;
 import org.y9nba.app.dto.search.UserInfoDto;
 import org.y9nba.app.dto.search.UserSearchDto;
@@ -15,6 +16,14 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class GeneralMapper {
+    public static Set<ProviderDto> toProviderDto(Set<Provider> models) {
+        if (models == null) {
+            return Set.of();
+        }
+
+        return models.stream().map(ProviderDto::new).collect(Collectors.toSet());
+    }
+
     public static Set<WarningDto> toWarningDto(Set<Warning> models) {
         if (models == null) {
             return Set.of();

@@ -46,7 +46,7 @@ import java.util.stream.Collectors;
                 )
         )
 })
-public class FileStorageController {
+public class FileStorageController {    // TODO: переделать обращение к файлам (обращаться по UUID)
 
     private final FileStorageServiceImpl fileStorageService;
 
