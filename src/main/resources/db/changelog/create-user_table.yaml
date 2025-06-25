@@ -8,7 +8,7 @@ databaseChangeLog:
             schemaName: cloudstorage
             columns:
               - column:
-                  name: id
+                  name: id    # TODO: изменить миграцию под User из кода
                   type: bigserial
                   constraints:
                     primaryKey: true

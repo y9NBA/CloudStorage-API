@@ -15,7 +15,7 @@ databaseChangeLog:
                     nullable: false
               - column:
                   name: user_id
-                  type: bigint
+                  type: bigint # TODO: изменить миграцию под User из кода
                   constraints:
                     nullable: false
               - column:
@@ -25,7 +25,7 @@ databaseChangeLog:
                     nullable: false
               - column:
                   name: file_id
-                  type: bigint
+                  type: bigint # TODO: изменить миграцию под File из кода
               - column:
                   name: created_at
                   type: timestamp

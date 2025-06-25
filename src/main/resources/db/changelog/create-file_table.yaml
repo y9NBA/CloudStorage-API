@@ -9,13 +9,13 @@ databaseChangeLog:
             columns:
               - column:
                   name: id
-                  type: bigserial
+                  type: bigserial # TODO: изменить миграцию под File из кода
                   constraints:
                     primaryKey: true
                     nullable: false
               - column:
                   name: user_id
-                  type: bigint
+                  type: bigint # TODO: изменить миграцию под User из кода
                   constraints:
                     nullable: false
               - column:

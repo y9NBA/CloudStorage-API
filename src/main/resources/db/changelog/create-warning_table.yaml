@@ -15,12 +15,12 @@ databaseChangeLog:
                     nullable: false
               - column:
                   name: user_id
-                  type: bigint
+                  type: bigint # TODO: изменить миграцию под User из кода
                   constraints:
                     nullable: false
               - column:
                   name: admin_id
-                  type: bigint
+                  type: bigint # TODO: изменить миграцию под User из кода
                   constraints:
                     nullable: false
               - column:

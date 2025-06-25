@@ -1,32 +1,25 @@
 databaseChangeLog:
   - changeSet:
-      id: 9
+      id: 10
       author: y9nba
       changes:
         - createTable:
-            tableName: one_time_tokens
+            tableName: providers
             schemaName: cloudstorage
             columns:
-              - column:
-                  name: id
-                  type: UUID
-                  defaultValue: gen_random_uuid()
-                  constraints:
-                    primaryKey: true
-                    nullable: false
               - column:
                   name: user_id
                   type: bigint # TODO: изменить миграцию под User из кода
                   constraints:
                     nullable: false
               - column:
-                  name: type
-                  type: varchar(20)
+                  name: provider_type
+                  type: varchar(10)
                   constraints:
                     nullable: false
               - column:
-                  name: is_used
-                  type: bool
+                  name: provider_id
+                  type: bigint
                   constraints:
                     nullable: false
               - column:
@@ -35,11 +28,16 @@ databaseChangeLog:
                   defaultValue: now()
                   constraints:
                     nullable: false
+        - addPrimaryKey:
+            schemaName: cloudstorage
+            constraintName: pk_providers
+            columnNames: user_id, provider_type
+            tableName: providers
         - addForeignKeyConstraint:
-            baseTableName: one_time_tokens
+            baseTableName: providers
             baseColumnNames: user_id
             referencedTableName: users
             referencedColumnNames: id
-            constraintName: fk_one_time_token_user
+            constraintName: fk_provider_user
             referencedTableSchemaName: cloudstorage
             baseTableSchemaName: cloudstorage
